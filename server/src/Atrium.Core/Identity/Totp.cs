@@ -13,6 +13,9 @@ public sealed class TotpCredential
 
     /// <summary>Null until the user proves the authenticator works; unconfirmed credentials are not enforced.</summary>
     public DateTimeOffset? ConfirmedAt { get; set; }
+
+    /// <summary>Time step of the last accepted code. Codes at or before it are refused, so none works twice.</summary>
+    public long? LastUsedStep { get; set; }
 }
 
 /// <summary>Single-use fallback for a lost authenticator. Stored hashed.</summary>

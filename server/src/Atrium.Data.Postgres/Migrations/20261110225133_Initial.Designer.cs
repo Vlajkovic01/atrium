@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Atrium.Data.Postgres.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261110222958_Initial")]
+    [Migration("20261110225133_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -184,6 +184,7 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasColumnType("bytea");
 
                     b.Property<long?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -264,6 +265,10 @@ namespace Atrium.Data.Postgres.Migrations
                     b.Property<byte[]>("EncryptedSecret")
                         .IsRequired()
                         .HasColumnType("bytea");
+
+                    b.Property<long?>("LastUsedStep")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
