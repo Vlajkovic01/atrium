@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- EF Core model shared by both database providers. Provider-specific
        code and migrations live in Atrium.Data.Sqlite and Atrium.Data.Postgres. -->

@@ -6,22 +6,32 @@ using DotNet.Testcontainers.Containers;
 
 namespace Atrium.Storage.Tests;
 
-/// <summary>One MinIO server shared by all S3 tests; each test gets its own bucket.</summary>
-public sealed class MinioFixture : IAsyncLifetime
+/// <summary>
+/// One S3-compatible server shared by all S3 tests; each test gets its own
+/// bucket. The server is SeaweedFS (Apache-2.0): MinIO, the usual choice,
+/// withdrew its container image. It is used only here and never shipped.
+/// </summary>
+public sealed class S3ServerFixture : IAsyncLifetime
 {
     public const string AccessKey = "atrium-test";
     public const string SecretKey = "atrium-test-secret";
 
-    private const int Port = 9000;
+    private const int Port = 8333;
+    private const string ConfigPath = "/etc/seaweedfs/s3.json";
 
-    // An S3-compatible server used only here, never shipped. Pinned so the
-    // tests do not change when the image does.
-    private readonly IContainer _container = new ContainerBuilder("minio/minio:RELEASE.2025-04-22T22-12-26Z")
-        .WithEnvironment("MINIO_ROOT_USER", AccessKey)
-        .WithEnvironment("MINIO_ROOT_PASSWORD", SecretKey)
-        .WithCommand("server", "/data")
+    // With an identity configured the server checks request signatures, so
+    // wrong credentials are really refused.
+    private const string Config =
+        """
+        {"identities":[{"name":"atrium","credentials":[{"accessKey":"atrium-test","secretKey":"atrium-test-secret"}],"actions":["Admin","Read","Write","List","Tagging"]}]}
+        """;
+
+    // Pinned so the tests do not change when the image does.
+    private readonly IContainer _container = new ContainerBuilder("chrislusf/seaweedfs:4.53")
+        .WithResourceMapping(System.Text.Encoding.UTF8.GetBytes(Config), ConfigPath)
+        .WithCommand("server", "-s3", $"-s3.config={ConfigPath}")
         .WithPortBinding(Port, assignRandomHostPort: true)
-        .WithWaitStrategy(Wait.ForUnixContainer().UntilHttpRequestIsSucceeded(r => r.ForPort(Port).ForPath("/minio/health/ready")))
+        .WithWaitStrategy(Wait.ForUnixContainer().UntilInternalTcpPortIsAvailable(Port))
         .Build();
 
     public string ServiceUrl => $"http://{_container.Hostname}:{_container.GetMappedPublicPort(Port)}";
@@ -36,8 +46,22 @@ public sealed class MinioFixture : IAsyncLifetime
         using var client = new AmazonS3Client(
             new BasicAWSCredentials(AccessKey, SecretKey),
             new AmazonS3Config { ServiceURL = ServiceUrl, ForcePathStyle = true, AuthenticationRegion = "us-east-1" });
-        await client.PutBucketAsync(bucket);
-        return bucket;
+
+        // The port opens before the server's parts have found each other;
+        // keep trying for a while before calling it a failure.
+        var deadline = DateTime.UtcNow.AddSeconds(90);
+        while (true)
+        {
+            try
+            {
+                await client.PutBucketAsync(bucket);
+                return bucket;
+            }
+            catch (Exception e) when (e is AmazonServiceException or AmazonClientException or HttpRequestException && DateTime.UtcNow < deadline)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+        }
     }
 
     public S3StorageOptions Options(string bucket, string? keyPrefix = null) =>
@@ -50,7 +74,7 @@ public sealed class MinioFixture : IAsyncLifetime
 /// <c>dotnet test --filter "Category!=Containers"</c>.
 /// </summary>
 [Trait("Category", "Containers")]
-public sealed class S3StorageProviderTests(MinioFixture minio) : StorageProviderContractTests, IClassFixture<MinioFixture>
+public sealed class S3StorageProviderTests(S3ServerFixture server) : StorageProviderContractTests, IClassFixture<S3ServerFixture>
 {
     private const int MiB = 1024 * 1024;
 
@@ -59,8 +83,8 @@ public sealed class S3StorageProviderTests(MinioFixture minio) : StorageProvider
 
     protected override async Task<IStorageProvider> CreateProviderAsync()
     {
-        _bucket = await minio.CreateBucketAsync();
-        return Track(new S3StorageProvider(minio.Options(_bucket)));
+        _bucket = await server.CreateBucketAsync();
+        return Track(new S3StorageProvider(server.Options(_bucket)));
     }
 
     protected override Task CleanUpAsync()
@@ -84,7 +108,7 @@ public sealed class S3StorageProviderTests(MinioFixture minio) : StorageProvider
     {
         // The real limit is 5 GB. Lowering it exercises the same code path
         // with an object small enough for a test.
-        var provider = Track(new S3StorageProvider(minio.Options(_bucket), singleCopyLimit: 5 * MiB, copyPartSize: 5 * MiB));
+        var provider = Track(new S3StorageProvider(server.Options(_bucket), singleCopyLimit: 5 * MiB, copyPartSize: 5 * MiB));
         var content = RandomBytes(11 * MiB + 3);
         await PutAsync("staging/large", content);
 
@@ -99,8 +123,8 @@ public sealed class S3StorageProviderTests(MinioFixture minio) : StorageProvider
     [Fact]
     public async Task A_key_prefix_keeps_two_locations_in_one_bucket_apart()
     {
-        var first = Track(new S3StorageProvider(minio.Options(_bucket, "atrium-one")));
-        var second = Track(new S3StorageProvider(minio.Options(_bucket, "/atrium-two/")));
+        var first = Track(new S3StorageProvider(server.Options(_bucket, "atrium-one")));
+        var second = Track(new S3StorageProvider(server.Options(_bucket, "/atrium-two/")));
         using (var content = new MemoryStream([1, 2, 3]))
         {
             await first.WriteAsync("blobs/object", content, overwrite: false, CancellationToken.None);
@@ -122,8 +146,8 @@ public sealed class S3StorageProviderTests(MinioFixture minio) : StorageProvider
     [Fact]
     public async Task The_health_check_explains_a_missing_bucket_and_wrong_credentials()
     {
-        using var noBucket = new S3StorageProvider(minio.Options("bucket-that-does-not-exist"));
-        using var badSecret = new S3StorageProvider(minio.Options(_bucket) with { SecretKey = "wrong-secret" });
+        using var noBucket = new S3StorageProvider(server.Options("bucket-that-does-not-exist"));
+        using var badSecret = new S3StorageProvider(server.Options(_bucket) with { SecretKey = "wrong-secret" });
 
         var missing = await noBucket.CheckAsync(CancellationToken.None);
         var denied = await badSecret.CheckAsync(CancellationToken.None);
@@ -150,8 +174,8 @@ public sealed class S3StorageProviderTests(MinioFixture minio) : StorageProvider
     [Fact]
     public void Printing_the_options_does_not_reveal_the_secret_key()
     {
-        var options = minio.Options(_bucket);
+        var options = server.Options(_bucket);
 
-        Assert.DoesNotContain(MinioFixture.SecretKey, options.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain(S3ServerFixture.SecretKey, options.ToString(), StringComparison.Ordinal);
     }
 }

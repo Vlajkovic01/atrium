@@ -26,10 +26,11 @@ having before public distribution.
    contributions to `/mobile`, `/tv` or `/packages/shared` therefore needs
    a contributor license agreement first. Client apps must not include
    third-party GPL or AGPL code.
-4. **S3 test server.** MinIO is AGPL-3.0 and is used only as a container
-   in tests, never distributed. Its community edition's maintenance status
-   should be checked at Phase 1; another S3-compatible server can replace
-   it in tests if needed.
+4. **S3 test server.** Resolved in Phase 1. MinIO withdrew its container
+   image from Docker Hub, so the S3 tests run against SeaweedFS
+   (Apache-2.0) instead. It is used only as a container in tests and is
+   never distributed. MinIO remains supported as a storage backend for
+   users who run it; it is just no longer what CI tests against.
 
 ## Approved: the stack named in the project brief
 
@@ -46,7 +47,7 @@ having before public distribution.
 | react-native-tvos | MIT | TV |
 | TypeScript | Apache-2.0 | All clients |
 | Caddy | Apache-2.0 | Optional HTTPS container (D-006) |
-| MinIO | AGPL-3.0 | Test container only; see flag 4 |
+| SeaweedFS | Apache-2.0 | S3-compatible server, test container only; see flag 4 |
 
 ## Approved for Phase 1
 
@@ -67,7 +68,7 @@ is actually in the repository.
 | NSec.Cryptography with libsodium | 26.4.0 | MIT; ISC | Argon2id password hashing |
 | AWSSDK.S3 | 4.0.104.12 | Apache-2.0 | S3-compatible storage provider; works with any S3 endpoint, no AWS account needed |
 | Microsoft.AspNetCore.Authentication.JwtBearer | 10.0.14 | MIT | Access token validation; brings Microsoft.IdentityModel (MIT) |
-| Testcontainers | 4.16.0 | MIT | Runs the MinIO container in storage tests |
+| Testcontainers | 4.16.0 | MIT | Runs the S3 server container in storage tests |
 | pnpm | 12.18.0 (tool) | MIT | JavaScript workspace manager |
 | Vite | not yet added | MIT | Web build |
 | React Router | not yet added | MIT | Web routing |

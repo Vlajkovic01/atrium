@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
   <Folder Name="/src/">
     <Project Path="src/Atrium.Api/Atrium.Api.csproj" />
     <Project Path="src/Atrium.Core/Atrium.Core.csproj" />

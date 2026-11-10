@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Authentication: password hashing, server keys, secret encryption,
        one-time codes, sessions and sign-in. -->

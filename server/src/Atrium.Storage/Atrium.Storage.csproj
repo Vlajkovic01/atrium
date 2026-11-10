@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- The storage provider interface and its implementations: local
        filesystem (also used for mounted network shares) and S3-compatible

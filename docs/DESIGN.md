@@ -280,7 +280,7 @@ two writers of one key write the same bytes.
 |---|---|
 | Local filesystem | Write to a temp file in the same filesystem, flush to disk, rename, flush the directory. Move is a rename. |
 | Network share | The local provider with different assumptions: no change notifications, rename may not be atomic so writes are verified by reading back, and availability is checked before every scan (section 4.4). |
-| S3-compatible | Multipart upload completes atomically. No rename: move is a server-side copy, a size check of the copy, and only then a delete of the source, using multipart copy above 5 GB. Each part is sent with a Content-MD5 checksum the service verifies; the newer SDK checksum headers are turned off because several compatible services reject them. Tested against MinIO; AWS S3, Backblaze B2 and Cloudflare R2 quirks are covered by a compatibility test suite the user can run from the admin UI. |
+| S3-compatible | Multipart upload completes atomically. No rename: move is a server-side copy, a size check of the copy, and only then a delete of the source, using multipart copy above 5 GB. Each part is sent with a Content-MD5 checksum the service verifies; the newer SDK checksum headers are turned off because several compatible services reject them. Tested in CI against SeaweedFS, an S3-compatible server; the quirks of AWS S3, Backblaze B2, Cloudflare R2 and MinIO are covered by a compatibility test suite the user can run from the admin UI. |
 
 ### 3.2 Layout of a managed storage location
 
