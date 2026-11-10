@@ -138,7 +138,8 @@ Target floor: 4 ARM64 cores, 2 GB RAM (D-003).
 ## 2. Data model
 
 Conventions: primary keys are UUIDv7 (time-ordered, identical in SQLite and
-PostgreSQL). Timestamps are UTC. Rows that clients edit carry a `version`
+PostgreSQL). Timestamps are UTC, stored as milliseconds since the Unix
+epoch, and enums are stored by name (D-020). Rows that clients edit carry a `version`
 used for optimistic concurrency. The schema is the same on both databases
 except for full-text search, which sits behind an interface (SQLite FTS5,
 PostgreSQL `tsvector`).
@@ -733,6 +734,14 @@ supported path between the two.
   to name them.
 - Retention is configurable. Restore is an admin action in Phase 11 and a
   documented command line step before that.
+
+Current state (Phase 1): the portable format is not built yet. Before a
+migration, SQLite gets a verified snapshot of the database file in
+`/config/backups`. PostgreSQL has no automatic backup yet, so the server
+refuses to migrate a PostgreSQL database that already holds data. Only
+the initial migration exists, and it runs on an empty database, so no
+install is affected; the portable backup must land before a second
+migration is released.
 
 ### 8.3 API versioning
 

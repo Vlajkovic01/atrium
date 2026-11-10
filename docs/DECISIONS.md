@@ -180,3 +180,30 @@ added. Any of them can still be overruled.
   make accidental overwrites likely.
 - Cost: version retention job, four endpoints and a details-panel section
   in Phase 2.
+
+## D-020 Timestamps are stored as UTC milliseconds, enums by name (Proposed)
+
+- Decision: every timestamp column is a 64-bit integer of milliseconds
+  since the Unix epoch on both databases. Enum columns hold the member
+  name as text.
+- Alternatives: native types (`timestamptz` on PostgreSQL, ISO text on
+  SQLite); enums as integers.
+- Reasons: SQLite cannot compare or sort the text form EF Core uses for
+  `DateTimeOffset`, so queries by time would fail or run in memory. One
+  representation keeps the schema, the queries and the portable backup
+  (D-008) identical on both databases. Names survive reordering of enum
+  members; integers do not.
+- Cost: timestamps are not human-readable in a database console, and
+  precision is one millisecond.
+
+## D-021 Container tests run only in CI (Owner)
+
+- Decision: tests that need PostgreSQL or an S3 server in a container are
+  tagged `Category=Containers` and run in GitHub Actions. Locally,
+  `dotnet test --filter "Category!=Containers"` runs everything else.
+- Alternatives: Podman or Docker Desktop on the development machine.
+- Reasons: Docker Desktop needs a paid license on a company laptop and
+  Podman needs WSL2, which company policy may block.
+- Cost: a PostgreSQL-only failure shows up after a push, not before. A
+  snapshot test that needs no database still catches a missing migration
+  for either provider locally.
