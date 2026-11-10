@@ -393,37 +393,51 @@ public abstract class StorageProviderContractTests : IAsyncLifetime
     }
 
     /// <summary>A source that breaks partway, like a dropped connection.</summary>
-    private sealed class FailingStream(byte[] data, int failAfter) : MemoryStream(data)
+    /// <remarks>
+    /// Derives from Stream, not MemoryStream, and overrides only the one
+    /// core read method. Every other way of reading (spans, async, copy)
+    /// is the base class's and ends up here, so no provider can read past
+    /// the failure point by taking a different path.
+    /// </remarks>
+    private sealed class FailingStream(byte[] data, int failAfter) : Stream
     {
-        public override int Read(byte[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+        private int _position;
 
-        public override int Read(Span<byte> buffer)
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position
         {
-            if (Position >= failAfter)
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_position >= failAfter)
             {
                 throw new IOException("The connection was lost.");
             }
 
-            return base.Read(buffer[..(int)Math.Min(buffer.Length, failAfter - Position)]);
+            var available = Math.Min(count, Math.Min(failAfter, data.Length) - _position);
+            Array.Copy(data, _position, buffer, offset, available);
+            _position += available;
+            return available;
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
-            ValueTask.FromResult(Read(buffer.Span));
-
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
-            Task.FromResult(Read(buffer.AsSpan(offset, count)));
-
-        public override Task CopyToAsync(Stream destination, int bufferSize, CancellationToken cancellationToken) =>
-            CopyViaReadAsync(destination, bufferSize, cancellationToken);
-
-        private async Task CopyViaReadAsync(Stream destination, int bufferSize, CancellationToken ct)
+        public override void Flush()
         {
-            var buffer = new byte[bufferSize];
-            int read;
-            while ((read = Read(buffer)) > 0)
-            {
-                await destination.WriteAsync(buffer.AsMemory(0, read), ct);
-            }
         }
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
 }
