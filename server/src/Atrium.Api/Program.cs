@@ -35,6 +35,8 @@ v1.MapSystemEndpoints();
 v1.MapAuthEndpoints();
 v1.MapSessionEndpoints();
 v1.MapPairingEndpoints();
+v1.MapMeEndpoints();
+v1.MapUserEndpoints();
 
 await app.RunAsync();
 

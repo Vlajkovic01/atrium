@@ -7,6 +7,8 @@ using Atrium.Identity.Pairing;
 using Atrium.Identity.Passwords;
 using Atrium.Identity.Sessions;
 using Atrium.Identity.SignIn;
+using Atrium.Identity.Totp;
+using Atrium.Identity.Users;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -46,6 +48,8 @@ public static class AuthSetup
         services.AddScoped<SignInService>();
         services.AddScoped<PairingService>();
         services.AddScoped<LinkCodeService>();
+        services.AddScoped<UserService>();
+        services.AddScoped<TotpService>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
