@@ -34,6 +34,7 @@ var v1 = app.MapGroup("/api/v1");
 v1.MapSystemEndpoints();
 v1.MapAuthEndpoints();
 v1.MapSessionEndpoints();
+v1.MapPairingEndpoints();
 
 await app.RunAsync();
 
