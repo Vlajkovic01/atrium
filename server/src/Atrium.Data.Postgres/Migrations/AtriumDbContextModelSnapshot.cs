@@ -40,6 +40,7 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<long?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("UserId")
@@ -107,6 +108,7 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("State")
+                        .IsConcurrencyToken()
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");

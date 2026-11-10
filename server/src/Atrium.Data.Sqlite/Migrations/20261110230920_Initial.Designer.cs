@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atrium.Data.Sqlite.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261110225113_Initial")]
+    [Migration("20261110230920_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -38,6 +38,7 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<long?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("UserId")
@@ -105,6 +106,7 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("State")
+                        .IsConcurrencyToken()
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
