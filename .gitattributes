@@ -1,0 +1,21 @@
+# Store and check out text with LF everywhere. Shell scripts and Docker
+# files break with CRLF, and Windows tools handle LF fine.
+* text=auto eol=lf
+
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.mp4 binary
+*.mkv binary
+*.mov binary
+*.webm binary
+*.mp3 binary
+*.flac binary
+*.sup binary
+*.woff2 binary

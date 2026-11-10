@@ -1,0 +1,32 @@
+# .NET
+bin/
+obj/
+*.user
+TestResults/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+playwright-report/
+test-results/
+
+# Editors and OS
+.vs/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+
+# Local runtime data. Never commit databases, keys or user files.
+/data/
+/config/
+/cache/
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.*
+!.env.example
