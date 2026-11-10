@@ -1,5 +1,6 @@
 using Atrium.Core.Identity;
 using Atrium.Data;
+using Atrium.Identity.Codes;
 using Atrium.Identity.Crypto;
 using Atrium.Identity.Passwords;
 using Atrium.Identity.Totp;
@@ -74,6 +75,12 @@ public sealed class SignInService(
             return null;
         }
 
+        // Something that is not six digits may be a recovery code.
+        if (RecoveryCodes.Normalize(code) is { } recovery)
+        {
+            return await UseRecoveryCodeAsync(user, recovery, ct) ? user : null;
+        }
+
         var secret = protector.Unprotect(credential.EncryptedSecret, TotpProtectionPurpose);
         var step = TotpGenerator.Verify(secret, code, time.GetUtcNow(), credential.LastUsedStep);
         if (step is null)
@@ -93,5 +100,18 @@ public sealed class SignInService(
         }
 
         return user;
+    }
+
+    private async Task<bool> UseRecoveryCodeAsync(User user, string code, CancellationToken ct)
+    {
+        var hash = SecretCode.Hash(code);
+        var now = time.GetUtcNow();
+
+        // One statement that only succeeds while the code is unused, so the
+        // same code presented twice at once is accepted once.
+        var updated = await db.RecoveryCodes
+            .Where(c => c.UserId == user.Id && c.CodeHash == hash && c.UsedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.UsedAt, now), ct);
+        return updated == 1;
     }
 }
