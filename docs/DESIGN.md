@@ -244,18 +244,19 @@ public interface IStorageProvider
 
     // Streamed single-shot write. Atomic: the key either holds the complete
     // new content or is unchanged. Fails if the key exists unless overwrite.
-    Task<StorageObject> WriteAsync(string key, Stream content, WriteOptions options, CancellationToken ct);
+    Task<StorageObject> WriteAsync(string key, Stream content, bool overwrite, CancellationToken ct);
 
-    // Multipart upload for large or resumable writes.
+    // Multipart upload for large or resumable writes. Nothing is visible
+    // under the key until the upload is completed.
     Task<MultipartUpload> BeginMultipartAsync(string key, CancellationToken ct);
     Task<UploadedPart> UploadPartAsync(MultipartUpload upload, int partNumber, Stream content, long length, CancellationToken ct);
-    Task<StorageObject> CompleteMultipartAsync(MultipartUpload upload, IReadOnlyList<UploadedPart> parts, CancellationToken ct);
+    Task<StorageObject> CompleteMultipartAsync(MultipartUpload upload, IReadOnlyList<UploadedPart> parts, bool overwrite, CancellationToken ct);
     Task AbortMultipartAsync(MultipartUpload upload, CancellationToken ct);
 
-    IAsyncEnumerable<StorageObject> ListAsync(string prefix, ListOptions options, CancellationToken ct);
+    IAsyncEnumerable<StorageObject> ListAsync(string prefix, CancellationToken ct);
     Task<StorageObject?> StatAsync(string key, CancellationToken ct);
     Task DeleteAsync(string key, CancellationToken ct);
-    Task MoveAsync(string sourceKey, string destinationKey, CancellationToken ct);
+    Task MoveAsync(string sourceKey, string destinationKey, bool overwrite, CancellationToken ct);
 
     // Wizard and health checks: write, read back, delete a probe object;
     // report free space where the backend can tell.
@@ -264,14 +265,22 @@ public interface IStorageProvider
 ```
 
 `StorageCapabilities` tells callers what the backend can do: atomic move,
-read-only, free-space reporting, change notifications, minimum multipart
-part size.
+free-space reporting, minimum and maximum multipart part size. Read-only
+and change-notification flags are added when external libraries arrive.
+
+Both implementations run the same contract test suite, the local one on
+every machine and the S3 one against a real S3-compatible server in CI.
+
+"Fails if the key exists" is exact on the local filesystem. On S3 it is a
+check followed by a write, which two simultaneous writers can both pass.
+This is accepted because managed objects are named by their content hash:
+two writers of one key write the same bytes.
 
 | Provider | Notes |
 |---|---|
 | Local filesystem | Write to a temp file in the same filesystem, flush to disk, rename, flush the directory. Move is a rename. |
 | Network share | The local provider with different assumptions: no change notifications, rename may not be atomic so writes are verified by reading back, and availability is checked before every scan (section 4.4). |
-| S3-compatible | Multipart upload completes atomically. No rename: move is a server-side copy followed by delete, using multipart copy above 5 GB. Each part is sent with a checksum the service verifies. Tested against MinIO; AWS S3, Backblaze B2 and Cloudflare R2 quirks are covered by a compatibility test suite the user can run from the admin UI. |
+| S3-compatible | Multipart upload completes atomically. No rename: move is a server-side copy, a size check of the copy, and only then a delete of the source, using multipart copy above 5 GB. Each part is sent with a Content-MD5 checksum the service verifies; the newer SDK checksum headers are turned off because several compatible services reject them. Tested against MinIO; AWS S3, Backblaze B2 and Cloudflare R2 quirks are covered by a compatibility test suite the user can run from the admin UI. |
 
 ### 3.2 Layout of a managed storage location
 
