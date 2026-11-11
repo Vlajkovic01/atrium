@@ -82,8 +82,8 @@ Linking a phone by QR (DESIGN.md 6.5):
 |---|---|---|
 | GET, PATCH | `/me` | Profile, locale, preferences |
 | POST | `/me/password` | Change password; revokes other sessions |
-| POST | `/me/totp`, `/me/totp/confirm` | Enroll |
-| DELETE | `/me/totp` | Disable, requires password |
+| POST | `/me/totp`, `/me/totp/confirm` | Enroll; confirming returns the recovery codes once |
+| POST | `/me/totp/disable` | Disable, requires the password in the body |
 | GET | `/me/usage` | Quota and usage |
 
 ## Users (Phase 1, admin)
@@ -91,8 +91,13 @@ Linking a phone by QR (DESIGN.md 6.5):
 | Method | Path | Notes |
 |---|---|---|
 | GET, POST | `/users` | List, create |
-| GET, PATCH, DELETE | `/users/{id}` | Role, quota, disable. Delete moves nothing; content handling is an explicit choice in the request |
-| POST | `/users/{id}/reset-password` | Logged and shown to the user |
+| GET, PATCH | `/users/{id}` | Role, quota, disable. `PATCH` requires `If-Match` with the version read. The last active admin cannot be demoted or disabled |
+| DELETE | `/users/{id}` | Not built in Phase 1. Deleting a user decides what happens to their files, so it arrives with files in Phase 2; until then accounts are disabled |
+| POST | `/users/{id}/reset-password` | Logged and shown to the user. Signs the user out everywhere |
+
+Restricted sessions (a paired device approved as read-only or with the
+personal library hidden) cannot change the account, administer users,
+approve pairings or create link codes.
 
 ## Storage locations and libraries (Phase 1 to 3, admin)
 
