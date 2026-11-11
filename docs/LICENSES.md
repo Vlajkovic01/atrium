@@ -64,7 +64,7 @@ is actually in the repository.
 | Npgsql.EntityFrameworkCore.PostgreSQL | 10.0.3 | PostgreSQL License | PostgreSQL provider |
 | dotnet-ef | 10.0.15 (tool) | MIT | Generates migrations at development time |
 | Testcontainers.PostgreSql | 4.16.0 | MIT | PostgreSQL container in tests |
-| NSec.Cryptography with libsodium | not yet added | MIT; ISC | Argon2id password hashing |
+| NSec.Cryptography with libsodium | 26.4.0 | MIT; ISC | Argon2id password hashing |
 | AWSSDK.S3 | not yet added | Apache-2.0 | S3-compatible storage provider |
 | Microsoft.AspNetCore.Authentication.JwtBearer | not yet added | MIT | Access token validation |
 | Testcontainers for .NET (S3 module) | not yet added | MIT | S3 container in tests |
