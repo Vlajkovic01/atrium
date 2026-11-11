@@ -36,33 +36,65 @@ public sealed class S3ServerFixture : IAsyncLifetime
 
     public string ServiceUrl => $"http://{_container.Hostname}:{_container.GetMappedPublicPort(Port)}";
 
-    public Task InitializeAsync() => _container.StartAsync();
+    public async Task InitializeAsync()
+    {
+        await _container.StartAsync();
+
+        // The port opens before the server's parts have found each other and
+        // before it can store anything. Wait until a real write succeeds; if
+        // it never does, fail with the server's own log, so the cause is in
+        // the test output and not a guess.
+        using var client = NewClient();
+        var deadline = DateTime.UtcNow.AddSeconds(120);
+        Exception? last = null;
+        while (DateTime.UtcNow < deadline)
+        {
+            try
+            {
+                await client.PutBucketAsync("readiness");
+                await client.PutObjectAsync(new Amazon.S3.Model.PutObjectRequest
+                {
+                    BucketName = "readiness",
+                    Key = "probe",
+                    ContentBody = "ready",
+                });
+                return;
+            }
+            catch (Exception e) when (e is AmazonServiceException or AmazonClientException or HttpRequestException)
+            {
+                last = e;
+                await Task.Delay(TimeSpan.FromSeconds(2));
+            }
+        }
+
+        var (stdout, stderr) = await _container.GetLogsAsync();
+        throw new InvalidOperationException(
+            $"The S3 test server never accepted a write. Last error: {last?.Message}\n" +
+            $"--- server stdout (tail) ---\n{Tail(stdout)}\n--- server stderr (tail) ---\n{Tail(stderr)}");
+    }
 
     public Task DisposeAsync() => _container.DisposeAsync().AsTask();
 
     public async Task<string> CreateBucketAsync()
     {
         var bucket = $"test-{Guid.NewGuid():N}";
-        using var client = new AmazonS3Client(
-            new BasicAWSCredentials(AccessKey, SecretKey),
-            new AmazonS3Config { ServiceURL = ServiceUrl, ForcePathStyle = true, AuthenticationRegion = "us-east-1" });
-
-        // The port opens before the server's parts have found each other;
-        // keep trying for a while before calling it a failure.
-        var deadline = DateTime.UtcNow.AddSeconds(90);
-        while (true)
-        {
-            try
-            {
-                await client.PutBucketAsync(bucket);
-                return bucket;
-            }
-            catch (Exception e) when (e is AmazonServiceException or AmazonClientException or HttpRequestException && DateTime.UtcNow < deadline)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(1));
-            }
-        }
+        using var client = NewClient();
+        await client.PutBucketAsync(bucket);
+        return bucket;
     }
+
+    private AmazonS3Client NewClient() => new(
+        new BasicAWSCredentials(AccessKey, SecretKey),
+        new AmazonS3Config
+        {
+            ServiceURL = ServiceUrl,
+            ForcePathStyle = true,
+            AuthenticationRegion = "us-east-1",
+            RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
+            ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED,
+        });
+
+    private static string Tail(string text) => text.Length <= 4000 ? text : text[^4000..];
 
     public S3StorageOptions Options(string bucket, string? keyPrefix = null) =>
         new(bucket, AccessKey, SecretKey, ServiceUrl, Region: null, ForcePathStyle: true, keyPrefix);
