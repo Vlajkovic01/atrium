@@ -1,0 +1,105 @@
+# Atrium: one file starts everything.
+#
+#   docker compose up -d
+#   docker compose logs atrium      (shows the setup token)
+#   open http://<this machine>:8080
+#
+# Optional parts are switched on in the .env file next to this one; see
+# .env.example. Nothing here needs editing for a normal install.
+
+name: atrium
+
+services:
+  atrium:
+    image: ghcr.io/vlajkovic01/atrium:${ATRIUM_VERSION:-latest}
+    # Builds from source when run inside a checkout of the repository.
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${ATRIUM_PORT:-8080}:8080"
+    environment:
+      # Choose the setup token yourself instead of reading it from the log.
+      # At least 16 characters. Only matters until the first admin exists.
+      ATRIUM_SETUP_TOKEN: ${ATRIUM_SETUP_TOKEN:-}
+      ATRIUM_DB_PROVIDER: ${ATRIUM_DB_PROVIDER:-sqlite}
+      ATRIUM_DB_CONNECTION: ${ATRIUM_DB_CONNECTION:-}
+      # The reverse proxy of the "https" profile runs on this network.
+      # Its forwarding headers are believed; nobody else's are.
+      ATRIUM_TRUSTED_PROXIES: ${ATRIUM_TRUSTED_PROXIES:-172.31.250.0/24}
+    volumes:
+      # Database, server keys, backups. Back this up.
+      - config:/config
+      # The default place for files. Replace with a bind mount to store
+      # files in a folder of your choice, for example:
+      #   - /mnt/storage/atrium:/data
+      - data:/data
+      # Thumbnails and other things that can be rebuilt. Safe to delete.
+      - cache:/cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    networks:
+      - atrium
+
+  # Optional: PostgreSQL instead of the built-in SQLite database.
+  # Enable with COMPOSE_PROFILES=postgres and the ATRIUM_DB_* values in .env.
+  postgres:
+    image: postgres:17-alpine
+    profiles: ["postgres"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: atrium
+      POSTGRES_USER: atrium
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env to use the postgres profile}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username atrium --dbname atrium"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - atrium
+
+  # Optional: HTTPS with automatic certificates, for a server that has a
+  # domain name pointing at it and ports 80 and 443 reachable.
+  # Enable with COMPOSE_PROFILES=https and ATRIUM_DOMAIN in .env.
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["https"]
+    restart: unless-stopped
+    command:
+      - caddy
+      - reverse-proxy
+      - --from
+      - ${ATRIUM_DOMAIN:?Set ATRIUM_DOMAIN in .env to use the https profile}
+      - --to
+      - atrium:8080
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy:/data
+    depends_on:
+      - atrium
+    networks:
+      - atrium
+
+volumes:
+  config:
+  data:
+  cache:
+  postgres:
+  caddy:
+
+networks:
+  atrium:
+    ipam:
+      config:
+        # A fixed range, so the server can be told exactly which addresses
+        # the reverse proxy may have (ATRIUM_TRUSTED_PROXIES above).
+        - subnet: 172.31.250.0/24

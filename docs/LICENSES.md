@@ -48,6 +48,8 @@ having before public distribution.
 | TypeScript | Apache-2.0 | All clients |
 | Caddy | Apache-2.0 | Optional HTTPS container (D-006) |
 | SeaweedFS | Apache-2.0 | S3-compatible server, test container only; see flag 4 |
+| .NET container images (sdk, aspnet) | MIT; Debian base under its own free licenses | Build stage and the base of the Atrium image |
+| Node.js container image | MIT | Build stage only, not in the Atrium image |
 
 ## Approved for Phase 1
 
