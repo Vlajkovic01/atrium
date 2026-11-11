@@ -40,9 +40,12 @@ One server process, one container (D-009). It contains:
 - the job workers, as hosted services in the same process,
 - the transcode manager, which starts and supervises FFmpeg processes.
 
-There is no clustering. Exactly one server instance owns a database. A
-second instance pointed at the same database refuses to start (it finds a
-live instance lease in the database).
+There is no clustering. Exactly one server instance owns a config
+directory: it holds a lock file open for as long as it runs, and a second
+instance on the same directory refuses to start. The operating system
+releases the lock however the process ends, so there is never a stale lock
+to delete. Two instances with different config directories pointed at one
+PostgreSQL database are not detected yet.
 
 ```
  web / mobile / TV clients

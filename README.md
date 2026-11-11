@@ -88,6 +88,12 @@ pnpm --filter @atrium/web exec playwright install chromium
 pnpm --filter @atrium/web run e2e
 ```
 
+Where Playwright's browser cannot be downloaded, use one that is already
+installed by setting `ATRIUM_BROWSER_CHANNEL` to `msedge` or `chrome`.
+
+`pnpm --filter @atrium/web run screenshots` walks through the same app
+and saves a picture of every screen into `screenshots/`.
+
 ## Contributing
 
 `master` is always releasable and changes only through pull requests that
