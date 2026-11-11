@@ -6,11 +6,13 @@
     <Project Path="src/Atrium.Data.Postgres/Atrium.Data.Postgres.csproj" />
     <Project Path="src/Atrium.Data.Sqlite/Atrium.Data.Sqlite.csproj" />
     <Project Path="src/Atrium.Identity/Atrium.Identity.csproj" />
+    <Project Path="src/Atrium.Storage/Atrium.Storage.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Atrium.Api.Tests/Atrium.Api.Tests.csproj" />
     <Project Path="tests/Atrium.Core.Tests/Atrium.Core.Tests.csproj" />
     <Project Path="tests/Atrium.Data.Tests/Atrium.Data.Tests.csproj" />
     <Project Path="tests/Atrium.Identity.Tests/Atrium.Identity.Tests.csproj" />
+    <Project Path="tests/Atrium.Storage.Tests/Atrium.Storage.Tests.csproj" />
   </Folder>
 </Solution>

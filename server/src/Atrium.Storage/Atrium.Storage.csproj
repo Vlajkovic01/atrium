@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- The storage provider interface and its implementations: local
+       filesystem (also used for mounted network shares) and S3-compatible
+       object storage (DESIGN.md 3). -->
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Atrium.Storage.Tests" />
+  </ItemGroup>
+
+</Project>
