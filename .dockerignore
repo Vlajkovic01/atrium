@@ -1,0 +1,22 @@
+# Keeps the build context small and keeps local state out of the image.
+.git
+.github
+docs
+**/node_modules
+**/dist
+**/bin
+**/obj
+**/TestResults
+**/test-results
+**/playwright-report
+server/tests
+web/e2e
+
+# Never part of an image: local runtime data, keys, databases, settings.
+**/.atrium
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/.env
+**/.env.*
+!**/.env.example

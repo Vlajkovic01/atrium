@@ -9,6 +9,12 @@ using Atrium.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// The container's health check runs this same program with one argument.
+if (args.Contains(HealthCheckCommand.Argument))
+{
+    return await HealthCheckCommand.RunAsync(builder.Configuration);
+}
+
 var bootstrap = BootstrapOptions.From(builder.Configuration);
 Directory.CreateDirectory(bootstrap.ConfigDir);
 
@@ -36,6 +42,10 @@ await using (var scope = app.Services.CreateAsyncScope())
     await app.Services.GetRequiredService<SetupService>().AnnounceAsync(
         scope.ServiceProvider.GetRequiredService<AtriumDbContext>(), app.Lifetime.ApplicationStopping);
 }
+
+// First in the pipeline, so everything after it sees the real client
+// address and scheme. Only applied for proxies the installer listed.
+app.UseTrustedProxies(bootstrap);
 
 app.UseSecurityHeaders();
 
@@ -65,6 +75,7 @@ v1.MapUserEndpoints();
 v1.MapStorageLocationEndpoints();
 
 await app.RunAsync();
+return 0;
 
 /// <summary>Entry point, exposed so integration tests can host the server in memory.</summary>
 public partial class Program;

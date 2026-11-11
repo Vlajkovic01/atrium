@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.HttpOverrides;
+
 namespace Atrium.Api.Hosting;
 
 /// <summary>
@@ -23,6 +25,36 @@ public static class WebAppSetup
         "form-action 'self'; " +
         "frame-ancestors 'none'";
 
+    /// <summary>
+    /// Believes X-Forwarded-For, -Proto and -Host, but only from the reverse
+    /// proxies the installer listed, and only one hop. Without this the
+    /// server behind an HTTPS proxy would think the connection is plain
+    /// HTTP and would not mark its cookies Secure. Believing these headers
+    /// from anyone else would let a client fake its address.
+    /// </summary>
+    public static IApplicationBuilder UseTrustedProxies(this IApplicationBuilder app, BootstrapOptions bootstrap)
+    {
+        if (bootstrap.TrustedProxies.Count == 0)
+        {
+            return app;
+        }
+
+        var options = new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost,
+            ForwardLimit = 1,
+        };
+
+        // The defaults trust loopback; only the listed proxies are trusted.
+        options.KnownProxies.Clear();
+        options.KnownIPNetworks.Clear();
+        foreach (var network in bootstrap.TrustedProxies)
+        {
+            options.KnownIPNetworks.Add(network);
+        }
+
+        return app.UseForwardedHeaders(options);
+    }
     public static IApplicationBuilder UseSecurityHeaders(this IApplicationBuilder app) =>
         app.Use(async (context, next) =>
         {
