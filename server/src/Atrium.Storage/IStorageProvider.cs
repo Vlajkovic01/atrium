@@ -11,6 +11,19 @@ public sealed record StorageObject(string Key, long Size, DateTimeOffset LastMod
 /// <param name="MaximumPartSize">Largest part the provider accepts in one call.</param>
 public sealed record StorageCapabilities(bool AtomicMove, bool ReportsFreeSpace, long MinimumPartSize, long MaximumPartSize);
 
+/// <summary>
+/// The reasons a storage health check can fail. They are error codes the
+/// clients translate, so each one needs a message in every language.
+/// </summary>
+public static class StorageHealthCodes
+{
+    public const string Unavailable = "storage.unavailable";
+    public const string AccessDenied = "storage.access_denied";
+    public const string RootMissing = "storage.root_missing";
+    public const string BucketNotFound = "storage.bucket_not_found";
+    public const string ReadBackMismatch = "storage.read_back_mismatch";
+}
+
 public sealed record StorageHealth(bool Ok, long? FreeBytes, string? ErrorCode, string? Detail)
 {
     public static StorageHealth Healthy(long? freeBytes) => new(true, freeBytes, null, null);

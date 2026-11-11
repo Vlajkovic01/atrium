@@ -292,15 +292,15 @@ public sealed class LocalStorageProvider : IStorageProvider
         }
         catch (StorageUnavailableException e)
         {
-            return StorageHealth.Failed("storage.root_missing", e.Message);
+            return StorageHealth.Failed(StorageHealthCodes.RootMissing, e.Message);
         }
         catch (UnauthorizedAccessException e)
         {
-            return StorageHealth.Failed("storage.access_denied", e.Message);
+            return StorageHealth.Failed(StorageHealthCodes.AccessDenied, e.Message);
         }
         catch (Exception e) when (e is IOException or StorageException or ArgumentException)
         {
-            return StorageHealth.Failed("storage.unavailable", e.Message);
+            return StorageHealth.Failed(StorageHealthCodes.Unavailable, e.Message);
         }
         finally
         {
