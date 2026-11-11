@@ -24,22 +24,53 @@ public sealed record SetupAdminResult(User? User, SetupAdminError? SetupError, U
 /// reach the server could claim it, so creating the first admin requires a
 /// token that only someone with access to the server's log can read.
 /// </summary>
-public sealed class SetupService(TimeProvider time, ILogger<SetupService> logger)
+public sealed class SetupService(TimeProvider time, IConfiguration configuration, ILogger<SetupService> logger)
 {
     public const string CompletedSettingKey = "setup.completed";
+
+    /// <summary>
+    /// Lets the person installing choose the setup token in advance, for
+    /// example in the Compose file, instead of reading it from the log.
+    /// </summary>
+    public const string TokenVariable = "ATRIUM_SETUP_TOKEN";
+
+    /// <summary>A chosen token shorter than this is ignored: it would be guessable.</summary>
+    public const int MinChosenTokenLength = 16;
 
     // Creating the first admin is checked and done one request at a time,
     // so two simultaneous requests cannot both find "no admin yet".
     private readonly SemaphoreSlim _gate = new(1, 1);
 
-    /// <summary>A fresh token every start. It only matters while there is no admin.</summary>
-    public string Token { get; } = SecretCode.NewToken(byteLength: 16);
+    private readonly bool _tokenWasChosen = configuration[TokenVariable]?.Trim().Length >= MinChosenTokenLength;
+
+    /// <summary>
+    /// The chosen token, or a fresh random one every start. It only matters
+    /// while there is no admin.
+    /// </summary>
+    public string Token { get; } = configuration[TokenVariable]?.Trim() is { Length: >= MinChosenTokenLength } chosen
+        ? chosen
+        : SecretCode.NewToken(byteLength: 16);
 
     public async Task AnnounceAsync(AtriumDbContext db, CancellationToken ct)
     {
         if (await AdminExistsAsync(db, ct))
         {
             return;
+        }
+
+        if (_tokenWasChosen)
+        {
+            // The installer already knows it; do not repeat a chosen secret in the log.
+            logger.LogWarning(
+                "Atrium is not set up yet. Open the web interface and enter the setup token you set in {Variable}.",
+                TokenVariable);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(configuration[TokenVariable]))
+        {
+            logger.LogWarning(
+                "{Variable} is shorter than {Min} characters and was ignored.", TokenVariable, MinChosenTokenLength);
         }
 
         // Deliberately logged: reading this log is the proof of control over
