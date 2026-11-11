@@ -18,6 +18,9 @@ if (args.Contains(HealthCheckCommand.Argument))
 var bootstrap = BootstrapOptions.From(builder.Configuration);
 Directory.CreateDirectory(bootstrap.ConfigDir);
 
+// Held until the process ends. A second server on the same directory stops here.
+using var instanceLock = InstanceLock.Acquire(bootstrap.ConfigDir);
+
 builder.Services.AddSingleton(bootstrap);
 builder.Services.AddAtriumDatabase(bootstrap);
 builder.Services.AddAtriumAuth(bootstrap);

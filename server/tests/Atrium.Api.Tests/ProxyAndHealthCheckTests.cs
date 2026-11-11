@@ -30,8 +30,9 @@ public sealed class ProxyAndHealthCheckTests : IDisposable
     /// <paramref name="connectingFrom"/>, and <paramref name="trusted"/> is
     /// what the installer listed as trusted proxies.
     /// </summary>
-    private HttpClient Behind(string connectingFrom, string? trusted) =>
-        _factory.WithWebHostBuilder(builder =>
+    private HttpClient Behind(string connectingFrom, string? trusted)
+    {
+        _factory.Configure = builder =>
         {
             if (trusted is not null)
             {
@@ -40,7 +41,9 @@ public sealed class ProxyAndHealthCheckTests : IDisposable
 
             builder.ConfigureTestServices(services =>
                 services.AddSingleton<IStartupFilter>(new RemoteAddressFilter(IPAddress.Parse(connectingFrom))));
-        }).CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
+        };
+        return _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
+    }
 
     private static async Task<HttpResponseMessage> StartPairingAsync(HttpClient client, string? forwardedProto, string? forwardedFor, string? forwardedHost)
     {
@@ -85,8 +88,8 @@ public sealed class ProxyAndHealthCheckTests : IDisposable
     [Fact]
     public async Task Behind_a_trusted_https_proxy_the_refresh_cookie_is_marked_secure()
     {
-        await _factory.CreateUserAsync("ana", TestApi.Password);
         using var client = Behind(ProxyAddress, trusted: ProxyAddress);
+        await _factory.CreateUserAsync("ana", TestApi.Password);
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/login")
         {
             Content = JsonContent.Create(new { name = "ana", password = TestApi.Password, device = new { name = "Browser", kind = "web" } }),
