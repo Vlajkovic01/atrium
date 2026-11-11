@@ -63,6 +63,10 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
             e.HasOne<Session>().WithMany().HasForeignKey(t => t.SessionId).OnDelete(DeleteBehavior.Cascade);
             e.Property(t => t.TokenHash).HasMaxLength(32);
             e.HasIndex(t => t.TokenHash).IsUnique();
+
+            // Two requests presenting the same token at the same moment must
+            // not both rotate it: the second sees that UsedAt changed and fails.
+            e.Property(t => t.UsedAt).IsConcurrencyToken();
         });
 
         modelBuilder.Entity<PairingRequest>(e =>
@@ -91,6 +95,7 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
         {
             e.HasOne<User>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
             e.HasIndex(t => t.UserId).IsUnique();
+            e.Property(t => t.LastUsedStep).IsConcurrencyToken();
         });
 
         modelBuilder.Entity<RecoveryCode>(e =>

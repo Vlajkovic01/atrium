@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atrium.Data.Sqlite.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261110222932_Initial")]
+    [Migration("20261110225113_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -179,6 +179,7 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasColumnType("BLOB");
 
                     b.Property<long?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -259,6 +260,10 @@ namespace Atrium.Data.Sqlite.Migrations
                     b.Property<byte[]>("EncryptedSecret")
                         .IsRequired()
                         .HasColumnType("BLOB");
+
+                    b.Property<long?>("LastUsedStep")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");

@@ -176,6 +176,7 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasColumnType("BLOB");
 
                     b.Property<long?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -256,6 +257,10 @@ namespace Atrium.Data.Sqlite.Migrations
                     b.Property<byte[]>("EncryptedSecret")
                         .IsRequired()
                         .HasColumnType("BLOB");
+
+                    b.Property<long?>("LastUsedStep")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");

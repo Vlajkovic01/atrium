@@ -181,6 +181,7 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasColumnType("bytea");
 
                     b.Property<long?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -261,6 +262,10 @@ namespace Atrium.Data.Postgres.Migrations
                     b.Property<byte[]>("EncryptedSecret")
                         .IsRequired()
                         .HasColumnType("bytea");
+
+                    b.Property<long?>("LastUsedStep")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");

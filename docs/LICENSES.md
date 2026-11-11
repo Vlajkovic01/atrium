@@ -66,7 +66,7 @@ is actually in the repository.
 | Testcontainers.PostgreSql | 4.16.0 | MIT | PostgreSQL container in tests |
 | NSec.Cryptography with libsodium | 26.4.0 | MIT; ISC | Argon2id password hashing |
 | AWSSDK.S3 | not yet added | Apache-2.0 | S3-compatible storage provider |
-| Microsoft.AspNetCore.Authentication.JwtBearer | not yet added | MIT | Access token validation |
+| Microsoft.AspNetCore.Authentication.JwtBearer | 10.0.14 | MIT | Access token validation; brings Microsoft.IdentityModel (MIT) |
 | Testcontainers for .NET (S3 module) | not yet added | MIT | S3 container in tests |
 | pnpm | 12.18.0 (tool) | MIT | JavaScript workspace manager |
 | Vite | not yet added | MIT | Web build |

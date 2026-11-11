@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Authentication building blocks: password hashing, server keys,
-       secret encryption, one-time codes. -->
+  <!-- Authentication: password hashing, server keys, secret encryption,
+       one-time codes, sessions and sign-in. -->
 
   <ItemGroup>
     <PackageReference Include="NSec.Cryptography" />
@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Atrium.Core\Atrium.Core.csproj" />
+    <ProjectReference Include="..\Atrium.Data\Atrium.Data.csproj" />
   </ItemGroup>
 
 </Project>
