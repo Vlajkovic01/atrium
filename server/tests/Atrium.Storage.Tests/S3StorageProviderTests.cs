@@ -211,6 +211,30 @@ public sealed class S3StorageProviderTests(S3ServerFixture server) : StorageProv
     }
 
     [Fact]
+    public async Task Service_failures_surface_as_storage_errors_without_the_secret()
+    {
+        using var badSecret = new S3StorageProvider(server.Options(_prefix) with { SecretKey = "wrong-secret" });
+        using var content = new MemoryStream([1, 2, 3]);
+
+        var onRead = await Assert.ThrowsAsync<StorageUnavailableException>(() => badSecret.StatAsync("object", CancellationToken.None));
+        var onWrite = await Assert.ThrowsAsync<StorageUnavailableException>(
+            () => badSecret.WriteAsync("object", content, overwrite: true, CancellationToken.None));
+
+        Assert.DoesNotContain("wrong-secret", onRead.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain("wrong-secret", onWrite.ToString(), StringComparison.Ordinal);
+        Assert.Null(await Provider.StatAsync("object", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task An_unreachable_server_surfaces_as_a_storage_error()
+    {
+        using var provider = new S3StorageProvider(
+            new S3StorageOptions("bucket", "key", "secret", "http://127.0.0.1:1", null, ForcePathStyle: true, null));
+
+        await Assert.ThrowsAsync<StorageUnavailableException>(() => provider.StatAsync("object", CancellationToken.None));
+    }
+
+    [Fact]
     public void Printing_the_options_does_not_reveal_the_secret_key()
     {
         var options = server.Options(_prefix);

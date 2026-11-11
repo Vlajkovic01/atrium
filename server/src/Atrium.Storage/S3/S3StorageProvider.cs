@@ -100,7 +100,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
     public StorageCapabilities Capabilities { get; } =
         new(AtomicMove: false, ReportsFreeSpace: false, MinimumPartSize: MinPartSize, MaximumPartSize: MaxPartSize);
 
-    public async Task<Stream> OpenReadAsync(string key, ByteRange? range, CancellationToken ct)
+    private async Task<Stream> OpenReadCoreAsync(string key, ByteRange? range, CancellationToken ct)
     {
         StorageKey.Validate(key);
         var request = new GetObjectRequest { BucketName = _bucket, Key = Full(key) };
@@ -145,7 +145,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         }
     }
 
-    public async Task<StorageObject> WriteAsync(string key, Stream content, bool overwrite, CancellationToken ct)
+    private async Task<StorageObject> WriteCoreAsync(string key, Stream content, bool overwrite, CancellationToken ct)
     {
         StorageKey.Validate(key);
 
@@ -192,12 +192,12 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         catch
         {
             // Nothing became visible under the key; discard the parts.
-            await AbortMultipartAsync(upload, CancellationToken.None);
+            await TryAbortAsync(upload);
             throw;
         }
     }
 
-    public async Task<MultipartUpload> BeginMultipartAsync(string key, CancellationToken ct)
+    private async Task<MultipartUpload> BeginMultipartCoreAsync(string key, CancellationToken ct)
     {
         StorageKey.Validate(key);
         var response = await _client.InitiateMultipartUploadAsync(
@@ -205,7 +205,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         return new MultipartUpload(key, response.UploadId);
     }
 
-    public async Task<UploadedPart> UploadPartAsync(
+    private async Task<UploadedPart> UploadPartCoreAsync(
         MultipartUpload upload, int partNumber, Stream content, long length, CancellationToken ct)
     {
         StorageKey.Validate(upload.Key);
@@ -225,7 +225,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         return await SendPartAsync(upload, partNumber, buffer, count, ct);
     }
 
-    public async Task<StorageObject> CompleteMultipartAsync(
+    private async Task<StorageObject> CompleteMultipartCoreAsync(
         MultipartUpload upload, IReadOnlyList<UploadedPart> parts, bool overwrite, CancellationToken ct)
     {
         StorageKey.Validate(upload.Key);
@@ -246,7 +246,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         return await RequireStatAsync(upload.Key, ct);
     }
 
-    public async Task AbortMultipartAsync(MultipartUpload upload, CancellationToken ct)
+    private async Task AbortMultipartCoreAsync(MultipartUpload upload, CancellationToken ct)
     {
         StorageKey.Validate(upload.Key);
         try
@@ -266,8 +266,9 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         string? continuation = null;
         do
         {
-            var response = await _client.ListObjectsV2Async(
-                new ListObjectsV2Request { BucketName = _bucket, Prefix = Full(prefix), ContinuationToken = continuation }, ct);
+            var token = continuation;
+            var response = await GuardAsync(() => _client.ListObjectsV2Async(
+                new ListObjectsV2Request { BucketName = _bucket, Prefix = Full(prefix), ContinuationToken = token }, ct));
             foreach (var item in response.S3Objects ?? [])
             {
                 yield return new StorageObject(
@@ -281,7 +282,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         while (continuation is not null);
     }
 
-    public async Task<StorageObject?> StatAsync(string key, CancellationToken ct)
+    private async Task<StorageObject?> StatCoreAsync(string key, CancellationToken ct)
     {
         StorageKey.Validate(key);
         try
@@ -296,13 +297,13 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         }
     }
 
-    public async Task DeleteAsync(string key, CancellationToken ct)
+    private async Task DeleteCoreAsync(string key, CancellationToken ct)
     {
         StorageKey.Validate(key);
         await _client.DeleteObjectAsync(new DeleteObjectRequest { BucketName = _bucket, Key = Full(key) }, ct);
     }
 
-    public async Task MoveAsync(string sourceKey, string destinationKey, bool overwrite, CancellationToken ct)
+    private async Task MoveCoreAsync(string sourceKey, string destinationKey, bool overwrite, CancellationToken ct)
     {
         StorageKey.Validate(sourceKey);
         StorageKey.Validate(destinationKey);
@@ -355,22 +356,100 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
                 ? StorageHealth.Healthy(freeBytes: null)
                 : StorageHealth.Failed(StorageProbe.MismatchCode, null);
         }
-        catch (AmazonS3Exception e) when (e.StatusCode == HttpStatusCode.Forbidden)
-        {
-            return StorageHealth.Failed("storage.access_denied", e.ErrorCode);
-        }
-        catch (AmazonS3Exception e) when (e.ErrorCode == "NoSuchBucket" || e.StatusCode == HttpStatusCode.NotFound)
-        {
-            return StorageHealth.Failed("storage.bucket_not_found", e.ErrorCode);
-        }
         catch (Exception e) when (e is AmazonServiceException or AmazonClientException or HttpRequestException or StorageException or IOException)
         {
-            // The message of a client-side failure names the endpoint, never the credentials.
-            return StorageHealth.Failed("storage.unavailable", e.Message);
+            // The service's own error may be wrapped by the guard below.
+            var cause = e is StorageUnavailableException { InnerException: { } inner } ? inner : e;
+            return cause switch
+            {
+                AmazonS3Exception { StatusCode: HttpStatusCode.Forbidden } s3 => StorageHealth.Failed("storage.access_denied", s3.ErrorCode),
+                AmazonS3Exception s3 when s3.ErrorCode == "NoSuchBucket" || s3.StatusCode == HttpStatusCode.NotFound =>
+                    StorageHealth.Failed("storage.bucket_not_found", s3.ErrorCode),
+
+                // The message of a client-side failure names the endpoint, never the credentials.
+                _ => StorageHealth.Failed("storage.unavailable", cause.Message),
+            };
         }
     }
 
     public void Dispose() => _client.Dispose();
+
+    // The public operations. Each runs its implementation inside a guard
+    // that turns the SDK's exceptions into StorageUnavailableException, so
+    // the rest of the server never needs to know which SDK is underneath.
+    public Task<Stream> OpenReadAsync(string key, ByteRange? range, CancellationToken ct) =>
+        GuardAsync(() => OpenReadCoreAsync(key, range, ct));
+
+    public Task<StorageObject> WriteAsync(string key, Stream content, bool overwrite, CancellationToken ct) =>
+        GuardAsync(() => WriteCoreAsync(key, content, overwrite, ct));
+
+    public Task<MultipartUpload> BeginMultipartAsync(string key, CancellationToken ct) =>
+        GuardAsync(() => BeginMultipartCoreAsync(key, ct));
+
+    public Task<UploadedPart> UploadPartAsync(
+        MultipartUpload upload, int partNumber, Stream content, long length, CancellationToken ct) =>
+        GuardAsync(() => UploadPartCoreAsync(upload, partNumber, content, length, ct));
+
+    public Task<StorageObject> CompleteMultipartAsync(
+        MultipartUpload upload, IReadOnlyList<UploadedPart> parts, bool overwrite, CancellationToken ct) =>
+        GuardAsync(() => CompleteMultipartCoreAsync(upload, parts, overwrite, ct));
+
+    public Task AbortMultipartAsync(MultipartUpload upload, CancellationToken ct) =>
+        GuardAsync(async () =>
+        {
+            await AbortMultipartCoreAsync(upload, ct);
+            return true;
+        });
+
+    public Task<StorageObject?> StatAsync(string key, CancellationToken ct) =>
+        GuardAsync(() => StatCoreAsync(key, ct));
+
+    public Task DeleteAsync(string key, CancellationToken ct) =>
+        GuardAsync(async () =>
+        {
+            await DeleteCoreAsync(key, ct);
+            return true;
+        });
+
+    public Task MoveAsync(string sourceKey, string destinationKey, bool overwrite, CancellationToken ct) =>
+        GuardAsync(async () =>
+        {
+            await MoveCoreAsync(sourceKey, destinationKey, overwrite, ct);
+            return true;
+        });
+
+    /// <summary>Cleanup after a failure. Must not replace the failure that caused it.</summary>
+    private async Task TryAbortAsync(MultipartUpload upload)
+    {
+        try
+        {
+            await AbortMultipartAsync(upload, CancellationToken.None);
+        }
+        catch (StorageException)
+        {
+            // The parts stay behind as an incomplete upload, which holds no
+            // visible object. The original error is the one to report.
+        }
+    }
+
+    private static async Task<T> GuardAsync<T>(Func<Task<T>> action)
+    {
+        try
+        {
+            return await action();
+        }
+        catch (AmazonServiceException e)
+        {
+            // The service answered with an error. Its code and status say
+            // what went wrong; its message can echo request details.
+            throw new StorageUnavailableException(
+                $"The storage service refused the request: {e.ErrorCode} (HTTP {(int)e.StatusCode}).", e);
+        }
+        catch (Exception e) when (e is AmazonClientException or HttpRequestException)
+        {
+            throw new StorageUnavailableException("The storage service could not be reached.", e);
+        }
+    }
 
     private async Task MultipartCopyAsync(string sourceKey, string destinationKey, long size, CancellationToken ct)
     {
@@ -401,7 +480,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         }
         catch
         {
-            await AbortMultipartAsync(upload, CancellationToken.None);
+            await TryAbortAsync(upload);
             throw;
         }
     }
