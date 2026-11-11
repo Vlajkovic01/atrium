@@ -31,3 +31,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Written by the IDE with machine-specific ports.
+**/Properties/launchSettings.json

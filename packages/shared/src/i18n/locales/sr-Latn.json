@@ -1,0 +1,67 @@
+{
+  "common": {
+    "continue": "Nastavi",
+    "back": "Nazad",
+    "cancel": "Otkaži",
+    "save": "Sačuvaj",
+    "done": "Gotovo",
+    "retry": "Pokušaj ponovo",
+    "loading": "Učitavanje…",
+    "signOut": "Odjavi se",
+    "close": "Zatvori",
+    "optional": "opciono"
+  },
+  "connection": {
+    "insecure": "Ova veza nije šifrovana. Svako na istoj mreži može da pročita ono što šaljete, uključujući lozinku."
+  },
+  "errors": {
+    "unknown": "Nešto nije u redu. Pokušajte ponovo.",
+    "network": "Server nije dostupan. Proverite vezu i pokušajte ponovo.",
+    "request": {
+      "invalid": "Zahtev nije ispravan. Proverite unete podatke i pokušajte ponovo.",
+      "precondition_required": "Za ovu izmenu potrebna je verzija stavke koju ste gledali. Učitajte ponovo i pokušajte opet.",
+      "version_conflict": "Neko drugi je u međuvremenu izmenio ovu stavku. Učitajte ponovo da vidite trenutno stanje, pa pokušajte opet."
+    },
+    "resource": {
+      "not_found": "Ta stavka ne postoji ili više nije dostupna."
+    },
+    "auth": {
+      "invalid_credentials": "Ime, lozinka ili kod nisu tačni.",
+      "invalid_challenge": "Prijava je trajala predugo. Počnite ponovo.",
+      "invalid_refresh_token": "Odjavljeni ste. Prijavite se ponovo.",
+      "too_many_attempts": "Previše pokušaja. Pokušajte ponovo za {retryAfterSeconds, plural, one {# sekundu} few {# sekunde} other {# sekundi}}.",
+      "invalid_link_code": "Ovaj kod više ne važi. Prikažite novi QR kod i skenirajte ga ponovo.",
+      "wrong_password": "Trenutna lozinka nije tačna.",
+      "invalid_code": "Taj kod nije tačan. Proverite vreme na telefonu i probajte sledeći kod.",
+      "totp_already_enabled": "Potvrda u dva koraka je već uključena."
+    },
+    "user": {
+      "invalid_name": "Ime ima od {minLength} do {maxLength} slova ili cifara, a može da sadrži tačke, crtice i donje crte.",
+      "name_taken": "To ime je već zauzeto.",
+      "invalid_display_name": "Unesite ime za prikaz od najviše 128 znakova.",
+      "weak_password": "Lozinka ima najmanje {minLength} znakova.",
+      "invalid_locale": "Taj jezik nije dostupan.",
+      "invalid_quota": "Kvota ne može biti negativna.",
+      "last_admin": "Ovo je jedini aktivni administrator. Prvo dodelite administratorska prava nekom drugom."
+    },
+    "setup": {
+      "already_done": "Ovaj server već ima administratora. Prijavite se.",
+      "token_required": "Unesite token za podešavanje iz loga servera.",
+      "token_invalid": "Taj token za podešavanje nije tačan. Menja se pri svakom pokretanju servera; prepišite najnoviji iz loga.",
+      "storage_missing": "Dodajte lokaciju za skladištenje pre završetka."
+    },
+    "storage": {
+      "invalid_config": "Neka podešavanja skladišta nedostaju ili nisu ispravna.",
+      "root_missing": "Taj folder ne postoji. Ako je to mrežni ili spoljni disk, proverite da li je povezan.",
+      "path_not_allowed": "Fajlovi ne mogu da se čuvaju u folderu u kome server drži svoje podatke. Izaberite drugi folder.",
+      "location_in_use": "Ova lokacija već sadrži podatke jednog Atrium servera i ne može da se doda kao nova.",
+      "name_taken": "Druga lokacija za skladištenje već ima to ime.",
+      "identity_missing": "Ova lokacija je dostupna, ali prazna. Ako je to mrežni ili spoljni disk, verovatno nije povezan.",
+      "identity_mismatch": "Na ovom mestu je pronađena druga lokacija za skladištenje.",
+      "unavailable": "Lokacija za skladištenje nije dostupna.",
+      "access_denied": "Server nema dozvolu da tamo čita ili piše. Proverite dozvole ili pristupne ključeve.",
+      "bucket_not_found": "Taj bucket ne postoji. Proverite naziv.",
+      "read_back_mismatch": "Lokacija je vratila drugačije podatke od upisanih. Ne može joj se poveriti čuvanje fajlova."
+    }
+  }
+}

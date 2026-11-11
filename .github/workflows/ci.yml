@@ -44,3 +44,40 @@ jobs:
 
       - name: Test
         run: dotnet test Atrium.slnx --configuration Release --no-build
+
+  clients:
+    name: Clients build and tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      # Reads the pnpm version from "packageManager" in package.json.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # The API client and the Cyrillic translations are generated files
+      # that are committed. Regenerating them must change nothing; if it
+      # does, someone changed a source and forgot to regenerate.
+      - name: Generated files are up to date
+        run: |
+          pnpm run generate
+          git diff --exit-code -- packages/shared/src/api/schema.d.ts packages/shared/src/i18n/locales/sr-Cyrl.json
+
+      - name: Check formatting
+        run: pnpm run format:check
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Test
+        run: pnpm run test

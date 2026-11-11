@@ -1,0 +1,27 @@
+{
+  "name": "@atrium/shared",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "description": "Code shared by the Atrium web, mobile and TV clients: generated API client, translations, domain logic.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "pnpm run generate:api && pnpm run generate:cyrillic",
+    "generate:api": "openapi-typescript openapi/atrium-v1.json -o src/api/schema.d.ts",
+    "generate:cyrillic": "node scripts/generate-cyrillic.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "openapi-typescript": "^7.13.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.1.0"
+  }
+}

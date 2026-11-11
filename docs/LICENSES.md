@@ -70,15 +70,19 @@ is actually in the repository.
 | Microsoft.AspNetCore.Authentication.JwtBearer | 10.0.14 | MIT | Access token validation; brings Microsoft.IdentityModel (MIT) |
 | Testcontainers | 4.16.0 | MIT | Runs the S3 server container in storage tests |
 | pnpm | 12.18.0 (tool) | MIT | JavaScript workspace manager |
+| TypeScript | 5.9.3 | Apache-2.0 | Pinned to the 5.9 line: version 7 has no programmatic API, which the API client generator needs |
+| openapi-typescript | 7.13.0 | MIT | Generates API types from the OpenAPI contract |
+| openapi-fetch | 0.17.0 | MIT | Typed HTTP client used by every app |
+| Vitest | 5.1.0 | MIT | Unit tests for the clients |
+| ESLint, @eslint/js, typescript-eslint | 10.14.0, 10.0.1, 8.72.2 | MIT | Lint |
+| Prettier | 3.9.10 | MIT | Formatting |
+| @types/node | 24.x | MIT | Type definitions for build scripts |
 | Vite | not yet added | MIT | Web build |
 | React Router | not yet added | MIT | Web routing |
 | TanStack Query | not yet added | MIT | Web data fetching |
 | i18next, react-i18next, ICU plugin | not yet added | MIT | Translations runtime |
-| openapi-typescript, openapi-fetch | not yet added | MIT | Generated API client |
 | qrcode.react | not yet added | ISC | QR codes for pairing and phone linking |
-| Vitest | not yet added | MIT | Web unit tests |
 | Playwright | not yet added | Apache-2.0 | Web end-to-end tests |
-| ESLint, Prettier | not yet added | MIT | Lint and formatting |
 
 TOTP is implemented in the server without a library.
 

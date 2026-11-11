@@ -1,0 +1,67 @@
+{
+  "common": {
+    "continue": "Continue",
+    "back": "Back",
+    "cancel": "Cancel",
+    "save": "Save",
+    "done": "Done",
+    "retry": "Try again",
+    "loading": "Loading…",
+    "signOut": "Sign out",
+    "close": "Close",
+    "optional": "optional"
+  },
+  "connection": {
+    "insecure": "This connection is not encrypted. Anyone on the same network can read what you send, including your password."
+  },
+  "errors": {
+    "unknown": "Something went wrong. Try again.",
+    "network": "The server could not be reached. Check your connection and try again.",
+    "request": {
+      "invalid": "The request was not valid. Check what you entered and try again.",
+      "precondition_required": "This change needs the version of the item you were looking at. Reload and try again.",
+      "version_conflict": "Someone else changed this in the meantime. Reload to see the current state, then try again."
+    },
+    "resource": {
+      "not_found": "That item does not exist or is no longer available."
+    },
+    "auth": {
+      "invalid_credentials": "The name, password or code is not correct.",
+      "invalid_challenge": "Signing in took too long. Start again.",
+      "invalid_refresh_token": "You have been signed out. Sign in again.",
+      "too_many_attempts": "Too many attempts. Try again in {retryAfterSeconds, plural, one {# second} other {# seconds}}.",
+      "invalid_link_code": "This code is no longer valid. Show a new QR code and scan it again.",
+      "wrong_password": "The current password is not correct.",
+      "invalid_code": "That code is not correct. Check the time on your phone and try the next code.",
+      "totp_already_enabled": "Two-step verification is already on."
+    },
+    "user": {
+      "invalid_name": "A name has {minLength} to {maxLength} letters or digits, and may contain dots, dashes and underscores.",
+      "name_taken": "That name is already in use.",
+      "invalid_display_name": "Enter a display name of up to 128 characters.",
+      "weak_password": "A password has at least {minLength} characters.",
+      "invalid_locale": "That language is not available.",
+      "invalid_quota": "A quota cannot be negative.",
+      "last_admin": "This is the only active admin. Make someone else an admin first."
+    },
+    "setup": {
+      "already_done": "This server already has an admin. Sign in instead.",
+      "token_required": "Enter the setup token from the server log.",
+      "token_invalid": "That setup token is not correct. It changes every time the server starts; copy the newest one from the log.",
+      "storage_missing": "Add a storage location before finishing."
+    },
+    "storage": {
+      "invalid_config": "Some of the storage settings are missing or not valid.",
+      "root_missing": "That folder does not exist. If it is a network share or an external disk, check that it is connected.",
+      "path_not_allowed": "Files cannot be stored in the folder where the server keeps its own data. Choose another folder.",
+      "location_in_use": "This location already holds data from an Atrium server and cannot be added as new.",
+      "name_taken": "Another storage location already has that name.",
+      "identity_missing": "This location is reachable but empty. If it is a network share or an external disk, it is probably not connected.",
+      "identity_mismatch": "A different storage location was found in this place.",
+      "unavailable": "The storage location could not be reached.",
+      "access_denied": "The server is not allowed to read or write there. Check the permissions or the access keys.",
+      "bucket_not_found": "That bucket does not exist. Check the name.",
+      "read_back_mismatch": "The location returned different data than was written to it. It cannot be trusted with files."
+    }
+  }
+}

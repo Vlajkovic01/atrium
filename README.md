@@ -46,6 +46,27 @@ The server keeps its database and keys in the directory named by
 is the default database; set `ATRIUM_DB_PROVIDER=postgres` and
 `ATRIUM_DB_CONNECTION` to use PostgreSQL.
 
+## Building the clients
+
+Requires Node.js 24 or newer and pnpm.
+
+```
+pnpm install
+pnpm run typecheck
+pnpm run test
+```
+
+Two files in `packages/shared` are generated and committed. After
+changing their sources, regenerate them with `pnpm run generate`:
+
+- `src/api/schema.d.ts`, from the OpenAPI contract in
+  `openapi/atrium-v1.json`. The contract itself is exported from the
+  server by running the server tests once with `ATRIUM_UPDATE_OPENAPI=1`.
+- `src/i18n/locales/sr-Cyrl.json`, from the Serbian Latin translations.
+  Translators edit only `sr-Latn.json`.
+
+CI fails if either generated file is out of date.
+
 ## Contributing
 
 `master` is always releasable and changes only through pull requests that
