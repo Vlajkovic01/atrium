@@ -82,6 +82,10 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
             e.HasOne<User>().WithMany().HasForeignKey(p => p.ApprovedByUserId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne<Session>().WithMany().HasForeignKey(p => p.SessionId).OnDelete(DeleteBehavior.SetNull);
             e.HasIndex(p => p.ExpiresAt);
+
+            // A request changes state once per step (approve, deny, redeem).
+            // Two requests racing for the same step must not both succeed.
+            e.Property(p => p.State).IsConcurrencyToken();
         });
 
         modelBuilder.Entity<LinkCode>(e =>
@@ -89,6 +93,7 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
             e.Property(c => c.CodeHash).HasMaxLength(32);
             e.HasIndex(c => c.CodeHash).IsUnique();
             e.HasOne<User>().WithMany().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.Property(c => c.UsedAt).IsConcurrencyToken();
         });
 
         modelBuilder.Entity<TotpCredential>(e =>

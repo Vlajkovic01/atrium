@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Atrium.Data.Postgres.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261110225133_Initial")]
+    [Migration("20261110230933_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -43,6 +43,7 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<long?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("bigint");
 
                     b.Property<Guid>("UserId")
@@ -110,6 +111,7 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("State")
+                        .IsConcurrencyToken()
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");

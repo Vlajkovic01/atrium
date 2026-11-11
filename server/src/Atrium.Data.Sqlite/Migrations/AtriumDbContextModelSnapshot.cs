@@ -35,6 +35,7 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<long?>("UsedAt")
+                        .IsConcurrencyToken()
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("UserId")
@@ -102,6 +103,7 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("State")
+                        .IsConcurrencyToken()
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");

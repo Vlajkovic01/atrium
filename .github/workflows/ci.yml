@@ -20,7 +20,9 @@ env:
 jobs:
   server:
     name: Server build and tests
-    runs-on: ubuntu-latest
+    # Pinned so the runner image changes when we decide, not when the
+    # ubuntu-latest label moves.
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: server

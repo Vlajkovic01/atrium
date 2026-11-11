@@ -15,6 +15,7 @@ public static class ApiProblem
     public const string InvalidChallenge = "auth.invalid_challenge";
     public const string InvalidRefreshToken = "auth.invalid_refresh_token";
     public const string TooManyAttempts = "auth.too_many_attempts";
+    public const string InvalidLinkCode = "auth.invalid_link_code";
 
     public static ProblemHttpResult Create(int status, string code, Dictionary<string, object?>? parameters = null) =>
         TypedResults.Problem(

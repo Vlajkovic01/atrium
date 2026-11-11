@@ -3,6 +3,7 @@ using Atrium.Api.Hosting;
 using Atrium.Core.Identity;
 using Atrium.Data;
 using Atrium.Identity.Crypto;
+using Atrium.Identity.Pairing;
 using Atrium.Identity.Passwords;
 using Atrium.Identity.Sessions;
 using Atrium.Identity.SignIn;
@@ -16,6 +17,13 @@ namespace Atrium.Api.Auth;
 public static class AuthSetup
 {
     public const string AdminPolicy = "Admin";
+
+    /// <summary>
+    /// A session without restrictions. Required wherever a session can create
+    /// another session, so a read-only living-room TV cannot be used to sign
+    /// in an unrestricted device.
+    /// </summary>
+    public const string FullSessionPolicy = "FullSession";
 
     private const long LowMemoryThresholdBytes = 4L * 1024 * 1024 * 1024;
 
@@ -36,6 +44,8 @@ public static class AuthSetup
         services.AddSingleton<AccessTokens>();
         services.AddScoped<SessionService>();
         services.AddScoped<SignInService>();
+        services.AddScoped<PairingService>();
+        services.AddScoped<LinkCodeService>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
@@ -63,7 +73,11 @@ public static class AuthSetup
         // explicitly opts out with AllowAnonymous.
         services.AddAuthorizationBuilder()
             .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
-            .AddPolicy(AdminPolicy, policy => policy.RequireRole(nameof(UserRole.Admin)));
+            .AddPolicy(AdminPolicy, policy => policy.RequireRole(nameof(UserRole.Admin)))
+            .AddPolicy(FullSessionPolicy, policy => policy
+                .RequireAuthenticatedUser()
+                .RequireAssertion(context => !context.User.HasClaim(
+                    claim => claim.Type is AccessTokens.ReadOnlyClaim or AccessTokens.HidePersonalClaim)));
 
         return services;
     }
