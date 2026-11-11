@@ -53,7 +53,10 @@ services:
     environment:
       POSTGRES_DB: atrium
       POSTGRES_USER: atrium
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env to use the postgres profile}
+      # Compose checks variables of every service, also of profiles that are
+      # switched off, so this cannot be marked as required here. Without a
+      # password PostgreSQL refuses to start and says so in its log.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
     volumes:
       - postgres:/var/lib/postgresql/data
     healthcheck:
@@ -75,7 +78,9 @@ services:
       - caddy
       - reverse-proxy
       - --from
-      - ${ATRIUM_DOMAIN:?Set ATRIUM_DOMAIN in .env to use the https profile}
+      # Without ATRIUM_DOMAIN this serves https://localhost with a
+      # certificate browsers do not trust; set the domain in .env.
+      - ${ATRIUM_DOMAIN:-localhost}
       - --to
       - atrium:8080
     ports:
