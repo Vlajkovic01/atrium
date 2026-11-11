@@ -6,6 +6,8 @@ export default tseslint.config(
     ignores: [
       "**/node_modules/**",
       "**/dist/**",
+      // Local runtime data of a server started for development.
+      "**/.atrium/**",
       "server/**",
       // Generated from the OpenAPI contract; never edited by hand.
       "packages/shared/src/api/schema.d.ts",

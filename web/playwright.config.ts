@@ -22,6 +22,9 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   timeout: 60_000,
+  // Creating an account hashes a password with Argon2id on purpose-built
+  // slow settings; on a busy machine that alone can take several seconds.
+  expect: { timeout: 15_000 },
   use: {
     baseURL,
     locale: "en-US",

@@ -11,3 +11,4 @@ packages/shared/src/api/schema.d.ts
 LICENSE
 
 dist/
+.atrium/

@@ -27,7 +27,10 @@ function watchForPolicyViolations(page: Page): string[] {
 }
 
 async function signIn(page: Page, name = OWNER, password = PASSWORD): Promise<void> {
-  await page.getByLabel("Name").fill(name);
+  // Wait for the sign-in screen itself. Right after signing out, the
+  // previous screen may still be showing, and it has fields of its own.
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await page.getByLabel("Name", { exact: true }).fill(name);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
 }
