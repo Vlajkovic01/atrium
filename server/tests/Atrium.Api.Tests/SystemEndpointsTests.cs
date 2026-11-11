@@ -2,8 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using Atrium.Api.Endpoints;
 using Atrium.Core.Identity;
-using Atrium.Data;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Atrium.Api.Tests;
 
@@ -27,50 +25,13 @@ public sealed class SystemEndpointsTests : IDisposable
         Assert.False(info.SetupComplete);
     }
 
+    // What completes setup is covered in SetupTests: the wizard must finish.
+    // Here: an admin account alone is not a finished setup.
     [Fact]
-    public async Task Setup_is_complete_once_an_admin_exists()
+    public async Task An_admin_account_alone_does_not_complete_setup()
     {
         using var client = _factory.CreateClient();
-        await using (var scope = _factory.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<AtriumDbContext>();
-            db.Users.Add(new User
-            {
-                Name = "Ana",
-                NameKey = "ana",
-                DisplayName = "Ana",
-                PasswordHash = "not-a-real-hash",
-                Role = UserRole.Admin,
-                CreatedAt = DateTimeOffset.UtcNow,
-                PasswordChangedAt = DateTimeOffset.UtcNow,
-            });
-            await db.SaveChangesAsync();
-        }
-
-        var info = await client.GetFromJsonAsync<SystemInfo>("/api/v1/system/info");
-
-        Assert.True(info?.SetupComplete);
-    }
-
-    [Fact]
-    public async Task A_non_admin_user_does_not_complete_setup()
-    {
-        using var client = _factory.CreateClient();
-        await using (var scope = _factory.Services.CreateAsyncScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<AtriumDbContext>();
-            db.Users.Add(new User
-            {
-                Name = "Guest",
-                NameKey = "guest",
-                DisplayName = "Guest",
-                PasswordHash = "not-a-real-hash",
-                Role = UserRole.Guest,
-                CreatedAt = DateTimeOffset.UtcNow,
-                PasswordChangedAt = DateTimeOffset.UtcNow,
-            });
-            await db.SaveChangesAsync();
-        }
+        await _factory.CreateUserAsync("ana", TestApi.Password, UserRole.Admin);
 
         var info = await client.GetFromJsonAsync<SystemInfo>("/api/v1/system/info");
 

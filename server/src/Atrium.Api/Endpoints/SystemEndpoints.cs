@@ -1,5 +1,5 @@
 using System.Reflection;
-using Atrium.Core.Identity;
+using Atrium.Api.Setup;
 using Atrium.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -29,8 +29,9 @@ public static class SystemEndpoints
                 Name: "Atrium",
                 Version: ServerVersion,
                 MinClientVersion: MinClientVersion,
-                // Setup is complete once an admin exists; the wizard creates the first one.
-                SetupComplete: await db.Users.AnyAsync(u => u.Role == UserRole.Admin, ct)))
+                // Complete when the wizard has finished: an admin exists and
+                // storage is configured. Until then clients open the wizard.
+                SetupComplete: await SetupService.IsCompletedAsync(db, ct)))
             .WithName("GetSystemInfo")
             .AllowAnonymous();
 
