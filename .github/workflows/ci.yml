@@ -62,13 +62,13 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # The API client and the Cyrillic translations are generated files
-      # that are committed. Regenerating them must change nothing; if it
-      # does, someone changed a source and forgot to regenerate.
+      # The API client is generated from the contract and committed.
+      # Regenerating it must change nothing; if it does, someone changed
+      # the contract and forgot to regenerate.
       - name: Generated files are up to date
         run: |
           pnpm run generate
-          git diff --exit-code -- packages/shared/src/api/schema.d.ts packages/shared/src/i18n/locales/sr-Cyrl.json
+          git diff --exit-code -- packages/shared/src/api/schema.d.ts
 
       - name: Check formatting
         run: pnpm run format:check

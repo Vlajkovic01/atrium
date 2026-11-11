@@ -166,7 +166,7 @@ added. Any of them can still be overruled.
   timers would be the least tested code touching deletion.
 - Cost: Phase 2 grows; Phase 3 shrinks by the same amount.
 
-## D-018 Serbian in Latin and Cyrillic, Cyrillic generated (Proposed)
+## D-018 Serbian in Latin and Cyrillic, Cyrillic generated (Proposed, superseded by D-022)
 
 - Decision: translators maintain Latin. Cyrillic is produced by
   transliteration at build time with an exception list. Clients follow
@@ -215,3 +215,16 @@ added. Any of them can still be overruled.
 - Cost: a PostgreSQL-only failure shows up after a push, not before. A
   snapshot test that needs no database still catches a missing migration
   for either provider locally.
+
+## D-022 Serbian in Latin script only (Owner, 2026-11-11)
+
+- Decision: the product ships English and Serbian in Latin script.
+  Cyrillic is removed from the whole project: no translation file, no
+  converter, no language option.
+- Supersedes D-018, which shipped both scripts with Cyrillic generated
+  from Latin.
+- Reasons: the owner does not need a Cyrillic interface. Dropping it
+  removes the converter, its hand-written exception lists and the
+  native-speaker review they needed before 1.0.
+- Kept on purpose: the language tag stays `sr-Latn`, because platforms
+  format plain `sr` in Cyrillic.

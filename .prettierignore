@@ -5,7 +5,6 @@ server/
 pnpm-lock.yaml
 packages/shared/openapi/
 packages/shared/src/api/schema.d.ts
-packages/shared/src/i18n/locales/sr-Cyrl.json
 
 # Documentation is wrapped by hand.
 *.md

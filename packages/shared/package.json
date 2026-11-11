@@ -9,9 +9,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "generate": "pnpm run generate:api && pnpm run generate:cyrillic",
+    "generate": "pnpm run generate:api",
     "generate:api": "openapi-typescript openapi/atrium-v1.json -o src/api/schema.d.ts",
-    "generate:cyrillic": "node scripts/generate-cyrillic.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -19,7 +18,6 @@
     "openapi-fetch": "^0.17.0"
   },
   "devDependencies": {
-    "@types/node": "^24.19.2",
     "openapi-typescript": "^7.13.0",
     "typescript": "~5.9.3",
     "vitest": "^5.1.0"

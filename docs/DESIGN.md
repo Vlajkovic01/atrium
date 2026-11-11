@@ -801,14 +801,14 @@ migration is released.
   Clients translate.
 - Dates, numbers and sizes use the platform's locale formatting. Sorting
   uses locale-aware collation.
-- Serbian ships in both scripts (D-018). Latin (`sr-Latn`) is the source
-  that translators edit. Cyrillic (`sr-Cyrl`) is generated from it at
-  build time by transliteration, with an exception list for words where
-  the letter pairs `lj`, `nj` and `dž` are not single sounds and for
-  names that stay in Latin (product names, codecs, file formats). The
-  client follows the device's script setting and falls back to Latin.
-- A CI check fails when a key is missing in any language, or when the
-  generated Cyrillic file is out of date.
+- Serbian ships in Latin script only (D-022). Its language tag is
+  `sr-Latn`, not `sr`: platforms format dates and numbers for plain `sr`
+  in Cyrillic, which would put Cyrillic month names into a Latin
+  interface. A device set to Serbian in either script gets the Serbian
+  translation.
+- A test fails when a key is missing in either language, when the two
+  use different arguments, or when a plural lacks a form the language
+  needs.
 
 ---
 

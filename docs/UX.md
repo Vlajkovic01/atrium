@@ -145,7 +145,7 @@ approval step.
 
 ### Settings
 
-Profile, language (English, Srpski, Српски), password, two-step verification with recovery codes,
+Profile, language (English, Srpski), password, two-step verification with recovery codes,
 playback defaults (preferred audio and subtitle languages, quality on
 mobile data), and storage usage against quota.
 

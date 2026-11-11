@@ -62,7 +62,7 @@ public abstract class DatabaseContractTests : IAsyncLifetime
     {
         var user = NewUser("Ana", UserRole.Admin);
         user.QuotaBytes = 5L * 1024 * 1024 * 1024 * 1024;
-        user.Locale = "sr-Cyrl";
+        user.Locale = "sr-Latn";
         user.PasswordChangedAt = T0.AddMilliseconds(123);
 
         await using (var db = CreateContext())
@@ -78,7 +78,7 @@ public abstract class DatabaseContractTests : IAsyncLifetime
             Assert.Equal("ana", loaded.NameKey);
             Assert.Equal(UserRole.Admin, loaded.Role);
             Assert.Equal(user.QuotaBytes, loaded.QuotaBytes);
-            Assert.Equal("sr-Cyrl", loaded.Locale);
+            Assert.Equal("sr-Latn", loaded.Locale);
             Assert.Equal(T0, loaded.CreatedAt);
             Assert.Equal(T0.AddMilliseconds(123), loaded.PasswordChangedAt);
             Assert.False(loaded.Disabled);

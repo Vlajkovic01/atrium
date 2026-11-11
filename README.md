@@ -56,16 +56,14 @@ pnpm run typecheck
 pnpm run test
 ```
 
-Two files in `packages/shared` are generated and committed. After
-changing their sources, regenerate them with `pnpm run generate`:
+`packages/shared/src/api/schema.d.ts` is generated from the OpenAPI
+contract in `packages/shared/openapi/atrium-v1.json` and committed. The
+contract itself is exported from the server by running the server tests
+once with `ATRIUM_UPDATE_OPENAPI=1`; then run `pnpm run generate`. CI
+fails if the generated file is out of date.
 
-- `src/api/schema.d.ts`, from the OpenAPI contract in
-  `openapi/atrium-v1.json`. The contract itself is exported from the
-  server by running the server tests once with `ATRIUM_UPDATE_OPENAPI=1`.
-- `src/i18n/locales/sr-Cyrl.json`, from the Serbian Latin translations.
-  Translators edit only `sr-Latn.json`.
-
-CI fails if either generated file is out of date.
+The interface is translated into English and Serbian (Latin script), in
+`packages/shared/src/i18n/locales`.
 
 ### Web app
 
