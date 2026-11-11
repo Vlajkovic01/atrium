@@ -1679,7 +1679,9 @@ export interface operations {
     UpdateUser: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "If-Match"?: string;
+            };
             path: {
                 id: string;
             };
