@@ -1,0 +1,14 @@
+# The server has its own formatter (dotnet format).
+server/
+
+# Generated files.
+pnpm-lock.yaml
+packages/shared/openapi/
+packages/shared/src/api/schema.d.ts
+packages/shared/src/i18n/locales/sr-Cyrl.json
+
+# Documentation is wrapped by hand.
+*.md
+LICENSE
+
+dist/
