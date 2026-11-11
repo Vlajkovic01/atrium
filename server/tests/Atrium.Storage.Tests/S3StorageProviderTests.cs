@@ -44,32 +44,42 @@ public sealed class S3ServerFixture : IAsyncLifetime
         // before it can store anything. Wait until a real write succeeds; if
         // it never does, fail with the server's own log, so the cause is in
         // the test output and not a guess.
+        // The provider's own health check is the probe, so "ready" means
+        // ready for exactly the requests the tests are about to send.
         using var client = NewClient();
-        var deadline = DateTime.UtcNow.AddSeconds(120);
-        Exception? last = null;
+        using var provider = new S3StorageProvider(Options("readiness"));
+        var deadline = DateTime.UtcNow.AddSeconds(90);
+        var last = "the bucket could not be created";
+        var bucketCreated = false;
         while (DateTime.UtcNow < deadline)
         {
             try
             {
-                await client.PutBucketAsync("readiness");
-                await client.PutObjectAsync(new Amazon.S3.Model.PutObjectRequest
+                if (!bucketCreated)
                 {
-                    BucketName = "readiness",
-                    Key = "probe",
-                    ContentBody = "ready",
-                });
-                return;
+                    await client.PutBucketAsync("readiness");
+                    bucketCreated = true;
+                }
+
+                var health = await provider.CheckAsync(CancellationToken.None);
+                if (health.Ok)
+                {
+                    return;
+                }
+
+                last = $"{health.ErrorCode}: {health.Detail}";
             }
             catch (Exception e) when (e is AmazonServiceException or AmazonClientException or HttpRequestException)
             {
-                last = e;
-                await Task.Delay(TimeSpan.FromSeconds(2));
+                last = e.Message;
             }
+
+            await Task.Delay(TimeSpan.FromSeconds(2));
         }
 
         var (stdout, stderr) = await _container.GetLogsAsync();
         throw new InvalidOperationException(
-            $"The S3 test server never accepted a write. Last error: {last?.Message}\n" +
+            $"The S3 test server never passed the provider's health check. Last result: {last}\n" +
             $"--- server stdout (tail) ---\n{Tail(stdout)}\n--- server stderr (tail) ---\n{Tail(stderr)}");
     }
 
