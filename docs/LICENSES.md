@@ -48,6 +48,35 @@ having before public distribution.
 | Caddy | Apache-2.0 | Optional HTTPS container (D-006) |
 | MinIO | AGPL-3.0 | Test container only; see flag 4 |
 
+## Approved for Phase 1
+
+Approved by the owner on 2026-11-10. A version appears once the package
+is actually in the repository.
+
+| Component | Version | License | Use |
+|---|---|---|---|
+| Microsoft.AspNetCore.OpenApi | 10.0.14 | MIT | OpenAPI document generation |
+| Microsoft.AspNetCore.Mvc.Testing | 10.0.14 | MIT | In-memory server for integration tests |
+| Microsoft.NET.Test.Sdk | 17.14.1 | MIT | Test host |
+| xunit | 2.9.3 | Apache-2.0 | Test framework |
+| xunit.runner.visualstudio | 3.1.4 | Apache-2.0 | Test runner adapter |
+| NSec.Cryptography with libsodium | not yet added | MIT; ISC | Argon2id password hashing |
+| AWSSDK.S3 | not yet added | Apache-2.0 | S3-compatible storage provider |
+| Microsoft.AspNetCore.Authentication.JwtBearer | not yet added | MIT | Access token validation |
+| Testcontainers for .NET | not yet added | MIT | PostgreSQL and S3 containers in tests |
+| pnpm | 12.18.0 (tool) | MIT | JavaScript workspace manager |
+| Vite | not yet added | MIT | Web build |
+| React Router | not yet added | MIT | Web routing |
+| TanStack Query | not yet added | MIT | Web data fetching |
+| i18next, react-i18next, ICU plugin | not yet added | MIT | Translations runtime |
+| openapi-typescript, openapi-fetch | not yet added | MIT | Generated API client |
+| qrcode.react | not yet added | ISC | QR codes for pairing and phone linking |
+| Vitest | not yet added | MIT | Web unit tests |
+| Playwright | not yet added | Apache-2.0 | Web end-to-end tests |
+| ESLint, Prettier | not yet added | MIT | Lint and formatting |
+
+TOTP is implemented in the server without a library.
+
 ## Candidates, not yet approved
 
 Listed so the choices are visible early. Each will be proposed with
