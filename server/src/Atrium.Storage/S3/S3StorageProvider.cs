@@ -345,6 +345,12 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
     {
         try
         {
+            // Ask about the bucket before writing to it. Some servers create
+            // a missing bucket on the first write, which would turn a
+            // mistyped name into a new, empty location instead of an error.
+            await _client.ListObjectsV2Async(
+                new ListObjectsV2Request { BucketName = _bucket, Prefix = _prefix, MaxKeys = 1 }, ct);
+
             return await StorageProbe.RoundTripAsync(this, StorageProbe.NewKey(), ct)
                 ? StorageHealth.Healthy(freeBytes: null)
                 : StorageHealth.Failed(StorageProbe.MismatchCode, null);
@@ -353,7 +359,7 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
         {
             return StorageHealth.Failed("storage.access_denied", e.ErrorCode);
         }
-        catch (AmazonS3Exception e) when (e.ErrorCode == "NoSuchBucket")
+        catch (AmazonS3Exception e) when (e.ErrorCode == "NoSuchBucket" || e.StatusCode == HttpStatusCode.NotFound)
         {
             return StorageHealth.Failed("storage.bucket_not_found", e.ErrorCode);
         }
