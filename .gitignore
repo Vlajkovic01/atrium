@@ -39,3 +39,6 @@ Thumbs.db
 test-results/
 playwright-report/
 blob-report/
+
+# Pictures of the app taken by web/screenshots; regenerate, do not commit.
+/screenshots/

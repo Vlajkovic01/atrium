@@ -26,6 +26,9 @@ export default defineConfig({
     baseURL,
     locale: "en-US",
     trace: "retain-on-failure",
+    // Set ATRIUM_BROWSER_CHANNEL=msedge (or chrome) to use a browser that
+    // is already installed, where Playwright's own cannot be downloaded.
+    ...(process.env.ATRIUM_BROWSER_CHANNEL ? { channel: process.env.ATRIUM_BROWSER_CHANNEL } : {}),
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
