@@ -122,3 +122,59 @@ jobs:
           name: playwright-traces
           path: web/test-results
           retention-days: 7
+
+  image:
+    name: Docker image and Compose
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      # The same command a person installing Atrium runs, building from
+      # source. --wait returns only when the container reports healthy,
+      # which exercises the image's own health check.
+      - name: Start with Compose
+        working-directory: deploy
+        run: docker compose up --detach --build --wait --wait-timeout 180
+
+      - name: The server answers and serves the web app
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error http://localhost:8080/api/v1/health/ready
+          curl --fail --silent --show-error http://localhost:8080/api/v1/system/info | grep --quiet '"name":"Atrium"'
+          curl --fail --silent --show-error http://localhost:8080/ | grep --quiet '<div id="root">'
+          curl --fail --silent --show-error --head http://localhost:8080/ | grep --ignore-case --quiet 'content-security-policy'
+
+      - name: The server does not run as root
+        working-directory: deploy
+        run: |
+          set -euo pipefail
+          test "$(docker compose exec --no-TTY atrium id --user)" != "0"
+
+      - name: Setup needs the token printed in the log
+        working-directory: deploy
+        run: |
+          set -euo pipefail
+          docker compose logs atrium | grep --quiet 'setup token'
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            --header 'Content-Type: application/json' \
+            --data '{"name":"owner","password":"correct horse battery"}' \
+            http://localhost:8080/api/v1/setup/admin)
+          test "$status" = "403"
+
+      - name: Data survives a restart
+        working-directory: deploy
+        run: |
+          set -euo pipefail
+          token=$(docker compose logs atrium | grep --only-matching 'first admin: [A-Za-z0-9_-]*' | tail --lines 1 | cut --delimiter ' ' --fields 3)
+          curl --fail --silent --show-error \
+            --header 'Content-Type: application/json' \
+            --data "{\"name\":\"owner\",\"password\":\"correct horse battery\",\"setupToken\":\"$token\"}" \
+            http://localhost:8080/api/v1/setup/admin
+          docker compose restart atrium
+          docker compose up --detach --wait --wait-timeout 120
+          curl --fail --silent --show-error http://localhost:8080/api/v1/setup/state | grep --quiet '"adminExists":true'
+
+      - name: Show logs if something failed
+        if: failure()
+        working-directory: deploy
+        run: docker compose logs
