@@ -596,11 +596,36 @@ its URLs. URLs with signatures are redacted in logs.
 
 ### 6.8 First-run takeover protection
 
-Until an admin exists, the setup endpoints are open. On a server reachable
-from the internet, a stranger could claim it first. Setup requests from
-loopback or private addresses proceed directly. Requests from public
-addresses, or carrying forwarding headers, must present a setup token
-printed in the container log (D-012).
+Until an admin exists, anyone who can reach the server could claim it.
+Creating the first admin therefore needs a setup token that the server
+prints to its log at startup; reading the log is the proof of control
+over the server. Only a request made on the server itself, over loopback
+and without forwarding headers, skips the token. Private network
+addresses are not exempt, because behind Docker or a proxy a request from
+the internet can look private (D-012). The token changes at every start
+and is useless once an admin exists. Two simultaneous setup requests
+create exactly one admin.
+
+After the first admin exists, the wizard signs in as that admin and uses
+the ordinary admin endpoints. Setup is complete when an admin exists, at
+least one storage location is registered, and the wizard has finished.
+
+A storage location is registered in three steps that protect files:
+
+1. It is tested: written to, read back, cleaned up. A local directory
+   that does not exist is reported and created only on explicit request.
+2. If it already carries an identity file, it was used by an Atrium
+   server and is not taken over. Two servers on one location could delete
+   each other's files; adopting a location is a recovery action
+   (Phase 11).
+3. An identity file with the location's ID is written to it
+   (`atrium/location.json`), and its settings are stored encrypted.
+
+Later checks read the identity first, before writing anything. A location
+whose identity is missing or different is marked offline. This is how an
+unmounted network share, which looks like an empty writable directory, is
+told apart from the real location. User files may not be stored inside
+the server's config directory.
 
 ### 6.9 Transport and web hardening
 

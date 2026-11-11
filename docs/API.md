@@ -35,18 +35,17 @@ Each section notes the phase in which it is built.
 
 ## Setup (Phase 1)
 
-Available only until an admin exists; see DESIGN.md 6.8 for the setup
-token.
+See DESIGN.md 6.8. Only creating the first admin is special. After that
+the wizard is signed in as the admin and uses the storage endpoints below,
+the same ones the admin interface uses later.
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/setup/state` | Which steps are done |
-| POST | `/setup/admin` | Create the first admin |
-| POST | `/setup/storage/test` | Probe a location: write, read back, delete, free space |
-| POST | `/setup/storage` | Save the first storage location and cache location |
-| GET | `/setup/hardware` | Detected CPU, memory, hardware profile, working encoders |
-| GET | `/setup/network` | The address the server sees for this request, proxy detection |
-| POST | `/setup/complete` | Finish; setup endpoints close |
+| GET | `/setup/state` | *Public.* Admin exists, storage configured, completed, whether this client needs the setup token |
+| POST | `/setup/admin` | *Public while no admin exists.* Creates the first admin; needs the setup token from the server log |
+| POST | `/setup/complete` | Admin. Finishes setup; refused until a storage location exists |
+| GET | `/admin/hardware` | Not built yet. Detected CPU, memory, hardware profile, working encoders |
+| GET | `/admin/network` | Not built yet. The address the server sees for this request, proxy detection |
 
 ## Authentication and sessions (Phase 1)
 
@@ -103,9 +102,10 @@ approve pairings or create link codes.
 
 | Method | Path | Notes |
 |---|---|---|
-| GET, POST | `/storage-locations` | Secrets are write-only |
-| GET, PATCH, DELETE | `/storage-locations/{id}` | Delete only when no library uses it |
-| POST | `/storage-locations/{id}/check` | Run the probe and compatibility tests |
+| GET, POST | `/storage-locations` | Secrets are write-only. Saving tests the location, refuses one already used by an Atrium server, and writes its identity file |
+| POST | `/storage-locations/test` | Try settings without saving. Never creates a directory. Always 200 with the outcome inside |
+| GET, PATCH, DELETE | `/storage-locations/{id}` | Not built yet. Delete only when no library uses it |
+| POST | `/storage-locations/{id}/check` | Verify the identity, then the probe; records online or offline |
 | GET, POST | `/libraries` | Non-admins see libraries they can access |
 | GET, PATCH, DELETE | `/libraries/{id}` | Deleting an external library removes only the index |
 | GET, PUT | `/libraries/{id}/grants` | Who can read or write |

@@ -110,14 +110,22 @@ added. Any of them can still be overruled.
 - Reasons: matches Windows and macOS expectations, avoids confusable
   names, and keeps exports to case-insensitive filesystems lossless.
 
-## D-012 Setup token for first-run requests from public addresses (Proposed)
+## D-012 Setup token for creating the first admin (Proposed, revised in Phase 1)
 
-- Decision: setup from loopback or private addresses needs no token;
-  requests from public addresses or through a proxy need the token from
-  the server log.
-- Alternatives: always require the token; never require it.
-- Reasons: a fresh install on a VPS could be claimed by a stranger.
-  Home installs keep the no-friction path.
+- Decision: creating the first admin needs a token that the server prints
+  to its log at startup. The only exception is a request made on the
+  server itself (loopback address, no forwarding headers).
+- Original decision: private network addresses were also exempt, so home
+  installs had no extra step.
+- Why it changed: the server cannot tell a private address from a public
+  one reliably. Behind Docker's port mapping, rootless containers or a
+  reverse proxy, a request from the internet can arrive with a private
+  source address. The exemption would then be open exactly on the
+  installs it was meant to protect, such as a VPS.
+- Alternatives: never require a token; exempt private addresses.
+- Cost: every normal install has one extra step, copying the token from
+  `docker compose logs`. Security outranks ease of installation in the
+  priority order.
 
 ## D-013 First public release after Phase 7, with a release gate (Owner, gate Proposed)
 
