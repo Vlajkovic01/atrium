@@ -1,0 +1,173 @@
+import type { ReactNode } from "react";
+
+/**
+ * Atrium's own icon set: simple line icons on a 24 by 24 grid, drawn here
+ * so the app loads nothing from outside and carries no third-party art.
+ * Icons are decorative; the text next to them carries the meaning.
+ */
+const shapes = {
+  devices: (
+    <>
+      <rect x="2.5" y="4.5" width="13" height="9.5" rx="1.8" />
+      <path d="M6.5 18h5M9 14v4" />
+      <rect x="17" y="8.5" width="4.5" height="11" rx="1.4" />
+    </>
+  ),
+  browser: (
+    <>
+      <rect x="3" y="4.5" width="18" height="15" rx="2.2" />
+      <path d="M3 9h18M6.5 6.8h.01M9 6.8h.01" />
+    </>
+  ),
+  phone: (
+    <>
+      <rect x="7" y="2.5" width="10" height="19" rx="2.4" />
+      <path d="M11 18.2h2" />
+    </>
+  ),
+  tv: (
+    <>
+      <rect x="2.5" y="5" width="19" height="12" rx="2" />
+      <path d="M8 20.5h8" />
+    </>
+  ),
+  device: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="3" />
+      <circle cx="12" cy="12" r="2.6" />
+    </>
+  ),
+  user: (
+    <>
+      <circle cx="12" cy="8.2" r="3.7" />
+      <path d="M4.8 20c.9-3.6 3.7-5.6 7.2-5.6s6.300 2 7.200 5.600" />
+    </>
+  ),
+  users: (
+    <>
+      <circle cx="9" cy="8.5" r="3.3" />
+      <path d="M2.8 19.500c.7-3.200 3.100-5 6.200-5s5.500 1.800 6.200 5" />
+      <path d="M15.800 5.600a3.300 3.300 0 0 1 0 5.800M17.800 14.800c1.800.6 3 2.200 3.500 4.700" />
+    </>
+  ),
+  drive: (
+    <>
+      <path d="M4.2 13.200 6.500 5.800A1.800 1.800 0 0 1 8.200 4.500h7.600a1.800 1.800 0 0 1 1.700 1.300l2.300 7.400" />
+      <rect x="3" y="13" width="18" height="6.500" rx="2" />
+      <path d="M7 16.300h.01M10.200 16.300h.01" />
+    </>
+  ),
+  folder: <path d="M3 7.500A2 2 0 0 1 5 5.500h4.200l2 2.300H19a2 2 0 0 1 2 2v7.700a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
+  share: (
+    <>
+      <rect x="3" y="3.500" width="18" height="7" rx="1.800" />
+      <path d="M7 7h.01M12 10.500v4M5 18.500h14" />
+      <circle cx="12" cy="18.500" r="2" />
+    </>
+  ),
+  cloud: (
+    <path d="M7.200 18.500a4.200 4.200 0 0 1-.6-8.360 5.600 5.600 0 0 1 10.900 1.060 3.700 3.700 0 0 1-.5 7.300z" />
+  ),
+  shield: (
+    <>
+      <path d="M12 3 5 5.800v5.400c0 4.300 2.900 7.700 7 9.300 4.100-1.600 7-5 7-9.300V5.800z" />
+      <path d="m9.200 12 2 2 3.700-4" />
+    </>
+  ),
+  key: (
+    <>
+      <circle cx="8" cy="14.500" r="4" />
+      <path d="m11 11.500 8.500-8.500M16 6.500l2.500 2.500M13.500 9l2 2" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="5" y="10.500" width="14" height="10" rx="2.200" />
+      <path d="M8.200 10.500V7.800a3.800 3.800 0 0 1 7.600 0v2.700" />
+    </>
+  ),
+  check: <path d="m5 12.500 4.500 4.500L19 7.500" />,
+  checkCircle: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8.200 12.300 2.600 2.600 5-5.400" />
+    </>
+  ),
+  alert: (
+    <>
+      <path d="M12 3.800 2.800 19.500h18.400z" />
+      <path d="M12 10v4.200M12 16.800h.01" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5.200M12 7.800h.01" />
+    </>
+  ),
+  error: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m9 9 6 6M15 9l-6 6" />
+    </>
+  ),
+  eye: (
+    <>
+      <path d="M2.500 12S6 5.500 12 5.500 21.500 12 21.500 12 18 18.500 12 18.500 2.500 12 2.500 12z" />
+      <circle cx="12" cy="12" r="2.800" />
+    </>
+  ),
+  eyeOff: (
+    <>
+      <path d="M4 4l16 16M9.900 5.800A9.200 9.200 0 0 1 12 5.500c6 0 9.500 6.500 9.500 6.500a15.600 15.600 0 0 1-2.700 3.500M6.300 7.600A15.300 15.300 0 0 0 2.500 12S6 18.500 12 18.500a8.800 8.800 0 0 0 3.800-.9" />
+      <path d="M10 10.200a2.800 2.800 0 0 0 3.900 3.900" />
+    </>
+  ),
+  logout: <path d="M14 4.500h3.500a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14M10 8l-4 4 4 4M6 12h9.500" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  copy: (
+    <>
+      <rect x="8.500" y="8.500" width="12" height="12" rx="2" />
+      <path d="M5.500 15.500H5a1.500 1.500 0 0 1-1.500-1.500V5A1.500 1.500 0 0 1 5 3.500h9A1.500 1.500 0 0 1 15.500 5v.5" />
+    </>
+  ),
+  refresh: (
+    <path d="M20 5v5h-5M4 19v-5h5M19.200 10A7.600 7.600 0 0 0 5.600 8.300M4.800 14a7.600 7.600 0 0 0 13.600 1.700" />
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c2.600 2.500 3.900 5.500 3.900 9s-1.300 6.500-3.900 9c-2.600-2.500-3.900-5.500-3.900-9S9.400 5.500 12 3z" />
+    </>
+  ),
+  qr: (
+    <>
+      <rect x="4" y="4" width="6" height="6" rx="1" />
+      <rect x="14" y="4" width="6" height="6" rx="1" />
+      <rect x="4" y="14" width="6" height="6" rx="1" />
+      <path d="M14 14h2.500v2.500H14zM20 14v.01M17.500 20H20v-2.500M14 20v.01" />
+    </>
+  ),
+} satisfies Record<string, ReactNode>;
+
+export type IconName = keyof typeof shapes;
+
+export function Icon({ name, size = 20 }: { readonly name: IconName; readonly size?: number }) {
+  return (
+    <svg
+      className="icon"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {shapes[name]}
+    </svg>
+  );
+}

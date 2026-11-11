@@ -3,11 +3,17 @@ import { useTranslation } from "react-i18next";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router";
 
 import { api, call } from "./api.ts";
-import { ErrorMessage, InsecureBanner } from "./components/ui.tsx";
+import { AuthLayout } from "./components/AuthLayout.tsx";
+import type { IconName } from "./components/Icon.tsx";
+import { Icon } from "./components/Icon.tsx";
+import { Logo } from "./components/Logo.tsx";
+import { Avatar, Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
 import { Account } from "./pages/Account.tsx";
 import { Devices } from "./pages/Devices.tsx";
+import { People } from "./pages/People.tsx";
 import { Setup } from "./pages/Setup.tsx";
 import { SignIn } from "./pages/SignIn.tsx";
+import { StorageLocations } from "./pages/StorageLocations.tsx";
 import { useSession } from "./session.tsx";
 
 /**
@@ -27,23 +33,17 @@ export function App() {
   });
 
   if (setup.isPending) {
-    return (
-      <main className="card">
-        <p>{t("common.loading")}</p>
-      </main>
-    );
+    return <div className="splash" role="status" aria-label={t("common.loading")} />;
   }
 
   if (setup.isError) {
     return (
-      <main className="card">
+      <AuthLayout>
         <ErrorMessage error={setup.error} />
-        <div className="actions">
-          <button type="button" onClick={() => void setup.refetch()}>
-            {t("common.retry")}
-          </button>
-        </div>
-      </main>
+        <Button onClick={() => void setup.refetch()} icon="refresh">
+          {t("common.retry")}
+        </Button>
+      </AuthLayout>
     );
   }
 
@@ -55,34 +55,79 @@ export function App() {
   return user ? <Shell /> : <SignIn />;
 }
 
+interface NavItem {
+  readonly to: string;
+  readonly label: string;
+  readonly icon: IconName;
+}
+
 function Shell() {
   const { t } = useTranslation();
   const { user, signOut } = useSession();
   const location = useLocation();
+  const isAdmin = user?.role === "admin";
+
+  const personal: readonly NavItem[] = [
+    { to: "/devices", label: t("nav.devices"), icon: "devices" },
+    { to: "/account", label: t("nav.account"), icon: "user" },
+  ];
+  const admin: readonly NavItem[] = [
+    { to: "/people", label: t("nav.people"), icon: "users" },
+    { to: "/storage", label: t("nav.storage"), icon: "drive" },
+  ];
+
+  const link = (item: NavItem) => (
+    <NavLink key={item.to} to={item.to} className="nav-link">
+      <Icon name={item.icon} size={20} />
+      <span>{item.label}</span>
+    </NavLink>
+  );
 
   return (
-    <div className="shell">
-      <InsecureBanner />
-      <header className="topbar">
-        <span className="brand">Atrium</span>
-        <nav aria-label={t("nav.main")}>
-          <NavLink to="/devices">{t("nav.devices")}</NavLink>
-          <NavLink to="/account">{t("nav.account")}</NavLink>
+    <div className="app">
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <Logo size={30} />
+        </div>
+        <nav className="nav" aria-label={t("nav.main")}>
+          {personal.map(link)}
+          {isAdmin ? (
+            <>
+              <p className="nav-heading">{t("nav.administration")}</p>
+              {admin.map(link)}
+            </>
+          ) : null}
         </nav>
-        <span className="who">{user?.displayName}</span>
-        <button type="button" onClick={() => void signOut()}>
-          {t("common.signOut")}
-        </button>
-      </header>
-      <main className="content">
-        <Routes>
-          <Route path="/devices" element={<Devices />} />
-          {/* The address a device's QR code points at: opens the approval with the code filled in. */}
-          <Route path="/pair" element={<Navigate to={`/devices${location.search}`} replace />} />
-          <Route path="/account" element={<Account />} />
-          <Route path="*" element={<Navigate to="/devices" replace />} />
-        </Routes>
-      </main>
+        <div className="sidebar-user">
+          <Avatar name={user?.displayName ?? ""} />
+          <div className="user-text">
+            <span className="user-name">{user?.displayName}</span>
+            <span className="user-role">{user ? t(`roles.${user.role}`) : ""}</span>
+          </div>
+          <button type="button" className="icon-button" aria-label={t("common.signOut")} onClick={() => void signOut()}>
+            <Icon name="logout" size={18} />
+          </button>
+        </div>
+      </aside>
+
+      <div className="app-main">
+        <InsecureBanner />
+        <main className="content">
+          <Routes>
+            <Route path="/devices" element={<Devices />} />
+            {/* The address a device's QR code points at: opens the approval with the code filled in. */}
+            <Route path="/pair" element={<Navigate to={`/devices${location.search}`} replace />} />
+            <Route path="/account" element={<Account />} />
+            {isAdmin ? (
+              <>
+                <Route path="/people" element={<People />} />
+                <Route path="/storage" element={<StorageLocations />} />
+              </>
+            ) : null}
+            <Route path="*" element={<Navigate to="/devices" replace />} />
+          </Routes>
+        </main>
+      </div>
     </div>
   );
 }
