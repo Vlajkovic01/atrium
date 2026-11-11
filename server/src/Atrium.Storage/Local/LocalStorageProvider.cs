@@ -50,6 +50,11 @@ public sealed class LocalStorageProvider : IStorageProvider
         {
             throw new StorageObjectNotFoundException(key);
         }
+        catch (UnauthorizedAccessException) when (Directory.Exists(path))
+        {
+            // The key names a folder of other objects, not an object.
+            throw new StorageObjectNotFoundException(key);
+        }
 
         if (range is not { } r)
         {
@@ -70,6 +75,7 @@ public sealed class LocalStorageProvider : IStorageProvider
     public async Task<StorageObject> WriteAsync(string key, Stream content, bool overwrite, CancellationToken ct)
     {
         var destination = Resolve(key);
+        RefuseFolderKey(destination);
         if (!overwrite && File.Exists(destination))
         {
             throw new StorageObjectExistsException(key);
@@ -97,7 +103,7 @@ public sealed class LocalStorageProvider : IStorageProvider
 
     public Task<MultipartUpload> BeginMultipartAsync(string key, CancellationToken ct)
     {
-        StorageKey.Validate(key);
+        RefuseFolderKey(Resolve(key));
         var uploadId = Guid.NewGuid().ToString("N");
         Directory.CreateDirectory(PartDirectory(uploadId));
         return Task.FromResult(new MultipartUpload(key, uploadId));
@@ -149,6 +155,7 @@ public sealed class LocalStorageProvider : IStorageProvider
         MultipartUpload upload, IReadOnlyList<UploadedPart> parts, bool overwrite, CancellationToken ct)
     {
         var destination = Resolve(upload.Key);
+        RefuseFolderKey(destination);
         if (!overwrite && File.Exists(destination))
         {
             throw new StorageObjectExistsException(upload.Key);
@@ -202,10 +209,7 @@ public sealed class LocalStorageProvider : IStorageProvider
     public async IAsyncEnumerable<StorageObject> ListAsync(string prefix, [EnumeratorCancellation] CancellationToken ct)
     {
         StorageKey.ValidatePrefix(prefix);
-        if (!Directory.Exists(_root))
-        {
-            yield break;
-        }
+        RequireRoot();
 
         // Start from the deepest directory the prefix names; the rest of the
         // prefix is matched against each key.
@@ -251,6 +255,11 @@ public sealed class LocalStorageProvider : IStorageProvider
         {
             // Nothing there: deleting is idempotent.
         }
+        catch (UnauthorizedAccessException) when (Directory.Exists(path))
+        {
+            // The key names a folder of other objects. There is no object
+            // with this key to delete, and the folder is left alone.
+        }
 
         return Task.CompletedTask;
     }
@@ -264,6 +273,7 @@ public sealed class LocalStorageProvider : IStorageProvider
             throw new StorageObjectNotFoundException(sourceKey);
         }
 
+        RefuseFolderKey(destination);
         MoveIntoPlace(source, destination, destinationKey, overwrite);
         return Task.CompletedTask;
     }
@@ -279,6 +289,10 @@ public sealed class LocalStorageProvider : IStorageProvider
             }
 
             return StorageHealth.Healthy(new DriveInfo(_root).AvailableFreeSpace);
+        }
+        catch (StorageUnavailableException e)
+        {
+            return StorageHealth.Failed("storage.root_missing", e.Message);
         }
         catch (UnauthorizedAccessException e)
         {
@@ -315,13 +329,50 @@ public sealed class LocalStorageProvider : IStorageProvider
             throw new InvalidStorageKeyException(key, "outside the storage root");
         }
 
+        RequireRoot();
         return path;
+    }
+
+    /// <summary>
+    /// The root must already exist; this class never creates it. If a
+    /// network share is not mounted, its mount point is an empty directory
+    /// or missing: creating folders there would silently store files on the
+    /// wrong disk and report the location as healthy.
+    /// </summary>
+    private void RequireRoot()
+    {
+        if (!Directory.Exists(_root))
+        {
+            throw new StorageUnavailableException(
+                "The storage root directory does not exist. If it is a network share or an external disk, it may not be mounted.");
+        }
+    }
+
+    /// <summary>
+    /// On a filesystem a name is either a file or a folder. A key that is
+    /// already the folder of other objects cannot also be an object.
+    /// </summary>
+    private static void RefuseFolderKey(string path)
+    {
+        if (Directory.Exists(path))
+        {
+            throw new StorageException("The key is already used as the folder of other objects.");
+        }
     }
 
     private void MoveIntoPlace(string source, string destination, string destinationKey, bool overwrite)
     {
         var directory = Path.GetDirectoryName(destination)!;
-        Directory.CreateDirectory(directory);
+        try
+        {
+            Directory.CreateDirectory(directory);
+        }
+        catch (IOException e)
+        {
+            // Part of the key's path is an existing object, not a folder.
+            throw new StorageException("Part of the key's path is already used by an object.", e);
+        }
+
         try
         {
             File.Move(source, destination, overwrite);

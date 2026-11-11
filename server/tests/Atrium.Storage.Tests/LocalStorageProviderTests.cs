@@ -128,6 +128,74 @@ public sealed class LocalStorageProviderTests : StorageProviderContractTests
     }
 
     [Fact]
+    public async Task A_missing_root_is_an_error_and_is_never_created()
+    {
+        // What an unmounted network share looks like: the directory is gone.
+        var unmounted = Path.Combine(Outside, "unmounted-share");
+        var provider = new LocalStorageProvider(unmounted);
+        using var content = new MemoryStream([1, 2, 3]);
+
+        await Assert.ThrowsAsync<StorageUnavailableException>(() => provider.WriteAsync("blobs/x", content, false, CancellationToken.None));
+        await Assert.ThrowsAsync<StorageUnavailableException>(() => provider.OpenReadAsync("blobs/x", null, CancellationToken.None));
+        await Assert.ThrowsAsync<StorageUnavailableException>(() => provider.StatAsync("blobs/x", CancellationToken.None));
+        await Assert.ThrowsAsync<StorageUnavailableException>(() => provider.DeleteAsync("blobs/x", CancellationToken.None));
+        await Assert.ThrowsAsync<StorageUnavailableException>(() => provider.BeginMultipartAsync("blobs/x", CancellationToken.None));
+        await Assert.ThrowsAsync<StorageUnavailableException>(() => provider.MoveAsync("a", "b", false, CancellationToken.None));
+        await Assert.ThrowsAsync<StorageUnavailableException>(async () =>
+        {
+            await foreach (var _ in provider.ListAsync(string.Empty, CancellationToken.None))
+            {
+            }
+        });
+
+        var health = await provider.CheckAsync(CancellationToken.None);
+        Assert.False(health.Ok);
+        Assert.Equal("storage.root_missing", health.ErrorCode);
+        Assert.False(Directory.Exists(unmounted));
+    }
+
+    [Fact]
+    public async Task Unsafe_keys_are_refused_before_the_root_is_even_looked_at()
+    {
+        var provider = new LocalStorageProvider(Path.Combine(Outside, "unmounted-share"));
+
+        await Assert.ThrowsAsync<InvalidStorageKeyException>(() => provider.StatAsync("../x", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task A_key_that_is_the_folder_of_other_objects_is_not_an_object()
+    {
+        var content = RandomBytes(100);
+        await PutAsync("a/b", content);
+
+        await Assert.ThrowsAsync<StorageObjectNotFoundException>(() => GetAsync("a"));
+        Assert.Null(await Provider.StatAsync("a", CancellationToken.None));
+        await Provider.DeleteAsync("a", CancellationToken.None);
+        await Assert.ThrowsAsync<StorageException>(() => PutAsync("a", RandomBytes(10), overwrite: true));
+        await Assert.ThrowsAsync<StorageException>(() => Provider.BeginMultipartAsync("a", CancellationToken.None));
+        await PutAsync("other", RandomBytes(10));
+        await Assert.ThrowsAsync<StorageException>(() => Provider.MoveAsync("other", "a", overwrite: true, CancellationToken.None));
+
+        // Nothing under the folder was harmed by any of it.
+        Assert.Equal(content, await GetAsync("a/b"));
+        Assert.Equal(["a/b", "other"], await KeysAsync());
+        Assert.Empty(TempFiles());
+    }
+
+    [Fact]
+    public async Task A_key_below_an_existing_object_is_refused()
+    {
+        var content = RandomBytes(100);
+        await PutAsync("a", content);
+
+        await Assert.ThrowsAsync<StorageException>(() => PutAsync("a/b", RandomBytes(10)));
+
+        Assert.Equal(content, await GetAsync("a"));
+        Assert.Equal(["a"], await KeysAsync());
+        Assert.Empty(TempFiles());
+    }
+
+    [Fact]
     public void The_root_must_be_an_absolute_path()
     {
         Assert.Throws<ArgumentException>(() => new LocalStorageProvider("relative/path"));

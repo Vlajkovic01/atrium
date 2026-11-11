@@ -25,6 +25,14 @@ public sealed record UploadedPart(int PartNumber, string ETag, long Size);
 
 public class StorageException(string message, Exception? inner = null) : Exception(message, inner);
 
+/// <summary>
+/// The storage location cannot be used right now: the service did not
+/// answer, refused the request, or the root directory is not there (for
+/// example an unmounted network share). Nothing was changed.
+/// </summary>
+public sealed class StorageUnavailableException(string message, Exception? inner = null)
+    : StorageException(message, inner);
+
 public sealed class StorageObjectNotFoundException(string key)
     : StorageException($"Object '{key}' does not exist.")
 {
@@ -46,7 +54,11 @@ public sealed class StorageObjectExistsException(string key)
 /// Rules every implementation follows, checked by one shared test suite:
 /// a write is all or nothing; an existing object is never replaced unless
 /// the caller asks; delete is idempotent; nothing outside the location's
-/// root can be reached through a key.
+/// root can be reached through a key. A provider never creates the
+/// location itself (the root directory or the bucket): if it is missing,
+/// operations fail with <see cref="StorageUnavailableException"/>, so an
+/// unmounted share or a mistyped bucket is an error, not a new empty
+/// location.
 /// </remarks>
 public interface IStorageProvider
 {
