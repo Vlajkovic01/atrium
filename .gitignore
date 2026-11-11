@@ -34,3 +34,8 @@ Thumbs.db
 
 # Written by the IDE with machine-specific ports.
 **/Properties/launchSettings.json
+
+# Playwright output.
+test-results/
+playwright-report/
+blob-report/

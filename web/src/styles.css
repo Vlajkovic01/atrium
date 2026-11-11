@@ -1,0 +1,372 @@
+/*
+ * One stylesheet, no inline styles: the server's content security policy
+ * allows styles only from files it serves.
+ */
+
+:root {
+  color-scheme: light dark;
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --text: #1b1f24;
+  --muted: #5a6472;
+  --border: #d5dae1;
+  --accent: #1f5fbf;
+  --accent-text: #ffffff;
+  --ok-bg: #e4f4e8;
+  --ok-text: #14532d;
+  --info-bg: #e6eefb;
+  --info-text: #173b78;
+  --warn-bg: #fff3d6;
+  --warn-text: #6b4a00;
+  --error-bg: #fde8e8;
+  --error-text: #8a1c1c;
+  --focus: #e8a100;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171b;
+    --surface: #1e2329;
+    --text: #e8ebef;
+    --muted: #a3adba;
+    --border: #39414c;
+    --accent: #6ea8ff;
+    --accent-text: #0b1830;
+    --ok-bg: #16351f;
+    --ok-text: #b7ebc6;
+    --info-bg: #17294a;
+    --info-text: #c3d8ff;
+    --warn-bg: #3d2f08;
+    --warn-text: #ffe3a1;
+    --error-bg: #441a1a;
+    --error-text: #ffc9c9;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem;
+}
+
+h2 {
+  font-size: 1.2rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+h3 {
+  font-size: 1.05rem;
+  margin: 1.25rem 0 0.25rem;
+}
+
+p {
+  margin: 0.5rem 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+/* A focus ring that is visible on every background, for keyboard users. */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.card {
+  max-width: 28rem;
+  margin: 3rem auto;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.card-wide {
+  max-width: 40rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.field {
+  margin: 1rem 0;
+}
+
+.field label,
+.language label,
+legend {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="url"],
+input:not([type]),
+select {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.language {
+  min-width: 11rem;
+}
+
+.help {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.3rem 0 0;
+}
+
+.check,
+.radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.6rem 0;
+}
+
+.check input,
+.radio input {
+  margin-top: 0.3rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 1rem 0;
+  padding: 0.5rem 0.9rem;
+}
+
+button {
+  font: inherit;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.message {
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.message-ok {
+  background: var(--ok-bg);
+  color: var(--ok-text);
+}
+
+.message-info {
+  background: var(--info-bg);
+  color: var(--info-text);
+}
+
+.message-warning {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+
+.message-error {
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+
+.insecure {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  padding: 0.6rem 1rem;
+  margin: 0 0 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+progress {
+  width: 100%;
+  height: 0.5rem;
+  accent-color: var(--accent);
+}
+
+.progress-label {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.shell {
+  min-height: 100vh;
+}
+
+.shell > .insecure {
+  border-radius: 0;
+  margin: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.topbar nav {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.topbar nav a {
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.topbar nav a.active {
+  background: var(--info-bg);
+  color: var(--info-text);
+  font-weight: 600;
+}
+
+.who {
+  color: var(--muted);
+}
+
+.content {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.25rem 1.25rem 1.25rem;
+  margin: 1.25rem 0;
+}
+
+.list {
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.list li:last-child {
+  border-bottom: none;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: var(--info-bg);
+  color: var(--info-text);
+  font-size: 0.8rem;
+}
+
+.code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 1.6rem;
+  letter-spacing: 0.15em;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.phone-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* The QR code must stay dark on light to be scannable, also in dark mode. */
+.phone-link svg {
+  background: #ffffff;
+  border-radius: 8px;
+  max-width: 100%;
+  height: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto;
+  }
+}

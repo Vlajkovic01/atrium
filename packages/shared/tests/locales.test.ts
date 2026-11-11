@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { isLocale, localeNames, messages, pickLocale, supportedLocales } from "../src/i18n/index.ts";
-import { messagesToCyrillic, type MessageTree } from "../src/i18n/transliterate.ts";
+import { KEEP_LATIN, messagesToCyrillic, type MessageTree } from "../src/i18n/transliterate.ts";
 
 function flatten(tree: MessageTree, prefix = ""): Map<string, string> {
   const out = new Map<string, string>();
@@ -101,6 +101,26 @@ describe("translations", () => {
   it("keeps the Cyrillic file in step with the Latin one", () => {
     // If this fails, run: pnpm --filter @atrium/shared generate:cyrillic
     expect(messages["sr-Cyrl"]).toEqual(messagesToCyrillic(messages["sr-Latn"]));
+  });
+
+  it("leaves no Latin word in the Cyrillic text except names that are meant to stay Latin", () => {
+    // A Latin word left behind is a foreign term the converter mangled or
+    // skipped ("буцкет", "проxy"). Either translate it, or add it to
+    // KEEP_LATIN and write case endings after a hyphen.
+    const offenders: string[] = [];
+    for (const [key, value] of cyrillic) {
+      const readable = value
+        .replace(/\{\s*[A-Za-z_][A-Za-z0-9_]*\s*(,\s*(plural|select|selectordinal)\s*,)?/g, " ")
+        .replace(/\b(one|few|many|other|zero|two)\s*\{/g, " ")
+        .replace(/<[^>]+>/g, " ");
+      for (const word of readable.match(/[\p{L}\p{N}]+/gu) ?? []) {
+        if (/[A-Za-zČĆĐŠŽčćđšž]/.test(word) && !KEEP_LATIN.has(word)) {
+          offenders.push(`${key}: ${word}`);
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
   });
 
   it("writes Cyrillic messages in Cyrillic", () => {

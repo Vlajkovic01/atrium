@@ -37,10 +37,22 @@ await using (var scope = app.Services.CreateAsyncScope())
         scope.ServiceProvider.GetRequiredService<AtriumDbContext>(), app.Lifetime.ApplicationStopping);
 }
 
+app.UseSecurityHeaders();
+
+// Before authorization: the web app's own files are public. They contain
+// no user data, and the sign-in page has to load for someone signed out.
+app.UseStaticFiles();
+
+// Routing is placed here on purpose. If it ran first (the default), the
+// web app's catch-all route would already be chosen for a script or style
+// file, and the static file middleware would step aside for it.
+app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapOpenApi().AllowAnonymous();
+app.MapWebApp();
 
 var v1 = app.MapGroup("/api/v1");
 v1.MapSystemEndpoints();

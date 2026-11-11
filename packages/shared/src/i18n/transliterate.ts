@@ -111,6 +111,13 @@ export const KEEP_LATIN: ReadonlySet<string> = new Set([
   "MB",
   "KB",
   "TB",
+  // Technical terms with no settled Serbian word. Written with a hyphen
+  // before a case ending (bucket-a), so the ending is converted and the
+  // term is not.
+  "bucket",
+  "Bucket",
+  "reverse",
+  "proxy",
 ]);
 
 /**

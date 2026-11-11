@@ -63,5 +63,151 @@
       "bucket_not_found": "That bucket does not exist. Check the name.",
       "read_back_mismatch": "The location returned different data than was written to it. It cannot be trusted with files."
     }
+  },
+  "nav": {
+    "devices": "Devices",
+    "account": "Account",
+    "main": "Main"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "setup": {
+    "title": "Set up Atrium",
+    "progress": "Step {current} of {total}",
+    "steps": {
+      "welcome": "Welcome",
+      "admin": "Admin account",
+      "storage": "Storage",
+      "access": "Access",
+      "done": "Done"
+    },
+    "welcome": {
+      "heading": "Welcome to Atrium",
+      "body": "A few steps and your private cloud is ready. Your files stay on storage you control.",
+      "tokenLabel": "Setup token",
+      "tokenHelp": "To make sure it is you setting up this server, it printed a setup token to its log when it started. On the server, run {command} and copy the token here."
+    },
+    "admin": {
+      "heading": "Create the admin account",
+      "body": "This account manages the server. You can add more people later.",
+      "name": "Name",
+      "nameHelp": "You sign in with this. Letters, digits, dots, dashes and underscores.",
+      "password": "Password",
+      "passwordHelp": "At least {minLength} characters. A sentence you can remember works well.",
+      "confirm": "Repeat the password",
+      "mismatch": "The two passwords are not the same.",
+      "submit": "Create account"
+    },
+    "storage": {
+      "heading": "Where should files be stored?",
+      "body": "Choose the place that will hold everyone's files. You can add more locations later.",
+      "kind": "Kind of storage",
+      "kindLocal": "A folder on this server",
+      "kindShare": "A mounted network share",
+      "kindS3": "S3-compatible storage",
+      "name": "Name of this location",
+      "defaultName": "Main storage",
+      "path": "Folder",
+      "pathHelp": "The full path as the server sees it. In Docker this is a path inside the container, for example {example}.",
+      "createDirectory": "Create the folder if it does not exist",
+      "willCreate": "This folder does not exist yet. It will be created when you continue.",
+      "shareNote": "A network share must be mounted before the server starts. If it is ever missing, Atrium marks the location as offline and does not write anywhere else.",
+      "bucket": "Bucket",
+      "serviceUrl": "Service address",
+      "serviceUrlHelp": "Leave empty for Amazon S3. For other services enter their address, for example {example}.",
+      "region": "Region",
+      "accessKey": "Access key",
+      "secretKey": "Secret key",
+      "keyPrefix": "Folder inside the bucket",
+      "forcePathStyle": "Address the bucket in the path (needed by most self-hosted services)",
+      "test": "Test",
+      "testing": "Testing…",
+      "testOk": "This location works.",
+      "testOkFree": "This location works. Free space: {free}.",
+      "holdsData": "This location already holds data from an Atrium server and cannot be added as new.",
+      "save": "Use this location",
+      "formatNote": "Files are stored in Atrium's own layout and named by their content. Their names and folders are kept in the server's database. Back up the server's config folder together with this location so that both can be restored."
+    },
+    "access": {
+      "heading": "Reaching Atrium",
+      "address": "Atrium is reachable at {address}.",
+      "secure": "This connection is encrypted.",
+      "outside": "To use Atrium away from home, put it behind HTTPS. There are three ways:",
+      "optionCaddy": "Turn on the built-in HTTPS service in the Compose file, if you have a domain name.",
+      "optionProxy": "Use a reverse proxy you already run.",
+      "optionTunnel": "Use a tunnel service, with no ports opened on your router.",
+      "later": "You can do this later. Nothing here is required to finish."
+    },
+    "done": {
+      "heading": "Atrium is ready",
+      "body": "The server is set up and storage is working.",
+      "phoneHeading": "Connect your phone",
+      "phoneBody": "Open the Atrium app and scan this code. It signs the phone in to your account. The code works once and for two minutes.",
+      "newCode": "Show a new code",
+      "open": "Open Atrium"
+    }
+  },
+  "signIn": {
+    "heading": "Sign in",
+    "name": "Name",
+    "password": "Password",
+    "submit": "Sign in",
+    "totpHeading": "Two-step verification",
+    "totpBody": "Enter the six-digit code from your authenticator app, or one of your recovery codes.",
+    "code": "Code",
+    "verify": "Verify",
+    "startOver": "Start over"
+  },
+  "devices": {
+    "heading": "Devices",
+    "body": "Every device signed in to your account. Sign out any you do not recognize.",
+    "thisDevice": "This device",
+    "lastUsed": "Last used {when}",
+    "readOnly": "Read-only",
+    "signOut": "Sign out",
+    "signOutConfirm": "Sign out {device}?",
+    "kinds": {
+      "web": "Browser",
+      "mobile": "Phone or tablet",
+      "tv": "TV",
+      "other": "Other device"
+    },
+    "phone": {
+      "heading": "Connect a phone",
+      "body": "Open the Atrium app on the phone and scan the code. No password is typed on the phone.",
+      "show": "Show QR code",
+      "validFor": "Valid for {seconds, plural, one {# more second} other {# more seconds}}.",
+      "expired": "This code has expired.",
+      "codeLabel": "QR code for connecting a phone"
+    },
+    "approve": {
+      "heading": "Approve a device",
+      "body": "A TV or another device without a keyboard shows a code. Enter it here.",
+      "code": "Code shown on the device",
+      "find": "Find device",
+      "found": "{device} wants to sign in to your account.",
+      "from": "Connecting from {address}.",
+      "warning": "Approve only if this device is in front of you and shows this code.",
+      "readOnly": "Read-only: it cannot change or delete anything",
+      "hidePersonal": "Hide my personal files on this device",
+      "approve": "Approve",
+      "deny": "Deny",
+      "approved": "Approved. The device is signing in.",
+      "denied": "Denied. The device was not signed in.",
+      "notFound": "No device is waiting with that code. Codes expire after ten minutes."
+    }
+  },
+  "account": {
+    "heading": "Account",
+    "signedInAs": "Signed in as {name}.",
+    "displayName": "Display name",
+    "saved": "Saved.",
+    "resetNotice": "An administrator reset your password. Choose a new one that only you know.",
+    "passwordHeading": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed. Your other devices were signed out."
   }
 }

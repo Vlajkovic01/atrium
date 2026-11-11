@@ -81,3 +81,44 @@ jobs:
 
       - name: Test
         run: pnpm run test
+
+  e2e:
+    name: End-to-end tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: server/global.json
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the web app
+        run: pnpm --filter @atrium/web run build
+
+      - name: Build the server
+        run: dotnet build server/src/Atrium.Api --configuration Release
+
+      - name: Install the browser
+        run: pnpm --filter @atrium/web exec playwright install --with-deps chromium
+
+      # Starts the real server with the built web app and drives it in a browser.
+      - name: Run
+        run: pnpm --filter @atrium/web run e2e
+
+      - name: Keep traces of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces
+          path: web/test-results
+          retention-days: 7
