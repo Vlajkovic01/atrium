@@ -16,6 +16,8 @@ public sealed class S3ServerFixture : IAsyncLifetime
     public const string AccessKey = "atrium-test";
     public const string SecretKey = "atrium-test-secret";
 
+    public const string Bucket = "atrium-tests";
+
     private const int Port = 8333;
     private const string ConfigPath = "/etc/seaweedfs/s3.json";
 
@@ -41,13 +43,11 @@ public sealed class S3ServerFixture : IAsyncLifetime
         await _container.StartAsync();
 
         // The port opens before the server's parts have found each other and
-        // before it can store anything. Wait until a real write succeeds; if
-        // it never does, fail with the server's own log, so the cause is in
-        // the test output and not a guess.
-        // The provider's own health check is the probe, so "ready" means
-        // ready for exactly the requests the tests are about to send.
+        // before it can store anything. The provider's own health check is
+        // the probe, so "ready" means ready for exactly the requests the
+        // tests send. If it never passes, fail with the server's own log.
         using var client = NewClient();
-        using var provider = new S3StorageProvider(Options("readiness"));
+        using var provider = new S3StorageProvider(Options(keyPrefix: "readiness"));
         var deadline = DateTime.UtcNow.AddSeconds(90);
         var last = "the bucket could not be created";
         var bucketCreated = false;
@@ -57,7 +57,7 @@ public sealed class S3ServerFixture : IAsyncLifetime
             {
                 if (!bucketCreated)
                 {
-                    await client.PutBucketAsync("readiness");
+                    await client.PutBucketAsync(Bucket);
                     bucketCreated = true;
                 }
 
@@ -85,13 +85,6 @@ public sealed class S3ServerFixture : IAsyncLifetime
 
     public Task DisposeAsync() => _container.DisposeAsync().AsTask();
 
-    public async Task<string> CreateBucketAsync()
-    {
-        var bucket = $"test-{Guid.NewGuid():N}";
-        using var client = NewClient();
-        await client.PutBucketAsync(bucket);
-        return bucket;
-    }
 
     private AmazonS3Client NewClient() => new(
         new BasicAWSCredentials(AccessKey, SecretKey),
@@ -106,7 +99,12 @@ public sealed class S3ServerFixture : IAsyncLifetime
 
     private static string Tail(string text) => text.Length <= 4000 ? text : text[^4000..];
 
-    public S3StorageOptions Options(string bucket, string? keyPrefix = null) =>
+    /// <summary>
+    /// All tests share one bucket and are kept apart by key prefix. This
+    /// server reserves storage volumes per bucket, so a bucket per test
+    /// runs it out of volumes after a few tests.
+    /// </summary>
+    public S3StorageOptions Options(string? keyPrefix, string bucket = Bucket) =>
         new(bucket, AccessKey, SecretKey, ServiceUrl, Region: null, ForcePathStyle: true, keyPrefix);
 }
 
@@ -121,13 +119,12 @@ public sealed class S3StorageProviderTests(S3ServerFixture server) : StorageProv
     private const int MiB = 1024 * 1024;
 
     private readonly List<IDisposable> _providers = [];
-    private string _bucket = string.Empty;
 
-    protected override async Task<IStorageProvider> CreateProviderAsync()
-    {
-        _bucket = await server.CreateBucketAsync();
-        return Track(new S3StorageProvider(server.Options(_bucket)));
-    }
+    // A fresh prefix per test: each test sees an empty location.
+    private readonly string _prefix = $"test-{Guid.NewGuid():N}";
+
+    protected override Task<IStorageProvider> CreateProviderAsync() =>
+        Task.FromResult<IStorageProvider>(Track(new S3StorageProvider(server.Options(_prefix))));
 
     protected override Task CleanUpAsync()
     {
@@ -150,7 +147,7 @@ public sealed class S3StorageProviderTests(S3ServerFixture server) : StorageProv
     {
         // The real limit is 5 GB. Lowering it exercises the same code path
         // with an object small enough for a test.
-        var provider = Track(new S3StorageProvider(server.Options(_bucket), singleCopyLimit: 5 * MiB, copyPartSize: 5 * MiB));
+        var provider = Track(new S3StorageProvider(server.Options(_prefix), singleCopyLimit: 5 * MiB, copyPartSize: 5 * MiB));
         var content = RandomBytes(11 * MiB + 3);
         await PutAsync("staging/large", content);
 
@@ -165,8 +162,8 @@ public sealed class S3StorageProviderTests(S3ServerFixture server) : StorageProv
     [Fact]
     public async Task A_key_prefix_keeps_two_locations_in_one_bucket_apart()
     {
-        var first = Track(new S3StorageProvider(server.Options(_bucket, "atrium-one")));
-        var second = Track(new S3StorageProvider(server.Options(_bucket, "/atrium-two/")));
+        var first = Track(new S3StorageProvider(server.Options($"{_prefix}/atrium-one")));
+        var second = Track(new S3StorageProvider(server.Options($"/{_prefix}/atrium-two/")));
         using (var content = new MemoryStream([1, 2, 3]))
         {
             await first.WriteAsync("blobs/object", content, overwrite: false, CancellationToken.None);
@@ -181,15 +178,15 @@ public sealed class S3StorageProviderTests(S3ServerFixture server) : StorageProv
         }
 
         Assert.Empty(seenBySecond);
-        // Without a prefix the object is visible under its full path.
+        // From the enclosing location the object is visible under its full path.
         Assert.Equal(["atrium-one/blobs/object"], await KeysAsync());
     }
 
     [Fact]
     public async Task The_health_check_explains_a_missing_bucket_and_wrong_credentials()
     {
-        using var noBucket = new S3StorageProvider(server.Options("bucket-that-does-not-exist"));
-        using var badSecret = new S3StorageProvider(server.Options(_bucket) with { SecretKey = "wrong-secret" });
+        using var noBucket = new S3StorageProvider(server.Options(_prefix, bucket: "bucket-that-does-not-exist"));
+        using var badSecret = new S3StorageProvider(server.Options(_prefix) with { SecretKey = "wrong-secret" });
 
         var missing = await noBucket.CheckAsync(CancellationToken.None);
         var denied = await badSecret.CheckAsync(CancellationToken.None);
@@ -216,7 +213,7 @@ public sealed class S3StorageProviderTests(S3ServerFixture server) : StorageProv
     [Fact]
     public void Printing_the_options_does_not_reveal_the_secret_key()
     {
-        var options = server.Options(_bucket);
+        var options = server.Options(_prefix);
 
         Assert.DoesNotContain(S3ServerFixture.SecretKey, options.ToString(), StringComparison.Ordinal);
     }
