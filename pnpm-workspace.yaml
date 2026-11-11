@@ -1,3 +1,12 @@
 packages:
   - "packages/*"
   - "web"
+
+# Security fixes for packages that arrive indirectly, through development
+# tools. Each line says why it is here; remove it once the tool that pulls
+# the package in asks for a fixed version itself.
+overrides:
+  # Advisory on minimatch (denial of service through glob patterns), fixed
+  # in 11.0.1. ESLint still asks for the 10 line. Pinned below the newest
+  # release so pnpm's minimum-release-age check stays in force.
+  "minimatch@^10": "11.0.4"
