@@ -63,5 +63,151 @@
       "bucket_not_found": "Taj bucket ne postoji. Proverite naziv.",
       "read_back_mismatch": "Lokacija je vratila drugačije podatke od upisanih. Ne može joj se poveriti čuvanje fajlova."
     }
+  },
+  "nav": {
+    "devices": "Uređaji",
+    "account": "Nalog",
+    "main": "Glavni meni"
+  },
+  "language": {
+    "label": "Jezik"
+  },
+  "setup": {
+    "title": "Podešavanje Atrium servera",
+    "progress": "Korak {current} od {total}",
+    "steps": {
+      "welcome": "Dobro došli",
+      "admin": "Administratorski nalog",
+      "storage": "Skladište",
+      "access": "Pristup",
+      "done": "Gotovo"
+    },
+    "welcome": {
+      "heading": "Dobro došli u Atrium",
+      "body": "Još nekoliko koraka i vaš privatni oblak je spreman. Vaši fajlovi ostaju na skladištu koje vi kontrolišete.",
+      "tokenLabel": "Token za podešavanje",
+      "tokenHelp": "Da bismo bili sigurni da baš vi podešavate ovaj server, on je pri pokretanju ispisao token za podešavanje u svoj log. Na serveru pokrenite {command} i prepišite token ovde."
+    },
+    "admin": {
+      "heading": "Napravite administratorski nalog",
+      "body": "Ovaj nalog upravlja serverom. Ostale korisnike možete dodati kasnije.",
+      "name": "Ime",
+      "nameHelp": "Ovim imenom se prijavljujete. Slova, cifre, tačke, crtice i donje crte.",
+      "password": "Lozinka",
+      "passwordHelp": "Najmanje {minLength} znakova. Dobro služi rečenica koju lako pamtite.",
+      "confirm": "Ponovite lozinku",
+      "mismatch": "Dve lozinke nisu iste.",
+      "submit": "Napravi nalog"
+    },
+    "storage": {
+      "heading": "Gde da se čuvaju fajlovi?",
+      "body": "Izaberite mesto na kome će se čuvati fajlovi svih korisnika. Još lokacija možete dodati kasnije.",
+      "kind": "Vrsta skladišta",
+      "kindLocal": "Folder na ovom serveru",
+      "kindShare": "Montiran mrežni disk",
+      "kindS3": "S3 kompatibilno skladište",
+      "name": "Naziv ove lokacije",
+      "defaultName": "Glavno skladište",
+      "path": "Folder",
+      "pathHelp": "Puna putanja onako kako je vidi server. U Docker okruženju je to putanja unutar kontejnera, na primer {example}.",
+      "createDirectory": "Napravi folder ako ne postoji",
+      "willCreate": "Ovaj folder još ne postoji. Biće napravljen kada nastavite.",
+      "shareNote": "Mrežni disk mora biti montiran pre pokretanja servera. Ako ikada nedostaje, Atrium označava lokaciju kao nedostupnu i ne piše nigde drugde.",
+      "bucket": "Bucket",
+      "serviceUrl": "Adresa servisa",
+      "serviceUrlHelp": "Ostavite prazno za Amazon S3. Za druge servise unesite njihovu adresu, na primer {example}.",
+      "region": "Region",
+      "accessKey": "Pristupni ključ",
+      "secretKey": "Tajni ključ",
+      "keyPrefix": "Folder unutar bucket-a",
+      "forcePathStyle": "Navedi bucket u putanji (potrebno većini servisa na sopstvenom serveru)",
+      "test": "Isprobaj",
+      "testing": "Proveravam…",
+      "testOk": "Ova lokacija radi.",
+      "testOkFree": "Ova lokacija radi. Slobodan prostor: {free}.",
+      "holdsData": "Ova lokacija već sadrži podatke jednog Atrium servera i ne može da se doda kao nova.",
+      "save": "Koristi ovu lokaciju",
+      "formatNote": "Fajlovi se čuvaju u posebnom rasporedu i nose naziv prema svom sadržaju. Njihova imena i folderi čuvaju se u bazi servera. Pravite rezervnu kopiju konfiguracionog foldera servera zajedno sa ovom lokacijom, da bi oboje moglo da se vrati."
+    },
+    "access": {
+      "heading": "Pristup serveru",
+      "address": "Atrium je dostupan na adresi {address}.",
+      "secure": "Ova veza je šifrovana.",
+      "outside": "Da biste Atrium koristili i van kuće, postavite ga iza HTTPS veze. Postoje tri načina:",
+      "optionCaddy": "Uključite ugrađeni HTTPS servis u Compose fajlu, ako imate naziv domena.",
+      "optionProxy": "Koristite reverse proxy koji već imate.",
+      "optionTunnel": "Koristite tunel servis, bez otvaranja portova na ruteru.",
+      "later": "Ovo možete uraditi i kasnije. Ništa odavde nije obavezno za završetak."
+    },
+    "done": {
+      "heading": "Atrium je spreman",
+      "body": "Server je podešen i skladište radi.",
+      "phoneHeading": "Povežite telefon",
+      "phoneBody": "Otvorite Atrium aplikaciju i skenirajte ovaj kod. On prijavljuje telefon na vaš nalog. Kod važi jednom i dva minuta.",
+      "newCode": "Prikaži novi kod",
+      "open": "Otvori Atrium"
+    }
+  },
+  "signIn": {
+    "heading": "Prijava",
+    "name": "Ime",
+    "password": "Lozinka",
+    "submit": "Prijavi se",
+    "totpHeading": "Potvrda u dva koraka",
+    "totpBody": "Unesite šestocifreni kod iz aplikacije za potvrdu ili jedan od rezervnih kodova.",
+    "code": "Kod",
+    "verify": "Potvrdi",
+    "startOver": "Počni ispočetka"
+  },
+  "devices": {
+    "heading": "Uređaji",
+    "body": "Svi uređaji prijavljeni na vaš nalog. Odjavite one koje ne prepoznajete.",
+    "thisDevice": "Ovaj uređaj",
+    "lastUsed": "Poslednji put korišćen {when}",
+    "readOnly": "Samo čitanje",
+    "signOut": "Odjavi",
+    "signOutConfirm": "Odjaviti uređaj {device}?",
+    "kinds": {
+      "web": "Pregledač",
+      "mobile": "Telefon ili tablet",
+      "tv": "Televizor",
+      "other": "Drugi uređaj"
+    },
+    "phone": {
+      "heading": "Povežite telefon",
+      "body": "Otvorite Atrium aplikaciju na telefonu i skenirajte kod. Lozinka se ne kuca na telefonu.",
+      "show": "Prikaži QR kod",
+      "validFor": "Važi još {seconds, plural, one {# sekundu} few {# sekunde} other {# sekundi}}.",
+      "expired": "Ovaj kod je istekao.",
+      "codeLabel": "QR kod za povezivanje telefona"
+    },
+    "approve": {
+      "heading": "Odobrite uređaj",
+      "body": "Televizor ili drugi uređaj bez tastature prikazuje kod. Unesite ga ovde.",
+      "code": "Kod prikazan na uređaju",
+      "find": "Pronađi uređaj",
+      "found": "Uređaj {device} želi da se prijavi na vaš nalog.",
+      "from": "Povezuje se sa adrese {address}.",
+      "warning": "Odobrite samo ako je taj uređaj ispred vas i prikazuje ovaj kod.",
+      "readOnly": "Samo čitanje: ne može ništa da menja ni briše",
+      "hidePersonal": "Sakrij moje lične fajlove na ovom uređaju",
+      "approve": "Odobri",
+      "deny": "Odbij",
+      "approved": "Odobreno. Uređaj se prijavljuje.",
+      "denied": "Odbijeno. Uređaj nije prijavljen.",
+      "notFound": "Nijedan uređaj ne čeka sa tim kodom. Kodovi ističu posle deset minuta."
+    }
+  },
+  "account": {
+    "heading": "Nalog",
+    "signedInAs": "Prijavljeni ste kao {name}.",
+    "displayName": "Ime za prikaz",
+    "saved": "Sačuvano.",
+    "resetNotice": "Administrator je resetovao vašu lozinku. Izaberite novu, koju znate samo vi.",
+    "passwordHeading": "Promena lozinke",
+    "currentPassword": "Trenutna lozinka",
+    "newPassword": "Nova lozinka",
+    "changePassword": "Promeni lozinku",
+    "passwordChanged": "Lozinka je promenjena. Ostali uređaji su odjavljeni."
   }
 }

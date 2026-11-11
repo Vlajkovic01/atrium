@@ -56,7 +56,9 @@ describe("text", () => {
     ["Atrium server", "Atrium сервер"],
     ["QR kod", "QR код"],
     ["Prikažite novi QR kod", "Прикажите нови QR код"],
-    ["S3 bucket na AWS", "S3 буцкет на AWS"],
+    ["S3 bucket na AWS", "S3 bucket на AWS"],
+    ["Folder unutar bucket-a", "Фолдер унутар bucket-а"],
+    ["reverse proxy koji već imate", "reverse proxy који већ имате"],
     ["Android TV", "Android TV"],
     ["Wi-Fi mreža", "Wi-Fi мрежа"],
   ])("keeps names and abbreviations in Latin script: %s", (latin, cyrillic) => {
