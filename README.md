@@ -34,9 +34,17 @@ Requires the .NET 10 SDK.
 
 ```
 cd server
-dotnet test
+dotnet test --filter "Category!=Containers"
 dotnet run --project src/Atrium.Api
 ```
+
+Tests in the `Containers` category start PostgreSQL in Docker. Plain
+`dotnet test` runs them too and is what CI does.
+
+The server keeps its database and keys in the directory named by
+`ATRIUM_CONFIG_DIR` (default `.atrium` in the working directory). SQLite
+is the default database; set `ATRIUM_DB_PROVIDER=postgres` and
+`ATRIUM_DB_CONNECTION` to use PostgreSQL.
 
 ## Contributing
 

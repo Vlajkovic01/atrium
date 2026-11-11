@@ -8,4 +8,11 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Atrium.Core\Atrium.Core.csproj" />
+    <ProjectReference Include="..\Atrium.Data\Atrium.Data.csproj" />
+    <ProjectReference Include="..\Atrium.Data.Postgres\Atrium.Data.Postgres.csproj" />
+    <ProjectReference Include="..\Atrium.Data.Sqlite\Atrium.Data.Sqlite.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -60,10 +60,14 @@ is actually in the repository.
 | Microsoft.NET.Test.Sdk | 17.14.1 | MIT | Test host |
 | xunit | 2.9.3 | Apache-2.0 | Test framework |
 | xunit.runner.visualstudio | 3.1.4 | Apache-2.0 | Test runner adapter |
+| Microsoft.EntityFrameworkCore (Relational, Sqlite, Design) | 10.0.15 | MIT | Database access and migrations; brings SQLitePCLRaw (Apache-2.0) and SQLite (public domain) |
+| Npgsql.EntityFrameworkCore.PostgreSQL | 10.0.3 | PostgreSQL License | PostgreSQL provider |
+| dotnet-ef | 10.0.15 (tool) | MIT | Generates migrations at development time |
+| Testcontainers.PostgreSql | 4.16.0 | MIT | PostgreSQL container in tests |
 | NSec.Cryptography with libsodium | not yet added | MIT; ISC | Argon2id password hashing |
 | AWSSDK.S3 | not yet added | Apache-2.0 | S3-compatible storage provider |
 | Microsoft.AspNetCore.Authentication.JwtBearer | not yet added | MIT | Access token validation |
-| Testcontainers for .NET | not yet added | MIT | PostgreSQL and S3 containers in tests |
+| Testcontainers for .NET (S3 module) | not yet added | MIT | S3 container in tests |
 | pnpm | 12.18.0 (tool) | MIT | JavaScript workspace manager |
 | Vite | not yet added | MIT | Web build |
 | React Router | not yet added | MIT | Web routing |

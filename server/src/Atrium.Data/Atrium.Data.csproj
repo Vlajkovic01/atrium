@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- EF Core model shared by both database providers. Provider-specific
+       code and migrations live in Atrium.Data.Sqlite and Atrium.Data.Postgres. -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Atrium.Core\Atrium.Core.csproj" />
+  </ItemGroup>
+
+</Project>

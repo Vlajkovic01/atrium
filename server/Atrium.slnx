@@ -1,8 +1,14 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Atrium.Api/Atrium.Api.csproj" />
+    <Project Path="src/Atrium.Core/Atrium.Core.csproj" />
+    <Project Path="src/Atrium.Data/Atrium.Data.csproj" />
+    <Project Path="src/Atrium.Data.Postgres/Atrium.Data.Postgres.csproj" />
+    <Project Path="src/Atrium.Data.Sqlite/Atrium.Data.Sqlite.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Atrium.Api.Tests/Atrium.Api.Tests.csproj" />
+    <Project Path="tests/Atrium.Core.Tests/Atrium.Core.Tests.csproj" />
+    <Project Path="tests/Atrium.Data.Tests/Atrium.Data.Tests.csproj" />
   </Folder>
 </Solution>

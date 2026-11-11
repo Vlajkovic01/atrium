@@ -1,4 +1,8 @@
 using System.Reflection;
+using Atrium.Core.Identity;
+using Atrium.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace Atrium.Api.Endpoints;
 
@@ -21,12 +25,12 @@ public static class SystemEndpoints
 
     public static IEndpointRouteBuilder MapSystemEndpoints(this IEndpointRouteBuilder routes)
     {
-        routes.MapGet("/system/info", () => new SystemInfo(
+        routes.MapGet("/system/info", async (AtriumDbContext db, CancellationToken ct) => new SystemInfo(
                 Name: "Atrium",
                 Version: ServerVersion,
                 MinClientVersion: MinClientVersion,
-                // Setup state arrives with the setup wizard; until then no admin can exist.
-                SetupComplete: false))
+                // Setup is complete once an admin exists; the wizard creates the first one.
+                SetupComplete: await db.Users.AnyAsync(u => u.Role == UserRole.Admin, ct)))
             .WithName("GetSystemInfo")
             .AllowAnonymous();
 
@@ -34,6 +38,16 @@ public static class SystemEndpoints
         // database or storage, so a slow disk never gets the container killed.
         routes.MapGet("/health/live", () => new HealthStatus("ok"))
             .WithName("GetHealthLive")
+            .AllowAnonymous();
+
+        // Readiness says the server can do useful work. It is public, so it
+        // reports no detail about what is wrong.
+        routes.MapGet("/health/ready", async Task<Results<Ok<HealthStatus>, JsonHttpResult<HealthStatus>>> (
+                AtriumDbContext db, CancellationToken ct) =>
+                await db.Database.CanConnectAsync(ct)
+                    ? TypedResults.Ok(new HealthStatus("ok"))
+                    : TypedResults.Json(new HealthStatus("unavailable"), statusCode: StatusCodes.Status503ServiceUnavailable))
+            .WithName("GetHealthReady")
             .AllowAnonymous();
 
         return routes;
