@@ -67,6 +67,29 @@ changing their sources, regenerate them with `pnpm run generate`:
 
 CI fails if either generated file is out of date.
 
+### Web app
+
+For development, start the server and the web app's dev server; the dev
+server forwards API calls to the server:
+
+```
+dotnet run --project server/src/Atrium.Api --urls http://localhost:5000
+pnpm --filter @atrium/web run dev
+```
+
+Opened from the same machine, the setup wizard does not ask for the setup
+token. From another machine it does; the server prints the token to its
+log at startup.
+
+End-to-end tests build the web app, start the real server on a fresh
+config directory and drive it in a browser:
+
+```
+pnpm --filter @atrium/web run build
+pnpm --filter @atrium/web exec playwright install chromium
+pnpm --filter @atrium/web run e2e
+```
+
 ## Contributing
 
 `master` is always releasable and changes only through pull requests that

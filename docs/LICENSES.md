@@ -77,12 +77,15 @@ is actually in the repository.
 | ESLint, @eslint/js, typescript-eslint | 10.14.0, 10.0.1, 8.72.2 | MIT | Lint |
 | Prettier | 3.9.10 | MIT | Formatting |
 | @types/node | 24.x | MIT | Type definitions for build scripts |
-| Vite | not yet added | MIT | Web build |
-| React Router | not yet added | MIT | Web routing |
-| TanStack Query | not yet added | MIT | Web data fetching |
-| i18next, react-i18next, ICU plugin | not yet added | MIT | Translations runtime |
-| qrcode.react | not yet added | ISC | QR codes for pairing and phone linking |
-| Playwright | not yet added | Apache-2.0 | Web end-to-end tests |
+| Vite, @vitejs/plugin-react | 8.3.7, 6.3.0 | MIT | Web build |
+| React, React DOM | 19.3.1 | MIT | Web interface |
+| React Router | 8.5.1 | MIT | Web routing |
+| TanStack Query | 5.107.1 | MIT | Web data fetching |
+| i18next, react-i18next, i18next-icu | 27.1.0, 18.0.1, 2.7.0 | MIT | Translations runtime |
+| intl-messageformat | 12.1.5 | BSD-3-Clause | ICU message formatting, required by i18next-icu |
+| qrcode.react | 4.2.0 | ISC | QR codes for pairing and phone linking |
+| Playwright | 1.65.0 | Apache-2.0 | Web end-to-end tests; downloads Chromium (BSD-3-Clause) at test time, not shipped |
+| @types/react, @types/react-dom | 19.3.0 | MIT | Type definitions |
 
 TOTP is implemented in the server without a library.
 
