@@ -29,6 +29,8 @@ export default defineConfig({
   },
   webServer: {
     command: "dotnet run --project ../server/src/Atrium.Api --configuration Release --no-launch-profile",
+    // Paths are relative to the web app, not to this config file's folder.
+    cwd: resolve("."),
     url: `${baseURL}/api/v1/health/ready`,
     timeout: 300_000,
     reuseExistingServer: false,

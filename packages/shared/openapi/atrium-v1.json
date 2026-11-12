@@ -1819,13 +1819,14 @@
         "tags": [
           "Jobs"
         ],
+        "description": "state: queued, running, succeeded, failed or cancelled.",
         "operationId": "ListJobs",
         "parameters": [
           {
             "name": "state",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/JobState"
+              "type": "string"
             }
           },
           {
@@ -2252,6 +2253,7 @@
         "tags": [
           "Files"
         ],
+        "description": "sort: name, modified, size or type. kind: folder or file.",
         "operationId": "ListChildren",
         "parameters": [
           {
@@ -2267,7 +2269,7 @@
             "name": "sort",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/ChildSort"
+              "type": "string"
             }
           },
           {
@@ -2281,7 +2283,7 @@
             "name": "kind",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/NodeKind"
+              "type": "string"
             }
           },
           {
@@ -3508,15 +3510,6 @@
             "type": "string"
           }
         }
-      },
-      "ChildSort": {
-        "enum": [
-          "name",
-          "modified",
-          "size",
-          "type",
-          null
-        ]
       },
       "ConflictPolicy": {
         "enum": [

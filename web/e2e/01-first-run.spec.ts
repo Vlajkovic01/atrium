@@ -90,7 +90,9 @@ test("a fresh server is set up through the wizard", async ({ page }) => {
   expect(identity.id).toMatch(/^[0-9a-f-]{36}$/);
 
   await page.getByRole("button", { name: "Open Atrium" }).click();
-  await expect(page.getByRole("heading", { name: "Devices" })).toBeVisible();
+  // The app opens on the user's files.
+  await expect(page.getByRole("heading", { name: "My files" })).toBeVisible();
+  await page.getByRole("link", { name: "Devices" }).click();
   await expect(page.getByText("This device")).toBeVisible();
   expect(violations).toEqual([]);
 });
@@ -99,11 +101,11 @@ test("the wizard does not come back, and reloading keeps the user signed in", as
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await signIn(page);
-  await expect(page.getByRole("heading", { name: "Devices" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "My files" })).toBeVisible();
 
   await page.reload();
 
-  await expect(page.getByRole("heading", { name: "Devices" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "My files" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sign in" })).toHaveCount(0);
 });
 
@@ -114,7 +116,7 @@ test("a wrong password is refused with an explanation, and signing out ends the 
 
   await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Devices" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "My files" })).toBeVisible();
 
   await page.getByRole("button", { name: "Sign out" }).first().click();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
@@ -202,7 +204,7 @@ test("an admin adds a person, who then sees no administration", async ({ page, b
   const hers = await context.newPage();
   await hers.goto("/people");
   await signIn(hers, "ana", "ana's own passphrase");
-  await expect(hers.getByRole("heading", { name: "Devices" })).toBeVisible();
+  await expect(hers.getByRole("heading", { name: "My files" })).toBeVisible();
   await expect(hers.getByRole("link", { name: "People" })).toHaveCount(0);
   await expect(hers.getByRole("link", { name: "Storage" })).toHaveCount(0);
   await context.close();
@@ -309,7 +311,7 @@ test("on a phone the navigation is a bar at the bottom and everything stays reac
   const page = await context.newPage();
   await page.goto("/");
   await signIn(page);
-  await expect(page.getByRole("heading", { name: "Devices" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "My files" })).toBeVisible();
 
   // No sideways scrolling.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

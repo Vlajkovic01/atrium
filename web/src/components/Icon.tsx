@@ -149,6 +149,45 @@ const shapes = {
       <path d="M14 14h2.500v2.500H14zM20 14v.01M17.500 20H20v-2.500M14 20v.01" />
     </>
   ),
+  file: (
+    <>
+      <path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z" />
+      <path d="M14 3.5v5h5" />
+    </>
+  ),
+  folderPlus: (
+    <>
+      <path d="M3 7.5A2 2 0 0 1 5 5.5h4.2l2 2.3H19a2 2 0 0 1 2 2v7.7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <path d="M12 11v5M9.5 13.5h5" />
+    </>
+  ),
+  upload: <path d="M12 15.5V4M7.5 8.5 12 4l4.5 4.5M4.5 15v3a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3" />,
+  download: <path d="M12 4v11.5M7.5 11 12 15.5l4.5-4.5M4.5 15v3a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3" />,
+  trash: (
+    <>
+      <path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l.8 12.2a1.8 1.8 0 0 0 1.8 1.6h5.8a1.8 1.8 0 0 0 1.8-1.6L17.5 7" />
+      <path d="M10.2 10.5v6.5M13.8 10.5v6.5" />
+    </>
+  ),
+  pencil: <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16zM13.5 6.5l4 4" />,
+  move: (
+    <path d="M3 7.5A2 2 0 0 1 5 5.5h4.2l2 2.3H19a2 2 0 0 1 2 2v7.7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 13.5h6M12.5 11l2.5 2.5-2.5 2.5" />
+  ),
+  restore: <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4.5v4.3h4.3M12 8v4.3l3 1.8" />,
+  history: <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4.5v4.3h4.3M12 8v4.3l3 1.8" />,
+  close: <path d="m6 6 12 12M18 6 6 18" />,
+  pause: <path d="M8.5 5.5v13M15.5 5.5v13" />,
+  play: <path d="m7.5 5 11 7-11 7z" />,
+  chevronRight: <path d="m9.5 6 6 6-6 6" />,
+  grid: (
+    <>
+      <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+      <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+    </>
+  ),
+  list: <path d="M8.5 6.5H20M8.5 12H20M8.5 17.5H20M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" />,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof shapes;

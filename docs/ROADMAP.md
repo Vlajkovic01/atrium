@@ -67,6 +67,16 @@ with Phases 1 to 3, items 4 and 6 to 8 are done at the end of Phase 7.
 | 11 | Operations | Admin dashboard, health, backup and restore UI, library relocation, Windows service, Linux packages |
 | 12 | Hardening | ASVS review, scale and low-power tests, documentation |
 
+## Status
+
+- Phase 0 and Phase 1: done.
+- Phase 2: built, awaiting the owner's approval. Besides the planned
+  scope it delivered the portable metadata backup and command-line
+  restore (D-026), scheduled user deletion (D-025) and the storage
+  integrity check, which cover release-gate items 1 (backup, restore)
+  and 5 (integrity report) in part. The change feed moved to Phase 4
+  (D-027).
+
 ## Sequencing notes
 
 - The job queue core (persistence, leases, retries, priorities, progress)

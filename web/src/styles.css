@@ -1659,3 +1659,484 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------------
+   Dialogs
+   ------------------------------------------------------------------ */
+
+.dialog {
+  width: min(480px, calc(100vw - 32px));
+  border: 0;
+  border-radius: var(--radius-l);
+  padding: 0;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-3);
+}
+
+.dialog-wide {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.dialog::backdrop {
+  background: rgb(10 20 16 / 45%);
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px 6px;
+}
+
+.dialog-title {
+  flex: 1;
+  font-size: 1.2rem;
+}
+
+.dialog-body {
+  padding: 8px 20px 4px;
+}
+
+.dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px 18px;
+}
+
+.dialog-body .dialog-actions {
+  padding: 14px 0 6px;
+}
+
+/* ---------------------------------------------------------------------
+   Files
+   ------------------------------------------------------------------ */
+
+.browser {
+  position: relative;
+  min-height: 60vh;
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: -6px 0 14px;
+  color: var(--ink-soft);
+}
+
+.crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.crumb a,
+.crumb-button {
+  color: var(--ink-soft);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 2px 6px;
+  border-radius: var(--radius-s);
+  font: inherit;
+  cursor: pointer;
+}
+
+.crumb a:hover,
+.crumb-button:hover {
+  background: var(--surface-sunk);
+  color: var(--ink);
+}
+
+.crumb [aria-current="page"] {
+  color: var(--ink);
+  font-weight: 600;
+  padding: 2px 6px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-1);
+}
+
+.toolbar-count {
+  padding: 0 6px;
+  font-weight: 600;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.browser-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.items {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-1);
+  padding: 6px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 110px 190px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-m);
+  cursor: default;
+  user-select: none;
+}
+
+.item:hover {
+  background: var(--surface-sunk);
+}
+
+.item.is-selected {
+  background: var(--accent-wash);
+  color: var(--accent-wash-ink);
+}
+
+.item.is-target {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+
+.item-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.item-icon {
+  display: inline-flex;
+  color: var(--ink-faint);
+}
+
+.item-icon.is-folder {
+  color: var(--gold);
+}
+
+.item-open {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item-open:hover {
+  text-decoration: underline;
+}
+
+.item-meta {
+  color: var(--ink-faint);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.items.is-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.items.is-grid .item {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+  padding: 14px 10px;
+  position: relative;
+}
+
+.items.is-grid .item-check {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+
+.items.is-grid .item-name {
+  flex-direction: column;
+  width: 100%;
+}
+
+.items.is-grid .item-open {
+  width: 100%;
+  text-align: center;
+}
+
+.items.is-grid .item-meta:last-child {
+  display: none;
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  border: 3px dashed var(--accent);
+  border-radius: var(--radius-xl);
+  background: rgb(28 107 88 / 10%);
+  color: var(--accent-strong);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.details {
+  width: 320px;
+  flex-shrink: 0;
+  padding: 18px;
+  background: var(--surface);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-2);
+}
+
+.details-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.details-title {
+  flex: 1;
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  margin: 0 0 16px;
+}
+
+.facts dt {
+  color: var(--ink-faint);
+}
+
+.facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.picker-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-m);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.picker-item span {
+  flex: 1;
+}
+
+.picker-item:hover:not(:disabled) {
+  background: var(--surface-sunk);
+}
+
+.picker-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------------
+   Uploads
+   ------------------------------------------------------------------ */
+
+.upload-panel {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 20;
+  width: min(380px, calc(100vw - 40px));
+  background: var(--surface);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+}
+
+.upload-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface-sunk);
+}
+
+.upload-panel-title {
+  flex: 1;
+  font-size: 0.98rem;
+}
+
+.upload-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.upload-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius-m);
+}
+
+.upload-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-name {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.upload-meta {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.88rem;
+}
+
+.upload-item.is-failed .upload-meta {
+  color: var(--danger-ink);
+}
+
+.upload-item.is-completed .icon {
+  color: var(--accent);
+}
+
+.upload-progress {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--accent);
+}
+
+.upload-actions {
+  display: flex;
+  gap: 2px;
+}
+
+@media (max-width: 760px) {
+  .item {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+  }
+
+  .item-meta:last-child {
+    display: none;
+  }
+
+  .browser-body {
+    flex-direction: column;
+  }
+
+  .details {
+    width: 100%;
+  }
+
+  .upload-panel {
+    right: 12px;
+    bottom: 76px;
+  }
+}
+
+/* The browser's header wraps on narrow screens: the title on its own line, the actions below it. */
+.browser .page-header {
+  flex-wrap: wrap;
+}
+
+.browser .page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* With the details panel open the date column gives its room to the names. */
+.browser-body.has-details .item {
+  grid-template-columns: 32px minmax(0, 1fr) 90px;
+}
+
+.browser-body.has-details .item-meta:last-child {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .browser .page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 760px) {
+  .browser-body {
+    align-items: stretch;
+  }
+}

@@ -9,6 +9,9 @@ import { Icon } from "./components/Icon.tsx";
 import { Logo } from "./components/Logo.tsx";
 import { Avatar, Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
 import { Account } from "./pages/Account.tsx";
+import { FileBrowser } from "./files/FileBrowser.tsx";
+import { Trash } from "./files/Trash.tsx";
+import { UploadsProvider } from "./files/uploads.tsx";
 import { Devices } from "./pages/Devices.tsx";
 import { People } from "./pages/People.tsx";
 import { Setup } from "./pages/Setup.tsx";
@@ -68,6 +71,8 @@ function Shell() {
   const isAdmin = user?.role === "admin";
 
   const personal: readonly NavItem[] = [
+    { to: "/files", label: t("nav.files"), icon: "folder" },
+    { to: "/trash", label: t("nav.trash"), icon: "trash" },
     { to: "/devices", label: t("nav.devices"), icon: "devices" },
     { to: "/account", label: t("nav.account"), icon: "user" },
   ];
@@ -84,50 +89,60 @@ function Shell() {
   );
 
   return (
-    <div className="app">
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          <Logo size={30} />
-        </div>
-        <nav className="nav" aria-label={t("nav.main")}>
-          {personal.map(link)}
-          {isAdmin ? (
-            <>
-              <p className="nav-heading">{t("nav.administration")}</p>
-              {admin.map(link)}
-            </>
-          ) : null}
-        </nav>
-        <div className="sidebar-user">
-          <Avatar name={user?.displayName ?? ""} />
-          <div className="user-text">
-            <span className="user-name">{user?.displayName}</span>
-            <span className="user-role">{user ? t(`roles.${user.role}`) : ""}</span>
+    <UploadsProvider>
+      <div className="app">
+        <aside className="sidebar">
+          <div className="sidebar-brand">
+            <Logo size={30} />
           </div>
-          <button type="button" className="icon-button" aria-label={t("common.signOut")} onClick={() => void signOut()}>
-            <Icon name="logout" size={18} />
-          </button>
-        </div>
-      </aside>
-
-      <div className="app-main">
-        <InsecureBanner />
-        <main className="content">
-          <Routes>
-            <Route path="/devices" element={<Devices />} />
-            {/* The address a device's QR code points at: opens the approval with the code filled in. */}
-            <Route path="/pair" element={<Navigate to={`/devices${location.search}`} replace />} />
-            <Route path="/account" element={<Account />} />
+          <nav className="nav" aria-label={t("nav.main")}>
+            {personal.map(link)}
             {isAdmin ? (
               <>
-                <Route path="/people" element={<People />} />
-                <Route path="/storage" element={<StorageLocations />} />
+                <p className="nav-heading">{t("nav.administration")}</p>
+                {admin.map(link)}
               </>
             ) : null}
-            <Route path="*" element={<Navigate to="/devices" replace />} />
-          </Routes>
-        </main>
+          </nav>
+          <div className="sidebar-user">
+            <Avatar name={user?.displayName ?? ""} />
+            <div className="user-text">
+              <span className="user-name">{user?.displayName}</span>
+              <span className="user-role">{user ? t(`roles.${user.role}`) : ""}</span>
+            </div>
+            <button
+              type="button"
+              className="icon-button"
+              aria-label={t("common.signOut")}
+              onClick={() => void signOut()}
+            >
+              <Icon name="logout" size={18} />
+            </button>
+          </div>
+        </aside>
+
+        <div className="app-main">
+          <InsecureBanner />
+          <main className="content">
+            <Routes>
+              <Route path="/files" element={<FileBrowser />} />
+              <Route path="/files/:folderId" element={<FileBrowser />} />
+              <Route path="/trash" element={<Trash />} />
+              <Route path="/devices" element={<Devices />} />
+              {/* The address a device's QR code points at: opens the approval with the code filled in. */}
+              <Route path="/pair" element={<Navigate to={`/devices${location.search}`} replace />} />
+              <Route path="/account" element={<Account />} />
+              {isAdmin ? (
+                <>
+                  <Route path="/people" element={<People />} />
+                  <Route path="/storage" element={<StorageLocations />} />
+                </>
+              ) : null}
+              <Route path="*" element={<Navigate to="/files" replace />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
+    </UploadsProvider>
   );
 }

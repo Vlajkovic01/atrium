@@ -71,18 +71,26 @@ export async function refreshSession(): Promise<TokenResponse | null> {
   }
 }
 
+/** The access token for requests made outside the API client, such as uploads. */
+export function currentAccessToken(): string | null {
+  return accessToken;
+}
+
+/** Gets a new access token after a 401; signs the app out when the session is over. */
+export async function refreshAccessToken(): Promise<string | null> {
+  const tokens = await refreshSession();
+  if (!tokens) {
+    accessToken = null;
+    onSignedOut();
+  }
+
+  return tokens?.accessToken ?? null;
+}
+
 export const api = createApiClient({
   baseUrl: "",
   getAccessToken: () => accessToken,
-  refresh: async () => {
-    const tokens = await refreshSession();
-    if (!tokens) {
-      accessToken = null;
-      onSignedOut();
-    }
-
-    return tokens?.accessToken ?? null;
-  },
+  refresh: refreshAccessToken,
 });
 
 /** An error the user should see: the server's code and parameters, or "network". */
