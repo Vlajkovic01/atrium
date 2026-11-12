@@ -13,7 +13,7 @@ public sealed class FilesOptions
     /// <summary>How long a deleted item stays in the trash.</summary>
     public TimeSpan TrashRetention { get; init; } = TimeSpan.FromDays(30);
 
-    /// <summary>Earlier versions older than this are removed, except the newest one.</summary>
+    /// <summary>Earlier versions are removed this long after they were replaced.</summary>
     public TimeSpan VersionRetention { get; init; } = TimeSpan.FromDays(30);
 
     /// <summary>At most this many earlier versions are kept per file.</summary>

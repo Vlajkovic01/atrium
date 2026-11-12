@@ -144,6 +144,54 @@ public sealed class FileServicesHost : IAsyncDisposable
         return node;
     }
 
+    /// <summary>A new user with their personal library, and the actor that stands for them.</summary>
+    public async Task<(FileActor Actor, Library Library)> NewUserAsync(string? name = null)
+    {
+        var user = await Database.AddUserAsync(name ?? "user" + Guid.NewGuid().ToString("N")[..8]);
+        Library library = null!;
+        await WithDbAsync(async db => library = (await new LibraryService(db, Time).EnsurePersonalAsync(user, default))!);
+        return (new FileActor(user.Id, IsGuest: false, ReadOnlySession: false, HidePersonal: false), library);
+    }
+
+    public Task<T> NodesAsync<T>(Func<NodeService, Task<T>> action) =>
+        WithAsync(sp => action(sp.GetRequiredService<NodeService>()));
+
+    public Task<T> TrashAsync<T>(Func<TrashService, Task<T>> action) =>
+        WithAsync(sp => action(sp.GetRequiredService<TrashService>()));
+
+    public Task<T> VersionsAsync<T>(Func<VersionService, Task<T>> action) =>
+        WithAsync(sp => action(sp.GetRequiredService<VersionService>()));
+
+    /// <summary>Stores the content and adds it as a file, the way a finished upload does.</summary>
+    public async Task<FileResult<Node>> UploadAsync(
+        FileActor actor, Guid parentId, string name, string content, ConflictPolicy policy = ConflictPolicy.Fail)
+    {
+        var blob = await StoreAsync(System.Text.Encoding.UTF8.GetBytes(content));
+        return await NodesAsync(n => n.AddFileAsync(actor, parentId, name, blob, "text/plain", null, policy, CancellationToken.None));
+    }
+
+    public async Task<Node?> NodeAsync(Guid id)
+    {
+        Node? node = null;
+        await WithDbAsync(async db => node = await db.Nodes.AsNoTracking().SingleOrDefaultAsync(n => n.Id == id));
+        return node;
+    }
+
+    /// <summary>Runs a job type through the real job queue.</summary>
+    public async Task<Atrium.Core.Jobs.Job> RunJobAsync(string type)
+    {
+        var job = await WithAsync(sp => sp.GetRequiredService<JobQueue>()
+            .EnqueueAsync(new JobRequest(type), CancellationToken.None));
+        var runner = _services.GetRequiredService<JobRunner>();
+        while (await runner.RunNextAsync(Enum.GetValues<Atrium.Core.Jobs.JobResourceClass>(), CancellationToken.None))
+        {
+        }
+
+        Atrium.Core.Jobs.Job done = null!;
+        await WithDbAsync(async db => done = await db.Jobs.AsNoTracking().SingleAsync(j => j.Id == job.Id));
+        return done;
+    }
+
     /// <summary>Runs the blob collector through the real job queue.</summary>
     public async Task<Atrium.Core.Jobs.Job> CollectAsync()
     {

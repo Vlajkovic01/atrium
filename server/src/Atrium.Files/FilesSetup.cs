@@ -15,6 +15,12 @@ public static class FilesSetup
         services.AddSingleton<BlobLocks>();
         services.AddScoped<LibraryService>();
         services.AddScoped<BlobStore>();
+        services.AddScoped<NodeService>();
+        services.AddScoped<TrashService>();
+        services.AddScoped<VersionService>();
+        services.AddScoped<UsageService>();
+        services.AddJobHandler<FileRetentionHandler>(FileRetentionHandler.Type);
+        services.AddRecurringJob(FileRetentionHandler.Schedule);
         services.AddJobHandler<BlobCollectorHandler>(BlobCollectorHandler.Type);
         services.AddRecurringJob(BlobCollectorHandler.Schedule);
         return services;
