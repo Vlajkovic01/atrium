@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -64,6 +64,51 @@ namespace Atrium.Data.Postgres.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Jobs",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Type = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    Payload = table.Column<string>(type: "text", nullable: true),
+                    Priority = table.Column<int>(type: "integer", nullable: false),
+                    ResourceClass = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    State = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    OwnerUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ParentJobId = table.Column<Guid>(type: "uuid", nullable: true),
+                    DedupeKey = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    ActiveDedupeKey = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    Progress = table.Column<double>(type: "double precision", nullable: true),
+                    Checkpoint = table.Column<string>(type: "text", nullable: true),
+                    Attempts = table.Column<int>(type: "integer", nullable: false),
+                    MaxAttempts = table.Column<int>(type: "integer", nullable: false),
+                    RunAfter = table.Column<long>(type: "bigint", nullable: false),
+                    LeaseOwner = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    LeaseExpiresAt = table.Column<long>(type: "bigint", nullable: true),
+                    CancelRequested = table.Column<bool>(type: "boolean", nullable: false),
+                    ErrorCode = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    ErrorDetail = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    StartedAt = table.Column<long>(type: "bigint", nullable: true),
+                    FinishedAt = table.Column<long>(type: "bigint", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Jobs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Jobs_Jobs_ParentJobId",
+                        column: x => x.ParentJobId,
+                        principalTable: "Jobs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Jobs_Users_OwnerUserId",
+                        column: x => x.OwnerUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -219,6 +264,32 @@ namespace Atrium.Data.Postgres.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Jobs_ActiveDedupeKey",
+                table: "Jobs",
+                column: "ActiveDedupeKey",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Jobs_OwnerUserId",
+                table: "Jobs",
+                column: "OwnerUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Jobs_ParentJobId",
+                table: "Jobs",
+                column: "ParentJobId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Jobs_State_Priority_RunAfter",
+                table: "Jobs",
+                columns: new[] { "State", "Priority", "RunAfter" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Jobs_Type_State",
+                table: "Jobs",
+                columns: new[] { "Type", "State" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LinkCodes_CodeHash",
                 table: "LinkCodes",
                 column: "CodeHash",
@@ -299,6 +370,9 @@ namespace Atrium.Data.Postgres.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Jobs");
+
             migrationBuilder.DropTable(
                 name: "LinkCodes");
 

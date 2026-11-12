@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Persistent job queue, workers and recurring schedules (DESIGN.md 5).
+       Hosting and logging come from the shared framework, not a package. -->
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Atrium.Jobs.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Atrium.Core\Atrium.Core.csproj" />
+    <ProjectReference Include="..\Atrium.Data\Atrium.Data.csproj" />
+  </ItemGroup>
+
+</Project>
