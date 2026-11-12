@@ -91,6 +91,27 @@ is actually in the repository.
 
 TOTP is implemented in the server without a library.
 
+## Approved for Phase 3
+
+Approved by the owner on 2026-11-12 (D-032). A version is confirmed once
+the package is actually in the repository.
+
+| Component | Version | License | Use |
+|---|---|---|---|
+| NetVips | 3.2.0 | MIT | .NET binding for libvips: image decoding and thumbnails |
+| libvips (Ubuntu package in the image) | distribution's | LGPL-2.1-or-later | Loaded dynamically by NetVips. Brings libheif (LGPL-3.0), libde265 (LGPL-3.0), libwebp (BSD-3-Clause), libjpeg-turbo (BSD-style, IJG), libpng (libpng license) and others under their own free licenses |
+| NetVips.Native | 8.18.7 | LGPL-3.0-or-later | Prebuilt libvips for running the tests on Windows only; not in the image. Has no HEIC decoder |
+| MetadataExtractor | 2.9.3 | Apache-2.0 | EXIF, XMP and container metadata of photos and videos |
+| XmpCore | 6.1.10.1 | BSD-3-Clause (Adobe XMP toolkit license) | Brought by MetadataExtractor |
+| FFmpeg, ffprobe (Ubuntu package in the image) | distribution's | GPL-2.0-or-later as built by Ubuntu (with libx264, libx265); see flags 1 and 2 | Probing, video frames, short previews |
+| FFmpeg (Gyan build via winget) | latest | GPL-3.0 | Development laptop only, to run the media tests |
+
+Flag for the release (requirement 8): the image redistributes Ubuntu's
+FFmpeg and libvips binaries. The GPL and LGPL obligations are met by
+offering the matching source; the release must state where it is
+(Ubuntu's source packages for the pinned versions, or a copy published
+with the release). HEVC decoding (libde265, FFmpeg) falls under flag 2.
+
 ## Candidates, not yet approved
 
 Listed so the choices are visible early. Each will be proposed with
@@ -101,9 +122,9 @@ alternatives at the start of the phase that needs it.
 | Argon2id | 1 | Konscious.Security.Cryptography; libsodium binding | MIT; ISC and MIT |
 | S3 client | 1 | AWS SDK for .NET; Minio .NET client | Apache-2.0 both |
 | tus server | 2 | tusdotnet; own implementation | MIT |
-| Image decoding and thumbnails | 3 | libvips through NetVips; SkiaSharp; ImageSharp; FFmpeg only | LGPL-2.1 and MIT; MIT; Six Labors Split License, which restricts some commercial use and is flagged; no new dependency |
-| EXIF | 3 | MetadataExtractor | Apache-2.0 |
-| Offline place names | 3 | GeoNames data | CC BY 4.0, attribution required |
+| Image decoding and thumbnails | 3 | Decided: libvips through NetVips (D-032) | |
+| EXIF | 3 | Decided: MetadataExtractor (D-032) | |
+| Offline place names | 3 | Dropped: no location in Atrium (D-031) | |
 | Translations runtime | 1 | i18next; FormatJS | MIT; BSD-3-Clause |
 | HLS in browsers | 5 | hls.js | Apache-2.0 |
 | Native video | 5 | react-native-video (Media3, AVPlayer) | MIT; Media3 is Apache-2.0 |

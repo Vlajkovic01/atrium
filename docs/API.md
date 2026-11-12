@@ -184,8 +184,7 @@ overwrites (DESIGN.md 4.2).
 | GET, POST | `/albums` | |
 | GET, PATCH, DELETE | `/albums/{id}` | |
 | POST, DELETE | `/albums/{id}/items` | Add, remove |
-| GET | `/search` | `q`, `type`, date range, `near` or bounding box, library |
-| GET | `/map/clusters` | Photo clusters for a bounding box and zoom |
+| GET | `/search` | `q`, `type`, date range, library. No location (D-031) |
 
 ## Playback (Phase 5)
 

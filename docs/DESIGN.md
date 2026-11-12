@@ -218,7 +218,7 @@ the phases that need them.
 
 | Entity | Key fields | Notes |
 |---|---|---|
-| `MediaInfo` | content key, kind, width, height, duration, container, streams (JSON), taken at, latitude, longitude, camera, orientation | Technical facts from EXIF and ffprobe. Keyed by content, so duplicates share it. |
+| `MediaInfo` | content key, kind, width, height, duration, container, streams (JSON), taken at, camera, orientation; no location (D-031) | Technical facts from EXIF and ffprobe. Keyed by content, so duplicates share it. |
 | `Derivative` | content key, kind, variant, cache key, state | Index of thumbnails and previews in the cache |
 | `Album`, `AlbumItem` | owner, name, cover; node, position | |
 | `MediaItem` | library, kind (`movie`, `show`, `season`, `episode`), parent, title, sort title, year, numbers, overview, provider ids, locked fields | Field locks keep user edits from being overwritten by a refresh |
@@ -717,11 +717,10 @@ depending on type:
    `MediaInfo`.
 2. Thumbnails: a small grid size and a larger preview size.
 3. Video previews: a short low-bitrate clip and seek-bar thumbnails.
-4. Indexing: name, date, type, location for search.
+4. Indexing: name, date and type for search.
 
-Location search uses stored coordinates. Turning coordinates into place
-names needs a data set; an offline one is proposed in Phase 3 so the
-feature works without any external service.
+Location is not read or stored (D-031): no coordinates, place names or
+map.
 
 ### 7.2 Client capability profile
 
