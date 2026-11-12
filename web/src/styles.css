@@ -560,6 +560,34 @@ a {
   margin-top: 0.75rem;
 }
 
+/* Every dropdown gets Atrium's own arrow instead of the browser's, so it
+   looks the same everywhere and matches the rest of the controls. */
+.control select,
+.select-inline select,
+.language select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2376827c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6.500 9.500 5.500 5.500 5.500-5.500'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1rem;
+  cursor: pointer;
+}
+
+.control select {
+  padding-right: 2.4rem;
+}
+
+.select-inline select {
+  padding-right: 2rem;
+  background-position: right 0.5rem center;
+  box-shadow: var(--shadow-1);
+}
+
+.select-inline select:disabled {
+  cursor: default;
+  opacity: 0.7;
+  box-shadow: none;
+}
 /* The compact language picker. */
 .language {
   position: relative;
@@ -576,13 +604,21 @@ a {
 
 .language select {
   width: auto;
-  min-height: 2.3rem;
-  padding: 0 2rem 0 2.1rem;
+  min-height: 2.4rem;
+  padding: 0 2.3rem 0 2.2rem;
   font-size: 0.92rem;
   font-weight: 600;
-  color: var(--ink-soft);
+  color: var(--ink);
   border-radius: 999px;
-  cursor: pointer;
+  box-shadow: var(--shadow-1);
+}
+
+.language select:hover {
+  border-color: var(--ink-faint);
+}
+
+.language .icon {
+  color: var(--accent);
 }
 
 .select-inline select {
