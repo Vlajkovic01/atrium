@@ -47,6 +47,16 @@ public sealed class BackupInvalidException(string message) : Exception(message);
 public static class PortableBackup
 {
     public const int FormatVersion = 1;
+
+    /// <summary>
+    /// Signed-in devices and their tokens are left out (D-029). They are worth
+    /// nothing for recovery, since everyone simply signs in again, and a
+    /// backup copied next to the files should hold no session material.
+    /// Accounts, password hashes and encrypted secrets stay: without them
+    /// nobody could sign in after a restore.
+    /// </summary>
+    public static readonly IReadOnlySet<string> ExcludedTables =
+        new HashSet<string>(["Sessions", "RefreshTokens", "PairingRequests", "LinkCodes"], StringComparer.Ordinal);
     public const string ManifestEntry = "manifest.json";
     private const string TablesFolder = "tables/";
     private const string BytesMarker = "$b";
@@ -70,7 +80,10 @@ public static class PortableBackup
             var tables = new List<BackupTable>();
             await using (var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
             {
-                foreach (var table in (await dialect.ListTablesAsync(connection, transaction, ct)).Order(StringComparer.Ordinal))
+                var included = (await dialect.ListTablesAsync(connection, transaction, ct))
+                    .Where(t => !ExcludedTables.Contains(t))
+                    .Order(StringComparer.Ordinal);
+                foreach (var table in included)
                 {
                     var entry = zip.CreateEntry(TablesFolder + table + ".jsonl", CompressionLevel.Optimal);
                     await using var stream = await entry.OpenAsync(ct);

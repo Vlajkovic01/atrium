@@ -55,7 +55,8 @@ kept. An admin can start one at any time.
 
 A backup contains password hashes (never passwords) and encrypted
 storage credentials, but not the key that decrypts them, which stays in
-`/config/keys`. Keep your storage location as private as the files in it.
+`/config/keys`, and no signed-in devices: after a restore everyone signs
+in again. Keep your storage location as private as the files in it.
 
 To restore a backup, stop the server and run the restore command with
 the backup's path inside the container:

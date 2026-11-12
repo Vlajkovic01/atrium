@@ -194,6 +194,24 @@ public abstract class BackupContractTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Sessions_and_tokens_are_never_written_into_a_backup()
+    {
+        await using (var source = CreateSource())
+        {
+            await PopulateAsync(source);
+        }
+
+        var (backup, manifest) = await BackupAsync();
+        using var zip = new ZipArchive(backup, ZipArchiveMode.Read);
+
+        foreach (var table in PortableBackup.ExcludedTables)
+        {
+            Assert.DoesNotContain(manifest.Tables, t => t.Name == table);
+            Assert.Null(zip.GetEntry($"tables/{table}.jsonl"));
+        }
+    }
+
+    [Fact]
     public async Task A_damaged_backup_is_refused()
     {
         await using (var source = CreateSource())
@@ -283,7 +301,11 @@ public abstract class BackupContractTests : IAsyncLifetime
         }
 
         await Same(expected.Users, actual.Users, u => u.Id, u => $"{u.Id}|{u.Name}|{u.DisplayName}|{u.Role}|{u.QuotaBytes}|{u.CreatedAt:O}|{u.Version}");
-        await Same(expected.Sessions, actual.Sessions, s => s.Id, s => $"{s.Id}|{s.UserId}|{s.DeviceKind}|{s.ReadOnly}|{s.LastSeenAt:O}");
+        // Signed-in devices are deliberately not backed up (D-029): after a restore everyone signs in again.
+        Assert.True(await expected.Sessions.AnyAsync());
+        Assert.False(await actual.Sessions.AnyAsync());
+        Assert.Equal(await expected.Users.Select(u => u.PasswordHash).OrderBy(h => h).ToListAsync(),
+            await actual.Users.Select(u => u.PasswordHash).OrderBy(h => h).ToListAsync());
         await Same(expected.StorageLocations, actual.StorageLocations, l => l.Id, l => $"{l.Id}|{l.Kind}|{Convert.ToHexString(l.EncryptedConfig)}|{l.State}");
         await Same(expected.Libraries, actual.Libraries, l => l.Id, l => $"{l.Id}|{l.OwnerUserId}|{l.RootNodeId}|{l.StorageLocationId}");
         await Same(expected.Nodes, actual.Nodes, n => n.Id, n => $"{n.Id}|{n.ParentId}|{n.Name}|{n.ActiveNameKey}|{n.Kind}|{n.BlobId}|{n.Size}|{n.ModifiedAt:O}|{n.TrashedAt:O}");
