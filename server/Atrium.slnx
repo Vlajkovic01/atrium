@@ -5,6 +5,7 @@
     <Project Path="src/Atrium.Data/Atrium.Data.csproj" />
     <Project Path="src/Atrium.Data.Postgres/Atrium.Data.Postgres.csproj" />
     <Project Path="src/Atrium.Data.Sqlite/Atrium.Data.Sqlite.csproj" />
+    <Project Path="src/Atrium.Files/Atrium.Files.csproj" />
     <Project Path="src/Atrium.Identity/Atrium.Identity.csproj" />
     <Project Path="src/Atrium.Jobs/Atrium.Jobs.csproj" />
     <Project Path="src/Atrium.Storage/Atrium.Storage.csproj" />
@@ -13,6 +14,7 @@
     <Project Path="tests/Atrium.Api.Tests/Atrium.Api.Tests.csproj" />
     <Project Path="tests/Atrium.Core.Tests/Atrium.Core.Tests.csproj" />
     <Project Path="tests/Atrium.Data.Tests/Atrium.Data.Tests.csproj" />
+    <Project Path="tests/Atrium.Files.Tests/Atrium.Files.Tests.csproj" />
     <Project Path="tests/Atrium.Identity.Tests/Atrium.Identity.Tests.csproj" />
     <Project Path="tests/Atrium.Jobs.Tests/Atrium.Jobs.Tests.csproj" />
     <Project Path="tests/Atrium.Storage.Tests/Atrium.Storage.Tests.csproj" />

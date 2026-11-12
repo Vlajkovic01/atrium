@@ -191,11 +191,26 @@ The photo timeline is a view, not a library: it shows every photo and video
 node the user can read across their personal library and `photos`
 libraries.
 
+Each library has a root folder node (`root node`); every node of the
+library descends from it. A personal library is created the first time
+its user asks for their libraries, on the default storage location: the
+oldest registered location, recorded as a setting so that adding a
+location later moves nothing. Guests have no personal library. Phase 2
+builds personal libraries only; shared and external libraries arrive with
+the phases that need them.
+
 `Node` rules:
 
 - Tree by `parent`. Unique on (`parent`, `name key`) among non-trashed
   nodes. `name key` is the NFC-normalized, case-folded name: names preserve
-  case but two siblings cannot differ only by case (D-011).
+  case but two siblings cannot differ only by case (D-011). The database
+  enforces this through a column that holds the key only while the node is
+  not in the trash.
+- Removing a folder row removes its subtree and the versions of its files
+  (database cascade). Rows are removed only when the trash is emptied or
+  its retention ends. A blob cannot be deleted while a node or version
+  references it, and a user who owns a library cannot be removed by a
+  stray delete.
 - Moves check for cycles. A move is a metadata change only.
 - Several nodes may reference one blob (deduplication, copies).
 
@@ -327,7 +342,11 @@ Applies wherever a client-supplied name or path reaches storage (external
 libraries, wizard path selection, sidecar files).
 
 - Names: reject empty, `.`, `..`, path separators, NUL and control
-  characters, and names reserved on Windows.
+  characters, names reserved on Windows (`CON`, `con.txt`, `LPT1` and so
+  on), a trailing dot or space (Windows drops them, so two names would
+  become one on export), and names over 255 characters. Other characters
+  such as `:` or `?` are allowed: they are valid on macOS and Linux, and
+  an export to Windows will have to escape them.
 - Paths: normalize, resolve against the library root, and verify the result
   is inside the root. Symbolic links that lead outside the root are not
   followed.

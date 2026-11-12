@@ -14,6 +14,7 @@
     <ProjectReference Include="..\Atrium.Data\Atrium.Data.csproj" />
     <ProjectReference Include="..\Atrium.Data.Postgres\Atrium.Data.Postgres.csproj" />
     <ProjectReference Include="..\Atrium.Data.Sqlite\Atrium.Data.Sqlite.csproj" />
+    <ProjectReference Include="..\Atrium.Files\Atrium.Files.csproj" />
     <ProjectReference Include="..\Atrium.Identity\Atrium.Identity.csproj" />
     <ProjectReference Include="..\Atrium.Jobs\Atrium.Jobs.csproj" />
     <ProjectReference Include="..\Atrium.Storage\Atrium.Storage.csproj" />

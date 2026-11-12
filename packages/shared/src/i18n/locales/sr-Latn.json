@@ -75,6 +75,9 @@
       "unexpected_error": "Zadatak je prekinut zbog neočekivane greške.",
       "unknown_type": "Ovaj server ne zna da izvrši ovaj zadatak. Možda potiče iz novije verzije.",
       "lease_lost": "Zadatak je prekinut i biće ponovo pokrenut."
+    },
+    "files": {
+      "no_storage": "Ovaj server još nema lokaciju za skladištenje. Administrator mora da je doda pre nego što fajlovi mogu da se čuvaju."
     }
   },
   "nav": {

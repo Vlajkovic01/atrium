@@ -6,6 +6,7 @@ using Atrium.Api.Hosting;
 using Atrium.Api.Setup;
 using Atrium.Api.Storage;
 using Atrium.Data;
+using Atrium.Files;
 using Atrium.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,7 @@ builder.Services.AddSingleton<SetupService>();
 builder.Services.AddScoped<StorageLocationService>();
 builder.Services.AddAtriumJobs();
 builder.Services.AddJobWorker();
+builder.Services.AddAtriumFiles();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi("v1");
 
@@ -80,6 +82,7 @@ v1.MapMeEndpoints();
 v1.MapUserEndpoints();
 v1.MapStorageLocationEndpoints();
 v1.MapJobEndpoints();
+v1.MapLibraryEndpoints();
 
 await app.RunAsync();
 return 0;

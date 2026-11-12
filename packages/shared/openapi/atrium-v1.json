@@ -1565,6 +1565,29 @@
           }
         }
       }
+    },
+    "/api/v1/libraries": {
+      "get": {
+        "tags": [
+          "Libraries"
+        ],
+        "operationId": "ListLibraries",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LibraryInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1922,6 +1945,54 @@
           "succeeded",
           "failed",
           "cancelled"
+        ]
+      },
+      "LibraryInfo": {
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "mode",
+          "rootNodeId",
+          "readOnly"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LibraryKind"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/LibraryMode"
+          },
+          "rootNodeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "readOnly": {
+            "type": "boolean"
+          }
+        }
+      },
+      "LibraryKind": {
+        "enum": [
+          "personal",
+          "shared",
+          "photos",
+          "movies",
+          "shows"
+        ]
+      },
+      "LibraryMode": {
+        "enum": [
+          "managed",
+          "external"
         ]
       },
       "LinkCodeResponse": {
@@ -2814,6 +2885,9 @@
     },
     {
       "name": "Jobs"
+    },
+    {
+      "name": "Libraries"
     }
   ]
 }

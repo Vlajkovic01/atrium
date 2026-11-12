@@ -106,7 +106,7 @@ approve pairings or create link codes.
 | POST | `/storage-locations/test` | Try settings without saving. Never creates a directory. Always 200 with the outcome inside |
 | GET, PATCH, DELETE | `/storage-locations/{id}` | Not built yet. Delete only when no library uses it |
 | POST | `/storage-locations/{id}/check` | Verify the identity, then the probe; records online or offline |
-| GET, POST | `/libraries` | Non-admins see libraries they can access |
+| GET, POST | `/libraries` | `GET` built in Phase 2: the caller's libraries, with the personal one created on first use and its root folder ID. A session approved with "hide my personal files" does not see it; a read-only session sees every library as read-only |
 | GET, PATCH, DELETE | `/libraries/{id}` | Deleting an external library removes only the index |
 | GET, PUT | `/libraries/{id}/grants` | Who can read or write |
 | POST | `/libraries/{id}/scan` | Enqueue a scan job |
