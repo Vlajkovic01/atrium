@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 
 import { api, ApiError, call } from "../api.ts";
 import { Dialog } from "../components/Dialog.tsx";
@@ -95,6 +96,22 @@ export function Trash() {
             </span>
             <div className="row-main">
               <p className="row-title">{item.node.name}</p>
+              <p className="row-meta trash-origin">
+                <span>{t("trash.from")}</span>
+                {item.location.map((folder, index) => {
+                  const label = index === 0 ? t("files.myFiles") : folder.name;
+                  return (
+                    <span key={folder.id} className="crumb">
+                      {index > 0 ? <Icon name="chevronRight" size={12} /> : null}
+                      {folder.inTrash ? (
+                        <span title={t("trash.folderInTrash")}>{label}</span>
+                      ) : (
+                        <Link to={index === 0 ? "/files" : `/files/${folder.id}`}>{label}</Link>
+                      )}
+                    </span>
+                  );
+                })}
+              </p>
               <p className="row-meta">
                 {formatBytes(Number(item.bytes))}
                 {Number(item.itemCount) > 1 ? (

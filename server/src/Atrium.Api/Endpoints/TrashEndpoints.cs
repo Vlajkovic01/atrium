@@ -7,7 +7,11 @@ namespace Atrium.Api.Endpoints;
 /// <param name="Bytes">Space a permanent deletion would stop charging.</param>
 /// <param name="ItemCount">The item itself and everything inside it.</param>
 /// <param name="DeleteAt">When retention removes it for good.</param>
-public sealed record TrashItemInfo(NodeInfo Node, long Bytes, int ItemCount, DateTimeOffset DeleteAt);
+/// <param name="Location">Where it was: the folders from the library's top down to its parent. The first is the library's root.</param>
+public sealed record TrashItemInfo(NodeInfo Node, long Bytes, int ItemCount, DateTimeOffset DeleteAt, IReadOnlyList<LocationSegment> Location);
+
+/// <param name="InTrash">This folder is in the trash itself, so restoring will ask for a new place.</param>
+public sealed record LocationSegment(Guid Id, string Name, bool InTrash);
 
 /// <param name="ParentId">Where to restore to. Needed when the original folder is in the trash too.</param>
 /// <param name="OnConflict"><c>fail</c> or <c>rename</c> (keep both).</param>
@@ -25,7 +29,12 @@ public static class TrashEndpoints
 
         trash.MapGet("/", async (HttpContext http, TrashService service, CancellationToken ct) =>
                 (await service.ListAsync(http.User.Actor(), ct))
-                    .Select(i => new TrashItemInfo(FileHttp.ToInfo(i.Node, canWrite: false), i.Bytes, i.ItemCount, i.DeleteAt))
+                    .Select(i => new TrashItemInfo(
+                        FileHttp.ToInfo(i.Node, canWrite: false),
+                        i.Bytes,
+                        i.ItemCount,
+                        i.DeleteAt,
+                        i.Location.Select(n => new LocationSegment(n.Id, n.Name, n.TrashedAt is not null)).ToList()))
                     .ToList())
             .WithName("ListTrash");
 

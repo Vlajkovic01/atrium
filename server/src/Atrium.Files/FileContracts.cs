@@ -74,4 +74,5 @@ public enum ConflictPolicy
 
 public sealed record UsageSummary(long UsedBytes, long FilesBytes, long TrashBytes, long VersionsBytes, long? QuotaBytes);
 
-public sealed record TrashItem(Node Node, long Bytes, int ItemCount, DateTimeOffset DeleteAt);
+/// <param name="Location">The folders the item was in, from the library's top down to its parent.</param>
+public sealed record TrashItem(Node Node, long Bytes, int ItemCount, DateTimeOffset DeleteAt, IReadOnlyList<Node> Location);

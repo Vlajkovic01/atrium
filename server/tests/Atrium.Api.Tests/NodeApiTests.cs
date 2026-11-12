@@ -177,6 +177,7 @@ public sealed class NodeApiTests : IDisposable
         var item = Assert.Single(trash);
         Assert.Equal(5, item.Bytes);
         Assert.Equal(2, item.ItemCount);
+        Assert.Equal(library.RootNodeId, Assert.Single(item.Location).Id);
 
         var restored = await _client.SendAsync(HttpMethod.Post, $"/api/v1/trash/{folder.Id}/restore", token, new { });
         Assert.Equal(HttpStatusCode.OK, restored.StatusCode);

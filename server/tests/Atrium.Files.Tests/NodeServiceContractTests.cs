@@ -226,6 +226,21 @@ public abstract class NodeServiceContractTests<TDatabase> : IAsyncLifetime
     }
 
     [Fact]
+    public async Task The_trash_says_which_folder_an_item_came_from()
+    {
+        var (actor, library) = await Host.NewUserAsync();
+        var trip = (await FolderAsync(actor, library.RootNodeId, "Trip")).Value!;
+        var day = (await FolderAsync(actor, trip.Id, "Day 1")).Value!;
+        var photo = (await Host.UploadAsync(actor, day.Id, "photo.jpg", "pixels")).Value!;
+        await Host.NodesAsync(n => n.TrashAsync(actor, photo.Id, null, None));
+
+        var item = Assert.Single(await Host.TrashAsync(t => t.ListAsync(actor, None)));
+
+        Assert.Equal([library.RootNodeId, trip.Id, day.Id], item.Location.Select(n => n.Id));
+        Assert.Equal(["Trip", "Day 1"], item.Location.Skip(1).Select(n => n.Name));
+    }
+
+    [Fact]
     public async Task Restoring_puts_an_item_back_or_asks_when_its_place_is_taken()
     {
         var (actor, library) = await Host.NewUserAsync();

@@ -1191,6 +1191,12 @@ export interface components {
             path: string;
             createDirectory: boolean;
         };
+        LocationSegment: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            inTrash: boolean;
+        };
         LoginRequest: {
             name: string;
             password: string;
@@ -1399,6 +1405,7 @@ export interface components {
             itemCount: number | string;
             /** Format: date-time */
             deleteAt: string;
+            location: components["schemas"]["LocationSegment"][];
         };
         UpdateNodeRequest: {
             name: null | string;

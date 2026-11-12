@@ -154,6 +154,9 @@ test("deleting goes to the trash, can be undone, restored, and only then deleted
   await page.getByRole("link", { name: "Trash" }).click();
   const trashed = page.getByRole("listitem").filter({ hasText: "plan.txt" });
   await expect(trashed.getByText("removed in 30 days")).toBeVisible();
+  // Where it came from, with a link back to that folder.
+  await expect(trashed.getByText("From", { exact: true })).toBeVisible();
+  await expect(trashed.getByRole("link", { name: "My files" })).toBeVisible();
   await trashed.getByRole("button", { name: "Restore" }).click();
   await expect(page.getByText("The trash is empty.")).toBeVisible();
 
