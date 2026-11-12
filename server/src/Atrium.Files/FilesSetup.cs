@@ -1,5 +1,6 @@
 using Atrium.Files.Blobs;
 using Atrium.Files.Storage;
+using Atrium.Files.Uploads;
 using Atrium.Jobs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -21,6 +22,10 @@ public static class FilesSetup
         services.AddScoped<UsageService>();
         services.AddJobHandler<FileRetentionHandler>(FileRetentionHandler.Type);
         services.AddRecurringJob(FileRetentionHandler.Schedule);
+        services.AddSingleton<UploadRunningHashes>();
+        services.AddScoped<UploadService>();
+        services.AddJobHandler<UploadCleanupHandler>(UploadCleanupHandler.Type);
+        services.AddRecurringJob(UploadCleanupHandler.Schedule);
         services.AddJobHandler<BlobCollectorHandler>(BlobCollectorHandler.Type);
         services.AddRecurringJob(BlobCollectorHandler.Schedule);
         return services;

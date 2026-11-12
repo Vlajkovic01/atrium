@@ -92,6 +92,18 @@
       "is_root": "The top folder of a library cannot be changed.",
       "cross_library": "Items cannot be moved between libraries.",
       "too_many_items": "This folder holds too many items to copy at once (more than {max})."
+    },
+    "upload": {
+      "offset_mismatch": "The upload got out of step with the server. It continues from where the server stopped.",
+      "checksum_mismatch": "Part of the file was damaged on the way. It is sent again.",
+      "content_mismatch": "The file that arrived is not the file that was sent, so it was not saved.",
+      "invalid_chunk_size": "The upload was sent in pieces the server cannot accept.",
+      "too_large": "This file is too large to upload.",
+      "not_active": "This upload has already finished or was cancelled.",
+      "busy": "This upload is already being sent from somewhere else.",
+      "expired": "This upload was not continued for a day and was discarded. Start it again.",
+      "unsupported_version": "This app uses an upload protocol the server does not support. Update the app.",
+      "invalid_metadata": "The upload is missing its folder or name."
     }
   },
   "nav": {

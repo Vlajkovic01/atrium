@@ -309,6 +309,57 @@ namespace Atrium.Data.Sqlite.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Uploads",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LibraryId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ParentId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    StorageLocationId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    MediaType = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),
+                    Length = table.Column<long>(type: "INTEGER", nullable: false),
+                    Offset = table.Column<long>(type: "INTEGER", nullable: false),
+                    ChunkSize = table.Column<long>(type: "INTEGER", nullable: false),
+                    ConflictPolicy = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    ModifiedAt = table.Column<long>(type: "INTEGER", nullable: true),
+                    ExpectedSha256 = table.Column<byte[]>(type: "BLOB", maxLength: 32, nullable: true),
+                    State = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    StagingKey = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    MultipartUploadId = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
+                    Parts = table.Column<string>(type: "TEXT", nullable: false),
+                    NodeId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    ErrorCode = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),
+                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    UpdatedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    ExpiresAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Uploads", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Uploads_Libraries_LibraryId",
+                        column: x => x.LibraryId,
+                        principalTable: "Libraries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Uploads_StorageLocations_StorageLocationId",
+                        column: x => x.StorageLocationId,
+                        principalTable: "StorageLocations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Uploads_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PairingRequests",
                 columns: table => new
                 {
@@ -559,6 +610,26 @@ namespace Atrium.Data.Sqlite.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Uploads_LibraryId",
+                table: "Uploads",
+                column: "LibraryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Uploads_State_ExpiresAt",
+                table: "Uploads",
+                columns: new[] { "State", "ExpiresAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Uploads_StorageLocationId",
+                table: "Uploads",
+                column: "StorageLocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Uploads_UserId_State",
+                table: "Uploads",
+                columns: new[] { "UserId", "State" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_NameKey",
                 table: "Users",
                 column: "NameKey",
@@ -591,6 +662,9 @@ namespace Atrium.Data.Sqlite.Migrations
 
             migrationBuilder.DropTable(
                 name: "TotpCredentials");
+
+            migrationBuilder.DropTable(
+                name: "Uploads");
 
             migrationBuilder.DropTable(
                 name: "Nodes");
