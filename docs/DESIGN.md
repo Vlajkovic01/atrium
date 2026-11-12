@@ -828,13 +828,35 @@ supported path between the two.
 - Retention is configurable. Restore is an admin action in Phase 11 and a
   documented command line step before that.
 
-Current state (Phase 1): the portable format is not built yet. Before a
-migration, SQLite gets a verified snapshot of the database file in
-`/config/backups`. PostgreSQL has no automatic backup yet, so the server
-refuses to migrate a PostgreSQL database that already holds data. Only
-the initial migration exists, and it runs on an empty database, so no
-install is affected; the portable backup must land before a second
-migration is released.
+Built in Phase 2 (D-026):
+
+- The archive is a ZIP with `manifest.json` (format, time, reason,
+  database kind, schema migration, server version, and per table the row
+  count and SHA-256 of its file) and `tables/<table>.jsonl`. It is read
+  from the database's own tables in one read-only snapshot that does not
+  block the server's writes, so a backup taken before a migration
+  describes the old schema exactly.
+- A backup file appears under its final name only after it was written,
+  flushed and verified against its manifest. A backup that fails
+  verification is never trusted, before a migration or for a restore.
+- Pre-migration backups run on both databases; the PostgreSQL refusal of
+  Phase 1 is gone. Scheduled (daily) and manual backups are also copied to
+  `atrium/backups/` in every storage location; the newest 14 of each kind
+  are kept, locally and in each location. Backups are listed from the
+  backup directory; no separate `BackupRecord` table is kept.
+- Restore is a command run instead of the server:
+  `Atrium.Api restore <backup.zip>`. It verifies the archive, moves an
+  existing SQLite database aside (nothing is deleted), refuses a
+  PostgreSQL database that is not empty and a backup from a schema the
+  server does not know, migrates an empty database to the backup's
+  schema, loads the rows in foreign-key order with parents before
+  children, and leaves newer migrations to the next start. A PostgreSQL
+  backup restores into SQLite and the reverse.
+- A backup holds password hashes and encrypted secrets, but not the
+  server key (6.7). Its copies sit next to the files in each storage
+  location, so anyone who can read the location can attempt to crack the
+  password hashes offline; Argon2id makes that slow, and the installation
+  guide says to protect the location accordingly.
 
 ### 8.3 API versioning
 

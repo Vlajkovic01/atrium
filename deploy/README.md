@@ -45,6 +45,31 @@ Back up `config` and `data` together. The files are stored in Atrium's
 own layout, named by their content; the names and folders live in the
 database in `config`.
 
+### Metadata backups
+
+Atrium backs up its database every day, and before every update that
+changes it, into `/config/backups`. The daily copy is also written to
+`atrium/backups/` inside each storage location, so the place that holds
+your files also holds what is needed to name them. The newest 14 are
+kept. An admin can start one at any time.
+
+A backup contains password hashes (never passwords) and encrypted
+storage credentials, but not the key that decrypts them, which stays in
+`/config/keys`. Keep your storage location as private as the files in it.
+
+To restore a backup, stop the server and run the restore command with
+the backup's path inside the container:
+
+```
+docker compose stop atrium
+docker compose run --rm atrium restore /config/backups/atrium-backup-20261112T030000000Z-scheduled.zip
+docker compose start atrium
+```
+
+The current database is renamed, not deleted, before the restore. With
+PostgreSQL, point Atrium at a new, empty database first; the restore
+refuses a database that already holds data.
+
 ### Storing files in a folder of your choice
 
 Replace the `data` volume with a bind mount in `docker-compose.yml`:
