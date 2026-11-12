@@ -185,6 +185,8 @@
     "nothing": "The trash is empty.",
     "items": "{count, plural, one {# item} other {# items}}",
     "deletedOn": "deleted {when}",
+    "from": "From",
+    "folderInTrash": "This folder is in the trash too",
     "daysLeft": "{count, plural, =0 {removed today} one {removed in # day} other {removed in # days}}",
     "restore": "Restore",
     "restoreTo": "Restore to…",

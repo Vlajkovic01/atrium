@@ -2140,3 +2140,15 @@ a {
     align-items: stretch;
   }
 }
+
+.trash-origin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.trash-origin a {
+  color: var(--ink-soft);
+}

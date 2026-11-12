@@ -299,6 +299,37 @@ added. Any of them can still be overruled.
   thousand items needs; it can change without breaking clients, because
   the cursor is opaque.
 
+## D-029 How the risks found in Phase 2 are handled (Proposed, delegated by the owner, 2026-11-12)
+
+The owner asked to settle the Phase 2 risks as the engineer sees best.
+
+1. **Backups next to the files.** Backups leave out signed-in devices
+   and their tokens (`Sessions`, `RefreshTokens`, `PairingRequests`,
+   `LinkCodes`): they are worthless for recovery, since everyone signs in
+   again, and should not sit in a storage location. Accounts with their
+   Argon2id password hashes and the encrypted secrets stay, because
+   without them nobody could sign in after a restore. Alternative
+   considered: encrypting the copies with the server key; rejected,
+   because the copies exist for the case where `/config` and its key are
+   lost.
+2. **Resuming the wrong file after a reload.** The web app records a
+   fingerprint of the file's content (its size and a hash of the first
+   and last mebibyte) once the upload exists, and continues only when the
+   file chosen again has the same fingerprint, folder, name, size and
+   modification time. Otherwise the upload starts over; the old one
+   expires on the server after a day.
+3. **No chunk checksum on plain HTTP.** The shared package carries its
+   own SHA-256, used wherever the platform has none: browsers on plain
+   HTTP, and React Native in Phase 4. Every chunk is now checked on
+   every platform.
+4. **S3 content is not read back after an upload.** Accepted as is: the
+   service verifies each part's Content-MD5 against the bytes the server
+   sent, and the server hashed those same bytes in transit, so a read
+   back would only repeat the check at the cost of downloading the file.
+5. **Listing and tree walks on very large libraries.** Kept as built and
+   measured with 100,000 files under release-gate item 6; keyset paging
+   or recursive queries are added only if the measurement asks for them.
+
 ## D-028 One tus chunk is one storage part; no local spool (Proposed, Phase 2)
 
 - Decision: every accepted tus chunk is stored as one part of a multipart

@@ -185,6 +185,8 @@
     "nothing": "Korpa je prazna.",
     "items": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
     "deletedOn": "obrisano {when}",
+    "from": "Iz",
+    "folderInTrash": "I ovaj folder je u korpi",
     "daysLeft": "{count, plural, =0 {uklanja se danas} one {uklanja se za # dan} few {uklanja se za # dana} other {uklanja se za # dana}}",
     "restore": "Vrati",
     "restoreTo": "Vrati u…",

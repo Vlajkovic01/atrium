@@ -858,8 +858,9 @@ Built in Phase 2 (D-026):
   schema, loads the rows in foreign-key order with parents before
   children, and leaves newer migrations to the next start. A PostgreSQL
   backup restores into SQLite and the reverse.
-- A backup holds password hashes and encrypted secrets, but not the
-  server key (6.7). Its copies sit next to the files in each storage
+- A backup holds accounts with their password hashes and encrypted
+  secrets, but not the server key (6.7), and no signed-in devices or
+  tokens (D-029). Its copies sit next to the files in each storage
   location, so anyone who can read the location can attempt to crack the
   password hashes offline; Argon2id makes that slow, and the installation
   guide says to protect the location accordingly.

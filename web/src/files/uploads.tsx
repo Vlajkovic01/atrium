@@ -1,4 +1,6 @@
 import {
+  fingerprint,
+  sha256,
   UploadQueue,
   type ConflictAnswer,
   type ConflictChoice,
@@ -42,23 +44,33 @@ export function useUploads(): UploadsValue {
 
 const RESUME_KEY = "atrium.uploads";
 
+/** An unfinished upload: where it is on the server, and a fingerprint of the file's content. */
+interface ResumePoint {
+  readonly location: string;
+  readonly fingerprint?: string;
+}
+
 /**
  * Where unfinished uploads were, so choosing the same file again after a
- * reload continues it. The key includes the file's modification time: a
- * different file that only shares name and size must start over, never
- * continue someone else's bytes.
+ * reload continues it. An upload continues only when folder, name, size,
+ * modification time and a fingerprint of the content all match: a
+ * different file must start over, never continue another file's bytes.
  */
 const resumeStore = {
   key: (parentId: string, file: { name: string; size: number; lastModified?: number | undefined }) =>
     `${parentId}|${file.name}|${file.size}|${file.lastModified ?? 0}`,
-  read(): Record<string, string> {
+  read(): Record<string, ResumePoint> {
     try {
-      return JSON.parse(localStorage.getItem(RESUME_KEY) ?? "{}") as Record<string, string>;
+      const raw = JSON.parse(localStorage.getItem(RESUME_KEY) ?? "{}") as Record<string, unknown>;
+      // Entries from before fingerprints existed are dropped: they cannot be checked.
+      return Object.fromEntries(
+        Object.entries(raw).filter((e): e is [string, ResumePoint] => typeof e[1] === "object" && e[1] !== null),
+      );
     } catch {
       return {};
     }
   },
-  write(map: Record<string, string>): void {
+  write(map: Record<string, ResumePoint>): void {
     try {
       localStorage.setItem(RESUME_KEY, JSON.stringify(map));
     } catch {
@@ -81,14 +93,14 @@ const transport: TusTransport = {
   fetch: (input, init) => window.fetch(input, init),
   getAccessToken: currentAccessToken,
   refresh: refreshAccessToken,
-  // Browsers hash only in secure contexts; on plain HTTP the server's own
-  // check of the whole file remains.
-  ...(globalThis.crypto?.subtle
-    ? {
-        sha256: async (data: Uint8Array) => new Uint8Array(await crypto.subtle.digest("SHA-256", data as BufferSource)),
-      }
-    : {}),
+  // The browser's own SHA-256 exists only on HTTPS and localhost; on plain
+  // HTTP the shared implementation checks each chunk instead.
+  sha256: globalThis.crypto?.subtle
+    ? async (data: Uint8Array) => new Uint8Array(await crypto.subtle.digest("SHA-256", data as BufferSource))
+    : (data: Uint8Array) => Promise.resolve(sha256(data)),
 };
+
+const fingerprintOf = (file: File) => fingerprint(file.size, fileSource(file).slice);
 
 /**
  * Holds the app's upload queue for as long as the page is open, so
@@ -99,6 +111,9 @@ export function UploadsProvider({ children }: { readonly children: ReactNode }) 
   const [items, setItems] = useState<readonly QueuedUpload[]>([]);
   const [question, setQuestion] = useState<{ q: ConflictQuestion; answer: (a: ConflictAnswer) => void } | null>(null);
   const finished = useRef(new Set<number>());
+  // The files behind queue items, to fingerprint them once their upload exists.
+  const fileById = useRef(new Map<number, File>());
+  const fingerprinting = useRef(new Set<number>());
 
   const queue = useMemo(
     () =>
@@ -117,10 +132,27 @@ export function UploadsProvider({ children }: { readonly children: ReactNode }) 
     for (const item of items) {
       const key = resumeStore.key(item.parentId, item);
       const state = item.status.state;
-      if (item.location && ["uploading", "paused", "waiting"].includes(state)) {
-        map.set(key, item.location);
+      const location = item.location;
+      if (location && ["uploading", "paused", "waiting"].includes(state)) {
+        const known = map.get(key);
+        if (known?.location !== location) {
+          map.set(key, { location });
+        }
+
+        const file = fileById.current.get(item.id);
+        if (!known?.fingerprint && file && !fingerprinting.current.has(item.id)) {
+          fingerprinting.current.add(item.id);
+          void fingerprintOf(file).then((print) => {
+            const latest = new Map(Object.entries(resumeStore.read()));
+            if (latest.get(key)?.location === location) {
+              latest.set(key, { location, fingerprint: print });
+              resumeStore.write(Object.fromEntries(latest));
+            }
+          });
+        }
       } else if (["completed", "failed", "cancelled", "skipped"].includes(state)) {
         map.delete(key);
+        fileById.current.delete(item.id);
       }
 
       if (state === "completed" && !finished.current.has(item.id)) {
@@ -160,7 +192,19 @@ export function UploadsProvider({ children }: { readonly children: ReactNode }) 
 
         const saved = resumeStore.read();
         for (const [target, list] of byFolder) {
-          queue.add(list.map(fileSource), target, (source) => saved[resumeStore.key(target, source)]);
+          // Continue only an upload whose file is provably the same one.
+          const resumable = new Map<File, string>();
+          for (const file of list) {
+            const point = saved[resumeStore.key(target, file)];
+            if (point?.fingerprint && point.fingerprint === (await fingerprintOf(file))) {
+              resumable.set(file, point.location);
+            }
+          }
+
+          const before = queue.items.length;
+          const sources = list.map(fileSource);
+          queue.add(sources, target, (source) => resumable.get(list[sources.indexOf(source)]!));
+          queue.items.slice(before).forEach((item, index) => fileById.current.set(item.id, list[index]!));
         }
       },
     }),

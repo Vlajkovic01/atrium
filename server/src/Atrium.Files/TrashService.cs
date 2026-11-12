@@ -24,7 +24,9 @@ public sealed class TrashService(AtriumDbContext db, NodeService nodes, TimeProv
         foreach (var node in trashed)
         {
             var (bytes, count) = await MeasureAsync(node, ct);
-            result.Add(new TrashItem(node, bytes, count, node.TrashedAt!.Value + options.TrashRetention));
+            var location = await NodeTree.AncestorsAsync(db, node, ct);
+            location.Reverse();
+            result.Add(new TrashItem(node, bytes, count, node.TrashedAt!.Value + options.TrashRetention, location));
         }
 
         return result;

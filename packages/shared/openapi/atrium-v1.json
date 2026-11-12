@@ -4167,6 +4167,26 @@
           }
         }
       },
+      "LocationSegment": {
+        "required": [
+          "id",
+          "name",
+          "inTrash"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "inTrash": {
+            "type": "boolean"
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "name",
@@ -5003,7 +5023,8 @@
           "node",
           "bytes",
           "itemCount",
-          "deleteAt"
+          "deleteAt",
+          "location"
         ],
         "type": "object",
         "properties": {
@@ -5029,6 +5050,12 @@
           "deleteAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "location": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LocationSegment"
+            }
           }
         }
       },
