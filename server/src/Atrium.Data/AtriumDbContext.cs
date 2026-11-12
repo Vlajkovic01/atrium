@@ -1,4 +1,5 @@
 using Atrium.Core;
+using Atrium.Core.Files;
 using Atrium.Core.Identity;
 using Atrium.Core.Jobs;
 using Atrium.Core.Settings;
@@ -20,6 +21,10 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
     public DbSet<StorageLocation> StorageLocations => Set<StorageLocation>();
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<Job> Jobs => Set<Job>();
+    public DbSet<Library> Libraries => Set<Library>();
+    public DbSet<Node> Nodes => Set<Node>();
+    public DbSet<Blob> Blobs => Set<Blob>();
+    public DbSet<NodeVersion> NodeVersions => Set<NodeVersion>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -38,6 +43,10 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
         configurationBuilder.Properties<StorageLocationState>().HaveConversion<string>().HaveMaxLength(32);
         configurationBuilder.Properties<JobState>().HaveConversion<string>().HaveMaxLength(32);
         configurationBuilder.Properties<JobResourceClass>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<LibraryKind>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<LibraryMode>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<NodeKind>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<BlobState>().HaveConversion<string>().HaveMaxLength(32);
 
         // The one enum stored by number: workers order the queue by it.
         configurationBuilder.Properties<JobPriority>().HaveConversion<int>();
@@ -145,6 +154,58 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
             // The claim query: the next queued job by priority and time.
             e.HasIndex(j => new { j.State, j.Priority, j.RunAfter });
             e.HasIndex(j => new { j.Type, j.State });
+        });
+
+        modelBuilder.Entity<Library>(e =>
+        {
+            e.Property(l => l.Name).HasMaxLength(128);
+            e.Property(l => l.Version).IsConcurrencyToken();
+            e.HasOne<StorageLocation>().WithMany().HasForeignKey(l => l.StorageLocationId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(l => l.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
+
+            // At most one personal library per user.
+            e.HasIndex(l => l.OwnerUserId).IsUnique();
+        });
+
+        modelBuilder.Entity<Node>(e =>
+        {
+            e.Property(n => n.Name).HasMaxLength(NodeName.MaxLength);
+            e.Property(n => n.NameKey).HasMaxLength(NodeName.MaxLength * 2);
+            e.Property(n => n.ActiveNameKey).HasMaxLength(NodeName.MaxLength * 2);
+            e.Property(n => n.MediaType).HasMaxLength(128);
+            e.Property(n => n.Version).IsConcurrencyToken();
+            e.Ignore(n => n.IsFolder);
+            e.HasOne<Library>().WithMany().HasForeignKey(n => n.LibraryId).OnDelete(DeleteBehavior.Cascade);
+
+            // Removing a folder row removes everything below it. Rows are only
+            // removed when the trash is emptied or its retention ends; content
+            // is not touched, blobs are collected separately (DESIGN.md 4.3).
+            e.HasOne<Node>().WithMany().HasForeignKey(n => n.ParentId).OnDelete(DeleteBehavior.Cascade);
+
+            // A blob is never deleted while a node points at it.
+            e.HasOne<Blob>().WithMany().HasForeignKey(n => n.BlobId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(n => n.CreatedByUserId).OnDelete(DeleteBehavior.SetNull);
+
+            // Siblings that are not in the trash have distinct names (D-011).
+            e.HasIndex(n => new { n.ParentId, n.ActiveNameKey }).IsUnique();
+            e.HasIndex(n => new { n.LibraryId, n.TrashedAt });
+        });
+
+        modelBuilder.Entity<Blob>(e =>
+        {
+            e.Property(b => b.Sha256).HasMaxLength(32);
+            e.HasIndex(b => new { b.StorageLocationId, b.Sha256 }).IsUnique();
+            e.HasIndex(b => new { b.State, b.PendingDeleteSince });
+            e.Ignore(b => b.Key);
+            e.HasOne<StorageLocation>().WithMany().HasForeignKey(b => b.StorageLocationId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<NodeVersion>(e =>
+        {
+            e.HasOne<Node>().WithMany().HasForeignKey(v => v.NodeId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Blob>().WithMany().HasForeignKey(v => v.BlobId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(v => v.CreatedByUserId).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(v => new { v.NodeId, v.CreatedAt });
         });
     }
 

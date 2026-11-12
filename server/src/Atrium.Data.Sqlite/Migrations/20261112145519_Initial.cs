@@ -67,6 +67,29 @@ namespace Atrium.Data.Sqlite.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Blobs",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    StorageLocationId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Sha256 = table.Column<byte[]>(type: "BLOB", maxLength: 32, nullable: false),
+                    Size = table.Column<long>(type: "INTEGER", nullable: false),
+                    State = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    PendingDeleteSince = table.Column<long>(type: "INTEGER", nullable: true),
+                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Blobs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Blobs_StorageLocations_StorageLocationId",
+                        column: x => x.StorageLocationId,
+                        principalTable: "StorageLocations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Jobs",
                 columns: table => new
                 {
@@ -109,6 +132,38 @@ namespace Atrium.Data.Sqlite.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Libraries",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
+                    Kind = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    Mode = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    StorageLocationId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    OwnerUserId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    RootNodeId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ReadOnly = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Libraries", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Libraries_StorageLocations_StorageLocationId",
+                        column: x => x.StorageLocationId,
+                        principalTable: "StorageLocations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Libraries_Users_OwnerUserId",
+                        column: x => x.OwnerUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -204,6 +259,56 @@ namespace Atrium.Data.Sqlite.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Nodes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    LibraryId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    ParentId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    NameKey = table.Column<string>(type: "TEXT", maxLength: 510, nullable: false),
+                    ActiveNameKey = table.Column<string>(type: "TEXT", maxLength: 510, nullable: true),
+                    Kind = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
+                    BlobId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    Size = table.Column<long>(type: "INTEGER", nullable: false),
+                    MediaType = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),
+                    ModifiedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    UpdatedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    TrashedAt = table.Column<long>(type: "INTEGER", nullable: true),
+                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Nodes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Nodes_Blobs_BlobId",
+                        column: x => x.BlobId,
+                        principalTable: "Blobs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Nodes_Libraries_LibraryId",
+                        column: x => x.LibraryId,
+                        principalTable: "Libraries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Nodes_Nodes_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "Nodes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Nodes_Users_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PairingRequests",
                 columns: table => new
                 {
@@ -263,6 +368,52 @@ namespace Atrium.Data.Sqlite.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "NodeVersions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    NodeId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    BlobId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Size = table.Column<long>(type: "INTEGER", nullable: false),
+                    ModifiedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NodeVersions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NodeVersions_Blobs_BlobId",
+                        column: x => x.BlobId,
+                        principalTable: "Blobs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_NodeVersions_Nodes_NodeId",
+                        column: x => x.NodeId,
+                        principalTable: "Nodes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_NodeVersions_Users_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Blobs_State_PendingDeleteSince",
+                table: "Blobs",
+                columns: new[] { "State", "PendingDeleteSince" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Blobs_StorageLocationId_Sha256",
+                table: "Blobs",
+                columns: new[] { "StorageLocationId", "Sha256" },
+                unique: true);
+
             migrationBuilder.CreateIndex(
                 name: "IX_Jobs_ActiveDedupeKey",
                 table: "Jobs",
@@ -290,6 +441,17 @@ namespace Atrium.Data.Sqlite.Migrations
                 columns: new[] { "Type", "State" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Libraries_OwnerUserId",
+                table: "Libraries",
+                column: "OwnerUserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Libraries_StorageLocationId",
+                table: "Libraries",
+                column: "StorageLocationId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LinkCodes_CodeHash",
                 table: "LinkCodes",
                 column: "CodeHash",
@@ -299,6 +461,42 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "IX_LinkCodes_UserId",
                 table: "LinkCodes",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Nodes_BlobId",
+                table: "Nodes",
+                column: "BlobId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Nodes_CreatedByUserId",
+                table: "Nodes",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Nodes_LibraryId_TrashedAt",
+                table: "Nodes",
+                columns: new[] { "LibraryId", "TrashedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Nodes_ParentId_ActiveNameKey",
+                table: "Nodes",
+                columns: new[] { "ParentId", "ActiveNameKey" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NodeVersions_BlobId",
+                table: "NodeVersions",
+                column: "BlobId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NodeVersions_CreatedByUserId",
+                table: "NodeVersions",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NodeVersions_NodeId_CreatedAt",
+                table: "NodeVersions",
+                columns: new[] { "NodeId", "CreatedAt" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_PairingRequests_ApprovedByUserId",
@@ -377,6 +575,9 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "LinkCodes");
 
             migrationBuilder.DropTable(
+                name: "NodeVersions");
+
+            migrationBuilder.DropTable(
                 name: "PairingRequests");
 
             migrationBuilder.DropTable(
@@ -389,13 +590,22 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "Settings");
 
             migrationBuilder.DropTable(
-                name: "StorageLocations");
-
-            migrationBuilder.DropTable(
                 name: "TotpCredentials");
 
             migrationBuilder.DropTable(
+                name: "Nodes");
+
+            migrationBuilder.DropTable(
                 name: "Sessions");
+
+            migrationBuilder.DropTable(
+                name: "Blobs");
+
+            migrationBuilder.DropTable(
+                name: "Libraries");
+
+            migrationBuilder.DropTable(
+                name: "StorageLocations");
 
             migrationBuilder.DropTable(
                 name: "Users");
