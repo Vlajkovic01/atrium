@@ -31,8 +31,12 @@ export interface TusTransport {
   readonly getAccessToken: () => string | null;
   /** Gets a new access token after a 401, or null when the session is over. */
   readonly refresh: () => Promise<string | null>;
-  /** SHA-256 of a chunk, sent so the server can refuse a chunk damaged on the way. */
-  readonly sha256: (data: Uint8Array) => Promise<Uint8Array>;
+  /**
+   * SHA-256 of a chunk, sent so the server can refuse a chunk damaged on
+   * the way. Optional: browsers offer it only on HTTPS and localhost. The
+   * server verifies the whole file's content either way.
+   */
+  readonly sha256?: (data: Uint8Array) => Promise<Uint8Array>;
   /** Waits, so tests can replace real time. */
   readonly sleep?: (ms: number) => Promise<void>;
   readonly now?: () => number;
@@ -237,16 +241,15 @@ export class TusUpload {
 
       const end = Math.min(source.size, offset + this.#chunkSize);
       const chunk = await source.slice(offset, end);
-      const checksum = base64(await this.#transport.sha256(chunk));
-      const response = await this.#send(this.#location!, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/offset+octet-stream",
-          "Upload-Offset": String(offset),
-          "Upload-Checksum": `sha256 ${checksum}`,
-        },
-        body: chunk as BodyInit,
-      });
+      const headers: Record<string, string> = {
+        "Content-Type": "application/offset+octet-stream",
+        "Upload-Offset": String(offset),
+      };
+      if (this.#transport.sha256) {
+        headers["Upload-Checksum"] = `sha256 ${base64(await this.#transport.sha256(chunk))}`;
+      }
+
+      const response = await this.#send(this.#location!, { method: "PATCH", headers, body: chunk as BodyInit });
 
       if (response.status === 409 || response.status === 460) {
         // Out of step, or damaged on the way: the server's offset decides.

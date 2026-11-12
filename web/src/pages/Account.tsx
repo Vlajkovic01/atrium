@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { api, call } from "../api.ts";
 import { Badge, Button, Card, ErrorMessage, Field, LanguagePicker, Notice, PageHeader } from "../components/ui.tsx";
-import { currentLocale } from "../i18n.ts";
+import { currentLocale, formatBytes } from "../i18n.ts";
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -62,6 +62,8 @@ export function Account() {
     <>
       <PageHeader title={t("account.heading")} lead={t("account.body")} />
       {me.data.passwordResetByAdmin ? <Notice kind="warning">{t("account.resetNotice")}</Notice> : null}
+
+      <StorageUsage />
 
       <Card title={t("account.profileHeading")} icon="user">
         <form className="form" onSubmit={(event) => void save(event)}>
@@ -334,6 +336,43 @@ function ChangePassword() {
           </Button>
         </div>
       </form>
+    </Card>
+  );
+}
+
+/** Space used against the quota, split the way it is charged: files, trash and earlier versions. */
+function StorageUsage() {
+  const { t } = useTranslation();
+  const usage = useQuery({ queryKey: ["usage"], queryFn: () => call(api.GET("/api/v1/me/usage")) });
+  if (!usage.data) {
+    return null;
+  }
+
+  const used = Number(usage.data.usedBytes);
+  const quota =
+    usage.data.quotaBytes === null || usage.data.quotaBytes === undefined ? null : Number(usage.data.quotaBytes);
+  return (
+    <Card title={t("account.storageHeading")} icon="drive">
+      <p className="card-lead">
+        {quota === null
+          ? t("account.storageUsed", { used: formatBytes(used) })
+          : t("account.storageOfQuota", { used: formatBytes(used), quota: formatBytes(quota) })}
+      </p>
+      {quota !== null ? (
+        <progress
+          className="upload-progress"
+          max={quota}
+          value={Math.min(used, quota)}
+          aria-label={t("account.storageHeading")}
+        />
+      ) : null}
+      <p className="row-meta">
+        {t("account.storageSplit", {
+          files: formatBytes(Number(usage.data.filesBytes)),
+          trash: formatBytes(Number(usage.data.trashBytes)),
+          versions: formatBytes(Number(usage.data.versionsBytes)),
+        })}
+      </p>
     </Card>
   );
 }

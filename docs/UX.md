@@ -95,6 +95,26 @@ with progress, pause and cancel.
 
 ### Files (Phase 2)
 
+Built in Phase 2 as described below, with these details settled while
+building it:
+
+- The app opens on Files. The sidebar starts with Files and Trash.
+- Selecting: click, Ctrl or Cmd click, Shift click; Ctrl+A, Escape,
+  Delete (to the trash) and F2 (rename) on the keyboard. Double click or
+  the name opens a folder or a file's details.
+- Moving to the trash shows "Undo" instead of asking first.
+- Folders dropped onto the page keep their structure; a folder that
+  already exists is added to, not duplicated.
+- While a name conflict waits for an answer, the upload counts as
+  pending, never as failed or finished.
+- Resuming after a reload matches the reselected file by folder, name,
+  size and modification time, so a different file that only shares name
+  and size starts over instead of continuing another file's bytes.
+- Downloads use short-lived signed links; several items or a folder come
+  as one ZIP.
+- The Account page shows the space used, split into files, trash and
+  earlier versions, against the quota.
+
 - Folder view as a list or grid, with breadcrumbs, sorting, multi-select
   with keyboard and mouse.
 - Actions: new folder, upload, download (single file, or several as a

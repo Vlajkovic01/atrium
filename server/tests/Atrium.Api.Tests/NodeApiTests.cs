@@ -87,6 +87,20 @@ public sealed class NodeApiTests : IDisposable
     }
 
     [Fact]
+    public async Task Sort_and_filter_values_are_accepted_as_the_contract_spells_them()
+    {
+        var (token, library) = await SignInWithLibraryAsync("ana");
+        await CreateFolderAsync(token, library.RootNodeId, "b");
+        await CreateFolderAsync(token, library.RootNodeId, "a");
+
+        var response = await _client.SendAsync(
+            HttpMethod.Get, $"/api/v1/nodes/{library.RootNodeId}/children?sort=name&descending=true&kind=folder&limit=500", token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(["b", "a"], (await response.ReadAsync<NodePage>()).Items.Select(i => i.Name));
+    }
+
+    [Fact]
     public async Task A_taken_name_answers_409_with_the_existing_item()
     {
         var (token, library) = await SignInWithLibraryAsync("ana");

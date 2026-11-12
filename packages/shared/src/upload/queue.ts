@@ -20,6 +20,8 @@ export interface QueuedUpload {
   readonly id: number;
   readonly name: string;
   readonly size: number;
+  /** With name, size and folder, identifies the same file chosen again for resuming. */
+  readonly lastModified: number | undefined;
   readonly parentId: string;
   readonly status: UploadStatus | { readonly state: "skipped" };
   /** Saved by the app to offer resuming after a reload. */
@@ -42,6 +44,8 @@ interface Entry {
   readonly parentId: string;
   upload: TusUpload;
   skipped: boolean;
+  /** A taken name is being decided: the upload is not over, it waits for the answer. */
+  deciding: boolean;
 }
 
 /**
@@ -66,8 +70,9 @@ export class UploadQueue {
       id: e.id,
       name: e.source.name,
       size: e.source.size,
+      lastModified: e.source.lastModified,
       parentId: e.parentId,
-      status: e.skipped ? { state: "skipped" as const } : e.upload.status,
+      status: e.skipped ? { state: "skipped" as const } : e.deciding ? { state: "queued" as const } : e.upload.status,
       location: e.upload.location,
     }));
   }
@@ -89,7 +94,7 @@ export class UploadQueue {
         onConflict: this.#standingAnswer && this.#standingAnswer !== "skip" ? this.#standingAnswer : "fail",
         ...(location ? { location } : {}),
       });
-      const entry: Entry = { id: this.#nextId++, source, parentId, upload, skipped: false };
+      const entry: Entry = { id: this.#nextId++, source, parentId, upload, skipped: false, deciding: false };
       this.#watch(entry);
       this.#entries.push(entry);
     }
@@ -136,7 +141,16 @@ export class UploadQueue {
   }
 
   #watch(entry: Entry): void {
-    entry.upload.onChange(() => this.#notify());
+    const upload = entry.upload;
+    upload.onChange((status) => {
+      // A taken name is a question, not the end: the item stays pending
+      // until the user answers, so nobody sees "finished" in between.
+      if (upload === entry.upload && status.state === "failed" && status.code === "node.name_conflict") {
+        entry.deciding = true;
+      }
+
+      this.#notify();
+    });
   }
 
   #pump(): void {
@@ -173,6 +187,7 @@ export class UploadQueue {
     const choice = await this.#decide(entry, status.params["existingKind"] === "Folder");
     if (choice === "skip") {
       entry.skipped = true;
+      entry.deciding = false;
       return;
     }
 
@@ -181,6 +196,7 @@ export class UploadQueue {
       parentId: entry.parentId,
       onConflict: choice,
     });
+    entry.deciding = false;
     this.#watch(entry);
     await entry.upload.start();
   }

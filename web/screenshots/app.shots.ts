@@ -61,6 +61,42 @@ test("screenshots of every screen", async ({ page, request, browser }) => {
   await shot(page, "wizard-done");
   await page.getByRole("button", { name: "Open Atrium" }).click();
 
+  // --- Files ---
+  await page.getByRole("heading", { name: "My files" }).waitFor();
+  await shot(page, "files-empty");
+  for (const folder of ["Documents", "Holiday 2026", "Taxes"]) {
+    await page.getByRole("button", { name: "New folder" }).click();
+    await page.getByRole("dialog").getByLabel("Name").fill(folder);
+    await page.getByRole("dialog").getByRole("button", { name: "Create" }).click();
+    await page.getByRole("button", { name: folder, exact: true }).waitFor();
+  }
+
+  await page.getByTestId("upload-files").setInputFiles([
+    { name: "Budget 2026.xlsx", mimeType: "application/octet-stream", buffer: Buffer.alloc(48_000, 1) },
+    { name: "Notes.txt", mimeType: "text/plain", buffer: Buffer.from("Shopping, tickets, keys.") },
+    { name: "Report.pdf", mimeType: "application/pdf", buffer: Buffer.alloc(1_250_000, 2) },
+  ]);
+  await page.getByText("Uploads finished").waitFor();
+  await shot(page, "files");
+  await page.getByRole("button", { name: "Show as grid" }).click();
+  await shot(page, "files-grid");
+  await page.getByRole("button", { name: "Show as list" }).click();
+  await page
+    .getByTestId("upload-files")
+    .setInputFiles([{ name: "Notes.txt", mimeType: "text/plain", buffer: Buffer.from("New notes") }]);
+  await page.getByRole("dialog", { name: "This name is already taken" }).waitFor();
+  await shot(page, "files-conflict");
+  await page.getByRole("dialog").getByRole("button", { name: "Replace" }).click();
+  await page.getByText("Uploads finished").waitFor();
+  await page.getByRole("button", { name: "Notes.txt", exact: true }).click();
+  await page.getByRole("heading", { name: "Earlier versions" }).waitFor();
+  await shot(page, "files-details-versions");
+  await page.getByRole("row").filter({ hasText: "Taxes" }).getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Move to trash" }).click();
+  await page.getByRole("link", { name: "Trash" }).click();
+  await page.getByRole("heading", { name: "Trash" }).waitFor();
+  await shot(page, "trash");
+
   // --- A second device and a TV waiting for approval ---
   await request.post("/api/v1/auth/login", {
     data: { name: OWNER, password: PASSWORD, device: { name: "Pixel 9", kind: "mobile", platform: "Android 16" } },
@@ -160,6 +196,10 @@ test("screenshots of every screen", async ({ page, request, browser }) => {
   await mobile.getByRole("heading", { name: "Sign in" }).waitFor();
   await shot(mobile, "sign-in-phone-dark");
   await signIn(mobile);
+  await mobile.getByRole("heading", { name: "My files" }).waitFor();
+  await mobile.getByRole("button", { name: "Notes.txt", exact: true }).waitFor();
+  await shot(mobile, "files-phone-dark");
+  await mobile.goto("/devices");
   await mobile.getByText("Pixel 9").waitFor();
   await shot(mobile, "devices-phone-dark");
   await mobile.goto("/account");
@@ -179,6 +219,9 @@ test("screenshots of every screen", async ({ page, request, browser }) => {
   await darkPage.getByRole("heading", { name: "Sign in" }).waitFor();
   await shot(darkPage, "sign-in-dark");
   await signIn(darkPage);
+  await darkPage.getByRole("button", { name: "Notes.txt", exact: true }).waitFor();
+  await shot(darkPage, "files-dark");
+  await darkPage.goto("/devices");
   await darkPage.getByText("Pixel 9").waitFor();
   await shot(darkPage, "devices-dark");
   await dark.close();

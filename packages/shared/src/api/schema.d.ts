@@ -606,6 +606,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description state: queued, running, succeeded, failed or cancelled. */
         get: operations["ListJobs"];
         put?: never;
         post?: never;
@@ -702,6 +703,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** @description sort: name, modified, size or type. kind: folder or file. */
         get: operations["ListChildren"];
         put?: never;
         post?: never;
@@ -1031,8 +1033,6 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
-        /** @enum {unknown} */
-        ChildSort: "name" | "modified" | "size" | "type" | null;
         /** @enum {unknown} */
         ConflictPolicy: "fail" | "rename" | "replace" | null;
         ContentUrlRequest: {
@@ -2999,7 +2999,7 @@ export interface operations {
     ListJobs: {
         parameters: {
             query?: {
-                state?: components["schemas"]["JobState"];
+                state?: string;
                 type?: string;
                 cursor?: string;
                 limit?: number | string;
@@ -3331,9 +3331,9 @@ export interface operations {
     ListChildren: {
         parameters: {
             query?: {
-                sort?: components["schemas"]["ChildSort"];
+                sort?: string;
                 descending?: boolean;
-                kind?: components["schemas"]["NodeKind"];
+                kind?: string;
                 cursor?: string;
                 limit?: number | string;
             };

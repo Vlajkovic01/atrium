@@ -53,6 +53,29 @@ public static class FileHttp
     public static void SetETag(HttpContext http, Node node) =>
         http.Response.Headers.ETag = $"\"{node.Version.ToString(CultureInfo.InvariantCulture)}\"";
 
+    /// <summary>
+    /// Reads an enum from a query string the way the contract spells it
+    /// (camelCase) or any other case. ASP.NET binds enum query parameters
+    /// case-sensitively, which would refuse the documented values.
+    /// </summary>
+    public static bool TryReadEnum<T>(string? value, out T? result)
+        where T : struct, Enum
+    {
+        result = null;
+        if (string.IsNullOrEmpty(value))
+        {
+            return true;
+        }
+
+        if (Enum.TryParse<T>(value, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed) && !int.TryParse(value, out _))
+        {
+            result = parsed;
+            return true;
+        }
+
+        return false;
+    }
+
     public static bool TryReadIfMatch(string? header, out int version)
     {
         var raw = header?.Trim();

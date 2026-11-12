@@ -112,6 +112,22 @@ public sealed class JobApiTests : IDisposable
     }
 
     [Fact]
+    public async Task Jobs_are_filtered_by_state_as_the_contract_spells_it()
+    {
+        var ana = await _factory.CreateUserAsync("ana", TestApi.Password);
+        var failed = await AddJobAsync(ana.Id, JobState.Failed, errorDetail: "x");
+        await AddJobAsync(ana.Id);
+        var client = _factory.CreateClient();
+        var token = (await client.SignInAsync("ana")).AccessToken;
+
+        var page = await (await client.SendAsync(HttpMethod.Get, "/api/v1/jobs?state=failed", token)).ReadAsync<JobPage>();
+        var unknown = await client.SendAsync(HttpMethod.Get, "/api/v1/jobs?state=exploded", token);
+
+        Assert.Equal(failed.Id, Assert.Single(page.Items).Id);
+        Assert.Equal(HttpStatusCode.BadRequest, unknown.StatusCode);
+    }
+
+    [Fact]
     public async Task A_bad_limit_or_cursor_is_refused()
     {
         await _factory.CreateUserAsync("ana", TestApi.Password);
