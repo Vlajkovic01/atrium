@@ -1,3 +1,4 @@
+using Atrium.Files.Backups;
 using Atrium.Files.Blobs;
 using Atrium.Files.Storage;
 using Atrium.Files.Uploads;
@@ -26,6 +27,8 @@ public static class FilesSetup
         services.AddScoped<UploadService>();
         services.AddJobHandler<UploadCleanupHandler>(UploadCleanupHandler.Type);
         services.AddRecurringJob(UploadCleanupHandler.Schedule);
+        services.AddJobHandler<MetadataBackupHandler>(MetadataBackupHandler.Type);
+        services.AddRecurringJob(MetadataBackupHandler.Schedule);
         services.AddJobHandler<BlobCollectorHandler>(BlobCollectorHandler.Type);
         services.AddRecurringJob(BlobCollectorHandler.Schedule);
         return services;

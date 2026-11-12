@@ -44,6 +44,12 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 var app = builder.Build();
 
+// Restoring a backup replaces starting the server, under the same lock.
+if (RestoreCommand.TryGetPath(args, out var backupPath))
+{
+    return await RestoreCommand.RunAsync(app.Services, backupPath, bootstrap, Console.Out);
+}
+
 await app.MigrateDatabaseAsync();
 await app.LoadRevokedSessionsAsync();
 
@@ -90,6 +96,7 @@ v1.MapNodeEndpoints();
 v1.MapTrashEndpoints();
 v1.MapUploadEndpoints();
 v1.MapContentEndpoints();
+v1.MapBackupEndpoints();
 
 await app.RunAsync();
 return 0;

@@ -905,6 +905,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListBackups"];
+        put?: never;
+        post: operations["CreateBackup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -931,6 +947,18 @@ export interface components {
         };
         ArchiveRequest: {
             ids: string[];
+        };
+        BackupInfo: {
+            name: string;
+            /** Format: int64 */
+            size: number | string;
+            /** Format: date-time */
+            createdAt: string;
+            reason: string;
+        };
+        BackupStarted: {
+            /** Format: uuid */
+            jobId: string;
         };
         BatchItemResult: {
             /** Format: uuid */
@@ -3796,6 +3824,46 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListBackups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupInfo"][];
+                };
+            };
+        };
+    };
+    CreateBackup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackupStarted"];
                 };
             };
         };

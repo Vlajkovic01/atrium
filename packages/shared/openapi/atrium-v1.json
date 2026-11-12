@@ -3026,6 +3026,47 @@
           }
         }
       }
+    },
+    "/api/v1/admin/backups": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "ListBackups",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BackupInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "CreateBackup",
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupStarted"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3117,6 +3158,47 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "BackupInfo": {
+        "required": [
+          "name",
+          "size",
+          "createdAt",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "BackupStarted": {
+        "required": [
+          "jobId"
+        ],
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -4945,6 +5027,9 @@
     },
     {
       "name": "Uploads"
+    },
+    {
+      "name": "Administration"
     }
   ]
 }
