@@ -184,14 +184,18 @@ test("an admin adds a person, who then sees no administration", async ({ page, b
   await expect(page.getByRole("heading", { name: "People", exact: true })).toBeVisible();
 
   await page.getByLabel("Name", { exact: true }).fill("ana");
-  await page.getByLabel("Role", { exact: true }).selectOption("user");
+  await page
+    .getByRole("combobox", { name: /^Role / })
+    .last()
+    .click();
+  await page.getByRole("option", { name: "Member", exact: true }).click();
   await page.getByLabel("Password", { exact: true }).fill("ana's own passphrase");
   await page.getByRole("button", { name: "Add person" }).click();
   await expect(page.getByText("ana can now sign in.")).toBeVisible();
   await expect(page.getByRole("listitem").filter({ hasText: "ana" })).toBeVisible();
 
   // The admin's own role cannot be changed here: nobody could administer the server.
-  await expect(page.getByLabel("Role of owner")).toBeDisabled();
+  await expect(page.getByRole("combobox", { name: /^Role of owner/ })).toBeDisabled();
 
   // Ana signs in on her own browser and has no admin navigation.
   const context = await browser.newContext();
@@ -273,7 +277,16 @@ test("two-step verification is turned on, used to sign in, and turned off", asyn
 test("the interface is available in Serbian", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByLabel("Language").selectOption("sr-Latn");
+  // The picker is Atrium's own dropdown and works with the keyboard too.
+  const picker = page.getByRole("combobox", { name: "Language" });
+  await picker.click();
+  await expect(page.getByRole("option")).toHaveText(["English", "Srpski"]);
+  await expect(page.getByRole("option", { name: "English" })).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  await picker.press("ArrowDown");
+  await picker.press("ArrowDown");
+  await picker.press("Enter");
   await expect(page.getByRole("heading", { name: "Prijava" })).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "sr-Latn");
   await expect(page.getByText("Vaš privatni oblak.")).toBeVisible();
@@ -282,8 +295,7 @@ test("the interface is available in Serbian", async ({ page }) => {
   await page.reload();
   await expect(page.getByRole("heading", { name: "Prijava" })).toBeVisible();
 
-  // Only the two shipped languages are offered.
-  await expect(page.getByLabel("Jezik").locator("option")).toHaveText(["English", "Srpski"]);
+  await expect(page.getByRole("combobox", { name: "Jezik" })).toContainText("Srpski");
 
   // An error from the server is shown in the chosen language too.
   await page.getByLabel("Ime").fill(OWNER);

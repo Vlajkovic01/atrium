@@ -1,9 +1,10 @@
 import type { components } from "@atrium/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useId, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, call } from "../api.ts";
+import { Select } from "../components/Select.tsx";
 import { Avatar, Badge, Button, Card, ErrorMessage, Field, Notice, PageHeader } from "../components/ui.tsx";
 import { useSession } from "../session.tsx";
 
@@ -146,28 +147,18 @@ function RoleSelect(props: {
   readonly onChange: (role: UserRole) => void;
 }) {
   const { t } = useTranslation();
-  const id = useId();
   return (
-    <span className="select-inline">
-      <label htmlFor={id} className="visually-hidden">
-        {t("people.roleOf", { name: props.person.name })}
-      </label>
-      <select
-        id={id}
-        value={props.person.role}
-        disabled={props.disabled}
-        onChange={(event) => props.onChange(event.target.value as UserRole)}
-      >
-        {ROLES.map((role) => (
-          <option key={role} value={role}>
-            {t(`roles.${role}`)}
-          </option>
-        ))}
-      </select>
-    </span>
+    <Select
+      variant="inline"
+      label={t("people.roleOf", { name: props.person.name })}
+      hideLabel
+      value={props.person.role}
+      disabled={props.disabled}
+      options={ROLES.map((role) => ({ value: role, label: t(`roles.${role}`) }))}
+      onChange={props.onChange}
+    />
   );
 }
-
 function ResetPassword(props: {
   readonly person: AdminUserView;
   readonly onCancel: () => void;
@@ -225,7 +216,6 @@ function ResetPassword(props: {
 
 function AddPerson({ onCreated }: { readonly onCreated: (name: string) => Promise<void> }) {
   const { t } = useTranslation();
-  const roleId = useId();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("user");
@@ -267,18 +257,12 @@ function AddPerson({ onCreated }: { readonly onCreated: (name: string) => Promis
             spellCheck={false}
             required
           />
-          <div className="field">
-            <label htmlFor={roleId}>{t("people.role")}</label>
-            <div className="control">
-              <select id={roleId} value={role} onChange={(event) => setRole(event.target.value as UserRole)}>
-                {ROLES.map((r) => (
-                  <option key={r} value={r}>
-                    {t(`roles.${r}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <Select
+            label={t("people.role")}
+            value={role}
+            options={ROLES.map((r) => ({ value: r, label: t(`roles.${r}`) }))}
+            onChange={setRole}
+          />{" "}
         </div>
         <Field
           label={t("people.password")}

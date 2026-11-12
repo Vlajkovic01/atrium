@@ -560,75 +560,157 @@ a {
   margin-top: 0.75rem;
 }
 
-/* Every dropdown gets Atrium's own arrow instead of the browser's, so it
-   looks the same everywhere and matches the rest of the controls. */
-.control select,
-.select-inline select,
-.language select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2376827c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6.500 9.500 5.500 5.500 5.500-5.500'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.7rem center;
-  background-size: 1rem;
-  cursor: pointer;
-}
-
-.control select {
-  padding-right: 2.4rem;
-}
-
-.select-inline select {
-  padding-right: 2rem;
-  background-position: right 0.5rem center;
-  box-shadow: var(--shadow-1);
-}
-
-.select-inline select:disabled {
-  cursor: default;
-  opacity: 0.7;
-  box-shadow: none;
-}
-/* The compact language picker. */
-.language {
+/* Dropdowns. Drawn by Atrium (components/Select.tsx), because the open
+   list of a native select is drawn by the operating system and cannot be
+   made to match. */
+.select {
   position: relative;
+  display: inline-block;
+  min-width: 0;
+}
+
+.select-field {
+  display: block;
+}
+
+.select-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin-bottom: 0.4rem;
+}
+
+.select-button {
   display: inline-flex;
   align-items: center;
-  color: var(--ink-soft);
-}
-
-.language .icon {
-  position: absolute;
-  left: 0.7rem;
-  pointer-events: none;
-}
-
-.language select {
-  width: auto;
-  min-height: 2.4rem;
-  padding: 0 2.3rem 0 2.2rem;
-  font-size: 0.92rem;
-  font-weight: 600;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 0.75rem 0 0.85rem;
+  font: inherit;
   color: var(--ink);
-  border-radius: 999px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-m);
   box-shadow: var(--shadow-1);
+  cursor: pointer;
+  transition:
+    border-color 140ms var(--ease),
+    box-shadow 140ms var(--ease);
 }
 
-.language select:hover {
+.select-button:hover:not(:disabled) {
   border-color: var(--ink-faint);
 }
 
-.language .icon {
+.select-button:focus-visible,
+.select-button[aria-expanded="true"] {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.select-button:disabled {
+  cursor: default;
+  opacity: 0.65;
+  box-shadow: none;
+}
+
+.select-button > .icon {
   color: var(--accent);
 }
 
-.select-inline select {
-  width: auto;
+.select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-arrow {
+  display: grid;
+  color: var(--ink-faint);
+  transition: transform 160ms var(--ease);
+}
+
+.select-button[aria-expanded="true"] .select-arrow {
+  transform: rotate(180deg);
+}
+
+.select-pill .select-button {
+  min-height: 2.4rem;
+  padding: 0 0.75rem 0 0.8rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  border-radius: 999px;
+}
+
+.select-inline .select-button {
   min-height: 2.15rem;
-  padding: 0 0.6rem;
+  padding: 0 0.55rem 0 0.7rem;
   font-size: 0.9rem;
   border-radius: var(--radius-s);
 }
 
+.select-list {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 30;
+  min-width: 100%;
+  width: max-content;
+  max-width: min(22rem, 90vw);
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-2);
+  animation: select-in 140ms var(--ease);
+}
+
+/* The language picker sits at the right edge of the screen. */
+.select-pill .select-list,
+.select-inline .select-list {
+  left: auto;
+  right: 0;
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius-s);
+  font-size: 0.95rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.select-option.is-active {
+  background: var(--surface-sunk);
+}
+
+.select-option[aria-selected="true"] {
+  font-weight: 650;
+  color: var(--accent-wash-ink);
+  background: var(--accent-wash);
+}
+
+.select-option .icon {
+  color: var(--accent);
+}
+
+@keyframes select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
 /* ---------------------------------------------------------------------
    Messages
    ------------------------------------------------------------------ */
