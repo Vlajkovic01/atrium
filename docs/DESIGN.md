@@ -421,17 +421,28 @@ Nothing is held only in memory, so a restart loses no work.
 
 | Field | Meaning |
 |---|---|
-| Priority | `interactive`, `user`, `background`, `idle` |
+| Priority | `interactive`, `user`, `background`, `idle`. Stored as a number, because the queue is ordered by it. |
 | Resource class | `cpu`, `io`, `transcode`, `network`, `gpu`. Each class has a concurrency limit. |
-| State | `queued`, `running`, `succeeded`, `failed`, `cancelled`, `paused` |
-| Lease | Owner and expiry, renewed by heartbeat. An expired lease returns the job to the queue. |
+| State | `queued`, `running`, `succeeded`, `failed`, `cancelled`. Pausing background work arrives with the small-device tuning in Phase 3. |
+| Lease | Owner and expiry, renewed by heartbeat. An expired lease returns the job to the queue. A run that lost its lease can no longer write progress, checkpoints or an outcome. |
 | Checkpoint | Opaque progress data the handler writes so it can resume |
-| Dedupe key | Prevents a second identical job (for example two scans of one library) |
-| Attempts | Retries with exponential backoff, then `failed` with the error kept |
+| Dedupe key | Prevents a second identical job (for example two scans of one library). The database enforces it with a unique column that holds the key only while the job is queued or running. |
+| Attempts | Retries with exponential backoff (30 seconds, doubling, at most one hour), then `failed` with the error kept |
 
-Claiming uses `FOR UPDATE SKIP LOCKED` on PostgreSQL and a single atomic
-update on SQLite. Workers wake on an in-process signal when a job is
-enqueued and poll as a fallback.
+A worker claims a job with an update that succeeds only while the job is
+still queued, on both databases (D-023). Workers wake on an in-process
+signal when a job is enqueued and poll every few seconds as a fallback.
+
+At startup, jobs left running by the previous process go back to the
+queue; the attempt counts, so a job that crashes the server is not
+retried forever. A job interrupted by an orderly shutdown goes back
+without using an attempt. A cancel request stops a running job at its
+next heartbeat.
+
+Recurring jobs are defined in code. The scheduler keeps one waiting
+instance of each, due one interval after the previous run finished. The
+first one, `jobs.cleanup`, removes finished jobs after 7 days and failed
+ones after 30.
 
 ### 5.2 Handler contract
 

@@ -221,9 +221,13 @@ overwrites (DESIGN.md 4.2).
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/jobs` | Filter by state and type; own jobs, or all for admins |
+| GET | `/jobs` | Filter by state and type, newest first, cursor pagination. Own jobs, or all for admins. An admin sees the error code of another user's job but not its detail (D-004) |
 | GET | `/jobs/{id}` | Progress, error |
-| POST | `/jobs/{id}/cancel`, `/jobs/{id}/retry` | |
+| POST | `/jobs/{id}/cancel` | A queued job is cancelled at once, a running one at its next heartbeat. 409 `job.not_active` when it has finished |
+| POST | `/jobs/{id}/retry` | Only a failed or cancelled job; starts with fresh attempts. 409 `job.not_retryable`, or `job.already_queued` when an identical job is active |
+
+Cancel and retry need an unrestricted session. Payloads are never
+returned.
 
 ## Administration (Phase 1 basics, Phase 11 complete)
 
