@@ -8,7 +8,7 @@ namespace Atrium.Api.Endpoints;
 /// <param name="Reason"><c>scheduled</c>, <c>manual</c> or <c>pre-migration</c>.</param>
 public sealed record BackupInfo(string Name, long Size, DateTimeOffset CreatedAt, string Reason);
 
-public sealed record BackupStarted(Guid JobId);
+public sealed record JobStarted(Guid JobId);
 
 /// <summary>Metadata backups for admins (DESIGN.md 8.2). Restore is a command-line step until Phase 11.</summary>
 public static class BackupEndpoints
@@ -35,7 +35,7 @@ public static class BackupEndpoints
                         DedupeKey = "backup:manual",
                     },
                     ct);
-                return TypedResults.Accepted($"/api/v1/jobs/{job.Id}", new BackupStarted(job.Id));
+                return TypedResults.Accepted($"/api/v1/jobs/{job.Id}", new JobStarted(job.Id));
             })
             .WithName("CreateBackup");
 

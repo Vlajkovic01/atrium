@@ -97,6 +97,7 @@ v1.MapTrashEndpoints();
 v1.MapUploadEndpoints();
 v1.MapContentEndpoints();
 v1.MapBackupEndpoints();
+v1.MapIntegrityEndpoints();
 
 await app.RunAsync();
 return 0;

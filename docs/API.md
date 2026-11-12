@@ -91,7 +91,9 @@ Linking a phone by QR (DESIGN.md 6.5):
 |---|---|---|
 | GET, POST | `/users` | List, create |
 | GET, PATCH | `/users/{id}` | Role, quota, disable. `PATCH` requires `If-Match` with the version read. The last active admin cannot be demoted or disabled |
-| DELETE | `/users/{id}` | Not built in Phase 1. Deleting a user decides what happens to their files, so it arrives with files in Phase 2; until then accounts are disabled |
+| GET | `/users/{id}/deletion` | What deleting would remove: file and folder counts and bytes, never names (D-004); and the schedule if one is set |
+| POST | `/users/{id}/deletion` | Schedule deletion (D-025). Body `confirmName` must match the account's name. Disables the account and signs it out at once; files are removed 30 days later. Not for yourself or the last active admin |
+| DELETE | `/users/{id}/deletion` | Cancel a scheduled deletion. The account stays disabled until enabled with `PATCH`, which is refused while a deletion is scheduled |
 | POST | `/users/{id}/reset-password` | Logged and shown to the user. Signs the user out everywhere |
 
 Restricted sessions (a paired device approved as read-only or with the
@@ -258,7 +260,8 @@ returned.
 | GET | `/admin/sessions` | All sessions; revoke |
 | GET | `/admin/transcodes` | Active streams and why each is transcoding |
 | GET | `/admin/logs` | Redacted |
-| GET, POST | `/admin/backups` | List, create |
+| GET, POST | `/admin/backups` | List, create. Built in Phase 2; creating returns 202 with the job to follow |
 | POST | `/admin/backups/{id}/restore` | Phase 11 |
-| GET | `/admin/integrity` | Scrub results: mismatched, missing and unknown objects |
+| GET | `/admin/integrity` | Scrub results: damaged, missing and unknown objects, and unreachable locations. Built in Phase 2 |
+| POST | `/admin/integrity/check` | Run the weekly check now. Built in Phase 2 |
 | POST | `/admin/libraries/{id}/relocate` | Move to another storage location, Phase 11 |

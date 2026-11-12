@@ -447,6 +447,12 @@ mismatches and missing objects in the admin UI. It never repairs or
 deletes on its own. A second check lists objects on storage that the
 database does not know.
 
+Built in Phase 2 as `storage.scrub`, weekly and on demand. It checkpoints
+after every hundred blobs and continues there after a restart. A location
+that cannot prove its identity is reported as unreachable rather than as
+missing files. The report keeps complete counts and lists the first 200
+findings, by blob ID and content hash, never by file name (D-004).
+
 ---
 
 ## 5. Job system
