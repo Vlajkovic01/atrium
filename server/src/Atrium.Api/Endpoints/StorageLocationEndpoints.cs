@@ -2,6 +2,7 @@ using Atrium.Api.Auth;
 using Atrium.Api.Storage;
 using Atrium.Core.Storage;
 using Atrium.Data;
+using Atrium.Files.Storage;
 using Atrium.Storage.S3;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;

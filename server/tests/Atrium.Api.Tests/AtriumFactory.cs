@@ -5,6 +5,7 @@ using Atrium.Api.Storage;
 using Atrium.Core.Identity;
 using Atrium.Core.Storage;
 using Atrium.Data;
+using Atrium.Files.Storage;
 using Atrium.Identity.Crypto;
 using Atrium.Identity.Passwords;
 using Atrium.Identity.SignIn;

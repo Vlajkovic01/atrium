@@ -1,19 +1,11 @@
-using System.Text.Json;
 using Atrium.Api.Hosting;
 using Atrium.Core.Storage;
 using Atrium.Data;
-using Atrium.Identity.Crypto;
+using Atrium.Files.Storage;
 using Atrium.Storage;
-using Atrium.Storage.Local;
-using Atrium.Storage.S3;
 using Microsoft.EntityFrameworkCore;
 
 namespace Atrium.Api.Storage;
-
-public sealed record LocalStorageSettings(string Path);
-
-/// <summary>What is stored, encrypted, for a location. Exactly one of the two is set, matching the kind.</summary>
-public sealed record StorageLocationConfig(LocalStorageSettings? Local, S3StorageOptions? S3);
 
 /// <param name="HoldsAtriumData">The location already has an identity file: another Atrium server, or an earlier install, used it.</param>
 public sealed record StorageTestOutcome(bool Ok, string? ErrorCode, string? Detail, long? FreeBytes, bool HoldsAtriumData)
@@ -43,14 +35,11 @@ public static class StorageErrors
 /// </summary>
 public sealed class StorageLocationService(
     AtriumDbContext db,
-    SecretProtector protector,
+    StorageProviders providers,
     BootstrapOptions bootstrap,
     TimeProvider time)
 {
-    public const string ConfigProtectionPurpose = "storage-location-config";
     public const int MaxNameLength = 128;
-
-    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     /// <summary>
     /// Tries a location without saving anything. A local directory that does
@@ -139,7 +128,7 @@ public sealed class StorageLocationService(
         {
             Name = name,
             Kind = kind,
-            EncryptedConfig = protector.ProtectString(JsonSerializer.Serialize(config, Json), ConfigProtectionPurpose),
+            EncryptedConfig = providers.ProtectConfig(config),
             State = StorageLocationState.Online,
             LastCheckedAt = now,
             CreatedAt = now,
@@ -199,9 +188,7 @@ public sealed class StorageLocationService(
         return outcome;
     }
 
-    public StorageLocationConfig ReadConfig(StorageLocation location) =>
-        JsonSerializer.Deserialize<StorageLocationConfig>(
-            protector.UnprotectString(location.EncryptedConfig, ConfigProtectionPurpose), Json)!;
+    public StorageLocationConfig ReadConfig(StorageLocation location) => providers.ReadConfig(location);
 
     /// <summary>Where the location points, for display. Never includes credentials.</summary>
     public string DescribeTarget(StorageLocation location)
@@ -309,7 +296,5 @@ public sealed class StorageLocationService(
     }
 
     private static IStorageProvider CreateProvider(StorageProviderKind kind, StorageLocationConfig config) =>
-        kind == StorageProviderKind.S3
-            ? new S3StorageProvider(config.S3!)
-            : new LocalStorageProvider(config.Local!.Path);
+        StorageProviders.Create(kind, config);
 }

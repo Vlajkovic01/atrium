@@ -25,7 +25,14 @@ public abstract class FileTestDatabase : IAsyncLifetime
 {
     public MutableTime Time { get; } = new();
 
-    public abstract AtriumDbContext CreateContext();
+    public abstract void Use(DbContextOptionsBuilder builder);
+
+    public AtriumDbContext CreateContext()
+    {
+        var builder = new DbContextOptionsBuilder<AtriumDbContext>();
+        Use(builder);
+        return new AtriumDbContext(builder.Options);
+    }
 
     public virtual Task StartAsync() => Task.CompletedTask;
 
@@ -98,18 +105,14 @@ public sealed class SqliteFileDatabase : FileTestDatabase
 {
     private readonly string _dir = Path.Combine(Path.GetTempPath(), "atrium-tests", Guid.NewGuid().ToString("N"));
 
-    public override AtriumDbContext CreateContext()
+    public override void Use(DbContextOptionsBuilder builder)
     {
         Directory.CreateDirectory(_dir);
-        var connectionString = new SqliteConnectionStringBuilder
+        builder.UseAtriumSqlite(new SqliteConnectionStringBuilder
         {
             DataSource = Path.Combine(_dir, "atrium.db"),
             Pooling = false,
-        }.ToString();
-        return new AtriumDbContext(
-            (DbContextOptions<AtriumDbContext>)new DbContextOptionsBuilder<AtriumDbContext>()
-                .UseAtriumSqlite(connectionString)
-                .Options);
+        }.ToString());
     }
 
     public override Task StopAsync()
@@ -135,8 +138,6 @@ public sealed class PostgresFileDatabase : FileTestDatabase
 
     public override Task StopAsync() => _container.DisposeAsync().AsTask();
 
-    public override AtriumDbContext CreateContext() =>
-        new((DbContextOptions<AtriumDbContext>)new DbContextOptionsBuilder<AtriumDbContext>()
-            .UseAtriumPostgres(_container.GetConnectionString())
-            .Options);
+    public override void Use(DbContextOptionsBuilder builder) =>
+        builder.UseAtriumPostgres(_container.GetConnectionString());
 }
