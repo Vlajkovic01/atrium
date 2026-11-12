@@ -1,4 +1,5 @@
 using Atrium.Data;
+using Atrium.Data.Backup;
 using Atrium.Data.Migrations;
 using Atrium.Data.Postgres;
 using Atrium.Data.Sqlite;
@@ -27,15 +28,18 @@ public static class DatabaseSetup
             }
         });
 
-        services.AddScoped<IMigrationOperations, EfMigrationOperations>();
-        services.AddScoped<IPreMigrationBackup>(sp => options.DatabaseProvider switch
+        services.AddSingleton<IBackupDialect>(options.DatabaseProvider switch
         {
-            DatabaseProvider.Sqlite => new SqlitePreMigrationBackup(
-                sp.GetRequiredService<AtriumDbContext>(),
-                options.BackupDir,
-                sp.GetRequiredService<TimeProvider>()),
-            _ => new PostgresPreMigrationBackup(),
+            DatabaseProvider.Sqlite => new SqliteBackupDialect(),
+            _ => new PostgresBackupDialect(),
         });
+        services.AddSingleton(new BackupOptions(options.BackupDir));
+        services.AddScoped<IMigrationOperations, EfMigrationOperations>();
+        services.AddScoped<IPreMigrationBackup>(sp => new PortablePreMigrationBackup(
+            sp.GetRequiredService<AtriumDbContext>(),
+            sp.GetRequiredService<IBackupDialect>(),
+            options.BackupDir,
+            sp.GetRequiredService<TimeProvider>()));
         services.AddScoped<DatabaseMigrator>();
 
         return services;
