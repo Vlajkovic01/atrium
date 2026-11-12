@@ -67,6 +67,14 @@
       "access_denied": "Server nema dozvolu da tamo čita ili piše. Proverite dozvole ili pristupne ključeve.",
       "bucket_not_found": "Taj bucket ne postoji. Proverite naziv.",
       "read_back_mismatch": "Lokacija je vratila drugačije podatke od upisanih. Ne može joj se poveriti čuvanje fajlova."
+    },
+    "job": {
+      "not_active": "Ovaj zadatak je već završen.",
+      "not_retryable": "Ponovo može da se pokrene samo zadatak koji nije uspeo ili je otkazan.",
+      "already_queued": "Isti zadatak već čeka ili se izvršava.",
+      "unexpected_error": "Zadatak je prekinut zbog neočekivane greške.",
+      "unknown_type": "Ovaj server ne zna da izvrši ovaj zadatak. Možda potiče iz novije verzije.",
+      "lease_lost": "Zadatak je prekinut i biće ponovo pokrenut."
     }
   },
   "nav": {

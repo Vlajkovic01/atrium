@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using Atrium.Api.Endpoints;
 using Atrium.Api.Storage;
+using Atrium.Jobs;
 using Atrium.Storage;
 
 namespace Atrium.Api.Tests;
@@ -22,6 +23,8 @@ public sealed partial class ErrorCodeTranslationTests
         typeof(SetupEndpoints),
         typeof(StorageErrors),
         typeof(StorageHealthCodes),
+        typeof(JobEndpoints),
+        typeof(JobErrorCodes),
     ];
 
     public static TheoryData<string> Locales() => ["en", "sr-Latn"];
