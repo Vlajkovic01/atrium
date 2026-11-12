@@ -361,9 +361,11 @@ libraries, wizard path selection, sidecar files).
 
 1. The client creates a tus upload with the target folder, name, length
    and, if it has one, the SHA-256 of the content.
-2. Bytes stream into `staging/<upload id>` (a file locally, a multipart
-   upload on S3). The offset is persisted after each chunk is durable, so
-   the upload resumes after a network drop or server restart.
+2. Each chunk is stored as one part of a multipart upload on the storage
+   location (D-028); the server prescribes the chunk size so S3 parts meet
+   their 5 MB minimum. The offset is persisted only after the part is
+   durable, so the upload resumes after a network drop or server restart
+   and loses at most the chunk in flight.
 3. On the last byte the server finalizes:
    - computes the SHA-256 of what is stored. Locally this is a read-back of
      the staged file, which also verifies what reached the disk. On S3 the

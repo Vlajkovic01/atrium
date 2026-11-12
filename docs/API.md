@@ -142,11 +142,17 @@ expiration extensions:
 
 | Method | Path | Notes |
 |---|---|---|
-| POST | `/uploads` | Create. Metadata: parent ID, name, modified time, optional SHA-256, conflict policy (`fail`, `rename`, `replace`) |
-| HEAD | `/uploads/{id}` | Current offset, for resume |
-| PATCH | `/uploads/{id}` | Append bytes |
+| OPTIONS | `/uploads` | *Public.* tus discovery |
+| POST | `/uploads` | Create. `Upload-Metadata`: `parentId`, `name`, optional `modifiedAt` (Unix milliseconds), `sha256` (hex), `onConflict` (`fail`, `rename`, `replace`). Name, folder, conflict and quota are checked here and again at the end. The response carries `Atrium-Chunk-Size` |
+| HEAD | `/uploads/{id}` | Current offset, for resume. `Atrium-Upload-State`, and `Atrium-Node-Id` once finished |
+| PATCH | `/uploads/{id}` | Append one chunk (D-028), optionally with `Upload-Checksum` (`sha1` or `sha256`; 460 on mismatch). The last chunk finishes the upload and the response carries `Atrium-Node-Id` |
 | DELETE | `/uploads/{id}` | Cancel |
-| POST | `/uploads/check` | Which of these hashes the user already has (own files only, DESIGN.md 3.3) |
+| GET | `/uploads`, `/uploads/{id}` | The caller's active uploads, so a reloaded page can resume; one upload as JSON |
+| POST | `/uploads/check` | Which of these hashes the user already has (own files only, D-010) |
+
+An upload nobody continues for 24 hours expires and its parts are
+removed. Content whose SHA-256 differs from the declared one answers 422
+`upload.content_mismatch` and never becomes a file.
 
 `replace` keeps the previous content as a version of the file; it never
 overwrites (DESIGN.md 4.2).

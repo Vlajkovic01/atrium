@@ -298,3 +298,25 @@ added. Any of them can still be overruled.
   paging over several sort orders is more code than a folder of a few
   thousand items needs; it can change without breaking clients, because
   the cursor is opaque.
+
+## D-028 One tus chunk is one storage part; no local spool (Proposed, Phase 2)
+
+- Decision: every accepted tus chunk is stored as one part of a multipart
+  upload on the storage location. The server tells the client its chunk
+  size (`Atrium-Chunk-Size`, at least 16 MB, more for very large files so
+  10,000 parts suffice), and every chunk but the last must be at least the
+  provider's minimum part size (5 MB on S3, 1 byte on disk). A chunk needs
+  a `Content-Length`; one that breaks off halfway is discarded and sent
+  again. The SHA-256 is computed while chunks pass through; if a restart
+  loses it, the assembled content is read back once.
+- Alternatives: buffer chunks of any size in a local spool file and flush
+  5 MB parts to S3, as DESIGN.md 4.1 first suggested; tusdotnet's stores.
+- Reasons: the offset the server reports is then always backed by parts
+  the storage holds durably, with no second copy on local disk to keep
+  consistent with the database across crashes, and nothing to lose when
+  the cache is deleted. Atrium's own clients choose their chunk size, so
+  the constraint costs nothing.
+- Cost: a generic tus client that sends the whole file in one request
+  works, but loses everything sent so far when that request breaks off.
+  An S3 upload holds one chunk in memory while it is sent (16 MB by
+  default).

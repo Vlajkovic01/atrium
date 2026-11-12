@@ -27,6 +27,8 @@ public sealed partial class ErrorCodeTranslationTests
         typeof(JobEndpoints),
         typeof(JobErrorCodes),
         typeof(FileErrors),
+        typeof(Atrium.Files.Uploads.UploadErrors),
+        typeof(UploadEndpoints),
     ];
 
     public static TheoryData<string> Locales() => ["en", "sr-Latn"];

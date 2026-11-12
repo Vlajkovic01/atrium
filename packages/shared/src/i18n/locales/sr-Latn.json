@@ -92,6 +92,18 @@
       "is_root": "Glavni folder biblioteke ne može da se menja.",
       "cross_library": "Stavke ne mogu da se premeštaju između biblioteka.",
       "too_many_items": "Ovaj folder ima previše stavki da bi se kopirao odjednom (više od {max})."
+    },
+    "upload": {
+      "offset_mismatch": "Otpremanje se razišlo sa serverom. Nastavlja se od mesta gde je server stao.",
+      "checksum_mismatch": "Deo fajla je oštećen usput. Šalje se ponovo.",
+      "content_mismatch": "Fajl koji je stigao nije isti kao fajl koji je poslat, pa nije sačuvan.",
+      "invalid_chunk_size": "Otpremanje je poslato u delovima koje server ne može da primi.",
+      "too_large": "Ovaj fajl je prevelik za otpremanje.",
+      "not_active": "Ovo otpremanje je već završeno ili otkazano.",
+      "busy": "Ovo otpremanje se već šalje sa drugog mesta.",
+      "expired": "Ovo otpremanje nije nastavljeno ceo dan, pa je odbačeno. Pokrenite ga ponovo.",
+      "unsupported_version": "Ova aplikacija koristi protokol za otpremanje koji server ne podržava. Ažurirajte aplikaciju.",
+      "invalid_metadata": "Otpremanju nedostaje folder ili ime."
     }
   },
   "nav": {
