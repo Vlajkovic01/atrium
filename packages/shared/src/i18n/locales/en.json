@@ -75,6 +75,9 @@
       "unexpected_error": "The task stopped because of an unexpected error.",
       "unknown_type": "This server does not know how to run this task. It may come from a newer version.",
       "lease_lost": "The task was interrupted and will be started again."
+    },
+    "files": {
+      "no_storage": "This server has no storage location yet. An admin has to add one before files can be stored."
     }
   },
   "nav": {

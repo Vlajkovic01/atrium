@@ -1,7 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Atrium.Api.Hosting;
+using Atrium.Api.Storage;
 using Atrium.Core.Identity;
+using Atrium.Core.Storage;
 using Atrium.Data;
 using Atrium.Identity.Crypto;
 using Atrium.Identity.Passwords;
@@ -116,6 +118,24 @@ public sealed class AtriumFactory : WebApplicationFactory<Program>
         return secret;
     }
 
+    /// <summary>Where <see cref="AddLocalStorageAsync"/> puts files: outside the config directory, as the server requires.</summary>
+    public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), "atrium-tests", Guid.NewGuid().ToString("N") + "-storage");
+
+    /// <summary>Registers a real local storage location, the way the setup wizard does.</summary>
+    public async Task<StorageLocation> AddLocalStorageAsync(string name = "main")
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var service = scope.ServiceProvider.GetRequiredService<StorageLocationService>();
+        var outcome = await service.CreateAsync(
+            name,
+            StorageProviderKind.LocalFileSystem,
+            new StorageLocationConfig(new LocalStorageSettings(Path.Combine(StorageRoot, name)), null),
+            createDirectory: true,
+            CancellationToken.None);
+        Assert.True(outcome.Test.Ok, outcome.Test.ErrorCode);
+        return outcome.Location!;
+    }
+
     public async Task WithDbAsync(Func<AtriumDbContext, Task> action)
     {
         await using var scope = Services.CreateAsyncScope();
@@ -132,16 +152,22 @@ public sealed class AtriumFactory : WebApplicationFactory<Program>
 
         // Pooled connections keep the database file open on Windows.
         SqliteConnection.ClearAllPools();
-        try
+        foreach (var directory in new[] { ConfigDir, StorageRoot })
         {
-            Directory.Delete(ConfigDir, recursive: true);
-        }
-        catch (IOException)
-        {
-            // Leftover temp files must not fail a test run.
-        }
-        catch (UnauthorizedAccessException)
-        {
+            try
+            {
+                if (Directory.Exists(directory))
+                {
+                    Directory.Delete(directory, recursive: true);
+                }
+            }
+            catch (IOException)
+            {
+                // Leftover temp files must not fail a test run.
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
         }
     }
 }

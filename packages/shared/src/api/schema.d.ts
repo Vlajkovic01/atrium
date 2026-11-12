@@ -548,6 +548,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/libraries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListLibraries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -636,6 +652,20 @@ export interface components {
         JobPriority: "interactive" | "user" | "background" | "idle";
         /** @enum {unknown} */
         JobState: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+        LibraryInfo: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["LibraryKind"];
+            mode: components["schemas"]["LibraryMode"];
+            /** Format: uuid */
+            rootNodeId: string;
+            readOnly: boolean;
+        };
+        /** @enum {unknown} */
+        LibraryKind: "personal" | "shared" | "photos" | "movies" | "shows";
+        /** @enum {unknown} */
+        LibraryMode: "managed" | "external";
         LinkCodeResponse: {
             code: string;
             /** Format: int32 */
@@ -2142,6 +2172,26 @@ export interface operations {
                 };
                 content: {
                     "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListLibraries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LibraryInfo"][];
                 };
             };
         };
