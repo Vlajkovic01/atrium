@@ -11,12 +11,19 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Atrium.Data.Backup;
 
 /// <summary>What a backup says about itself. Stored as manifest.json inside the archive.</summary>
+/// <param name="Migration">The last migration applied to the source database.</param>
+/// <param name="MigrationCount">
+/// How many migrations were applied. Each database kind has its own
+/// migration set with its own generated IDs, so a backup restored into the
+/// other kind finds its schema by this position and the migration's name.
+/// </param>
 public sealed record BackupManifest(
     int Format,
     DateTimeOffset CreatedAt,
     string Reason,
     string Provider,
     string Migration,
+    int MigrationCount,
     string ServerVersion,
     IReadOnlyList<BackupTable> Tables);
 
@@ -59,7 +66,7 @@ public static class PortableBackup
         try
         {
             await using var transaction = await dialect.BeginSnapshotAsync(connection, ct);
-            var migration = await LastMigrationAsync(connection, transaction, ct);
+            var (migration, migrationCount) = await LastMigrationAsync(connection, transaction, ct);
             var tables = new List<BackupTable>();
             await using (var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
             {
@@ -70,7 +77,7 @@ public static class PortableBackup
                     tables.Add(await WriteTableAsync(connection, transaction, table, stream, ct));
                 }
 
-                var manifest = new BackupManifest(FormatVersion, now, reason, dialect.Provider, migration, serverVersion, tables);
+                var manifest = new BackupManifest(FormatVersion, now, reason, dialect.Provider, migration, migrationCount, serverVersion, tables);
                 var manifestEntry = zip.CreateEntry(ManifestEntry, CompressionLevel.Optimal);
                 await using (var manifestStream = await manifestEntry.OpenAsync(ct))
                 {
@@ -137,18 +144,16 @@ public static class PortableBackup
             throw new BackupInvalidException($"The backup uses format {manifest.Format}; this server reads format {FormatVersion}.");
         }
 
-        if (!db.Database.GetMigrations().Contains(manifest.Migration, StringComparer.Ordinal))
-        {
-            throw new BackupInvalidException(
+        var target = TargetMigration(db.Database.GetMigrations().ToList(), manifest)
+            ?? throw new BackupInvalidException(
                 $"The backup was taken at schema {manifest.Migration}, which this server does not know. Restore it with the same or a newer version.");
-        }
 
         if ((await db.Database.GetAppliedMigrationsAsync(ct)).Any())
         {
             throw new BackupInvalidException("The database is not empty. Restore into a new, empty database.");
         }
 
-        await db.GetService<IMigrator>().MigrateAsync(manifest.Migration, ct);
+        await db.GetService<IMigrator>().MigrateAsync(target, ct);
 
         var connection = db.Database.GetDbConnection();
         await connection.OpenAsync(ct);
@@ -191,13 +196,46 @@ public static class PortableBackup
         }
     }
 
-    private static async Task<string> LastMigrationAsync(DbConnection connection, DbTransaction transaction, CancellationToken ct)
+    /// <summary>
+    /// The migration of this server that matches the backup's schema: the
+    /// same ID on the same kind of database, or on the other kind the
+    /// migration at the same position with the same name.
+    /// </summary>
+    public static string? TargetMigration(IReadOnlyList<string> known, BackupManifest manifest)
     {
+        if (known.Contains(manifest.Migration, StringComparer.Ordinal))
+        {
+            return manifest.Migration;
+        }
+
+        if (manifest.MigrationCount < 1 || manifest.MigrationCount > known.Count)
+        {
+            return null;
+        }
+
+        var candidate = known[manifest.MigrationCount - 1];
+        return NameOf(candidate) == NameOf(manifest.Migration) ? candidate : null;
+    }
+
+    // "20261112154212_Initial" is named "Initial".
+    private static string NameOf(string migrationId) =>
+        migrationId.IndexOf('_', StringComparison.Ordinal) is var underscore and >= 0 ? migrationId[(underscore + 1)..] : migrationId;
+
+    private static async Task<(string Id, int Count)> LastMigrationAsync(DbConnection connection, DbTransaction transaction, CancellationToken ct)
+    {
+        var applied = new List<string>();
         await using var command = connection.CreateCommand();
         command.Transaction = transaction;
-        command.CommandText = "SELECT \"MigrationId\" FROM \"__EFMigrationsHistory\" ORDER BY \"MigrationId\" DESC";
-        return await command.ExecuteScalarAsync(ct) as string
-            ?? throw new BackupInvalidException("The database has no schema yet; there is nothing to back up.");
+        command.CommandText = "SELECT \"MigrationId\" FROM \"__EFMigrationsHistory\" ORDER BY \"MigrationId\"";
+        await using var reader = await command.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            applied.Add(reader.GetString(0));
+        }
+
+        return applied.Count == 0
+            ? throw new BackupInvalidException("The database has no schema yet; there is nothing to back up.")
+            : (applied[^1], applied.Count);
     }
 
     private static async Task<BackupTable> WriteTableAsync(
