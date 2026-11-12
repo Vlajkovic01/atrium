@@ -7,12 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Atrium.Files;
 
-public static class FileErrors
-{
-    /// <summary>No storage location is registered, so there is nowhere to put files.</summary>
-    public const string NoStorage = "files.no_storage";
-}
-
 /// <summary>Finds and creates libraries.</summary>
 public sealed class LibraryService(AtriumDbContext db, TimeProvider time)
 {
