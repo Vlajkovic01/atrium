@@ -44,6 +44,7 @@ public static class NodeEndpoints
 
         nodes.MapGet("/{id:guid}", GetAsync).WithName("GetNode").ProducesProblem(StatusCodes.Status404NotFound);
         nodes.MapGet("/{id:guid}/children", ChildrenAsync).WithName("ListChildren")
+            .WithDescription("sort: name, modified, size or type. kind: folder or file.")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
         nodes.MapGet("/{id:guid}/path", PathAsync).WithName("GetNodePath").ProducesProblem(StatusCodes.Status404NotFound);
@@ -91,9 +92,9 @@ public static class NodeEndpoints
         Guid id,
         HttpContext http,
         NodeService nodes,
-        ChildSort? sort,
+        string? sort,
         bool? descending,
-        NodeKind? kind,
+        string? kind,
         string? cursor,
         int? limit,
         CancellationToken ct)
@@ -101,13 +102,15 @@ public static class NodeEndpoints
         var take = limit ?? DefaultLimit;
         var offset = 0;
         if (take is < 1 or > MaxLimit
-            || (cursor is not null && (!int.TryParse(cursor, NumberStyles.None, CultureInfo.InvariantCulture, out offset) || offset < 0)))
+            || (cursor is not null && (!int.TryParse(cursor, NumberStyles.None, CultureInfo.InvariantCulture, out offset) || offset < 0))
+            || !FileHttp.TryReadEnum<ChildSort>(sort, out var sortBy)
+            || !FileHttp.TryReadEnum<NodeKind>(kind, out var kindFilter))
         {
             return ApiProblem.Invalid();
         }
 
         var actor = http.User.Actor();
-        var result = await nodes.ChildrenAsync(actor, id, sort ?? ChildSort.Name, descending ?? false, kind, offset, take, ct);
+        var result = await nodes.ChildrenAsync(actor, id, sortBy ?? ChildSort.Name, descending ?? false, kindFilter, offset, take, ct);
         if (!result.Ok)
         {
             return FileHttp.Problem(result);

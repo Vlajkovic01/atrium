@@ -41,7 +41,9 @@ public static class JobEndpoints
     {
         var jobs = routes.MapGroup("/jobs").WithTags("Jobs");
 
-        jobs.MapGet("/", ListAsync).WithName("ListJobs").ProducesProblem(StatusCodes.Status400BadRequest);
+        jobs.MapGet("/", ListAsync).WithName("ListJobs")
+            .WithDescription("state: queued, running, succeeded, failed or cancelled.")
+            .ProducesProblem(StatusCodes.Status400BadRequest);
         jobs.MapGet("/{id:guid}", GetAsync).WithName("GetJob").ProducesProblem(StatusCodes.Status404NotFound);
 
         // Changing a job is a write: a read-only device may watch but not cancel.
@@ -62,20 +64,20 @@ public static class JobEndpoints
     private static async Task<Results<Ok<JobPage>, ProblemHttpResult>> ListAsync(
         HttpContext http,
         AtriumDbContext db,
-        JobState? state,
+        string? state,
         string? type,
         string? cursor,
         int? limit,
         CancellationToken ct)
     {
         var take = limit ?? DefaultLimit;
-        if (take is < 1 or > MaxLimit)
+        if (take is < 1 or > MaxLimit || !Atrium.Api.Files.FileHttp.TryReadEnum<JobState>(state, out var stateFilter))
         {
             return ApiProblem.Invalid();
         }
 
         var query = Visible(db.Jobs.AsNoTracking(), http);
-        if (state is { } s)
+        if (stateFilter is { } s)
         {
             query = query.Where(j => j.State == s);
         }
