@@ -1,6 +1,6 @@
 # Atrium UX
 
-Status: Phase 0 draft. Screens and flows in text, for web, mobile and TV.
+Status: Phase 0 design, updated at the end of Phase 1 where the built web app differs. Screens and flows in text, for web, mobile and TV.
 
 ## Principles
 
@@ -18,19 +18,46 @@ Status: Phase 0 draft. Screens and flows in text, for web, mobile and TV.
 - A persistent indicator shows when the connection to the server is not
   encrypted.
 
+## Visual language
+
+Decided at the end of Phase 1 and built into the web app; mobile and TV
+follow it.
+
+- **Idea.** An atrium is a calm, sunlit court at the centre of a house.
+  The interface is quiet and warm, not grey and technical.
+- **Colour.** Warm paper as the background, one strong colour (a patina
+  green) for the main action and the current place, gold only for things
+  that need care, red only for danger. Light and dark follow the system.
+- **Mark.** An arch opening onto a small sun.
+- **Shape.** Generous spacing, large rounded corners, soft depth instead
+  of lines where possible.
+- **Type.** The platform's own interface typeface, set large for titles.
+  No font is downloaded.
+- **Icons.** Atrium's own set of simple line icons. Icons never carry
+  meaning alone; a word is always next to them.
+- **Layout.** Sign-in and setup use a two-sided frame: the brand and the
+  list of steps on one side, the form on the other. The app has a sidebar
+  that becomes a bar at the bottom on a phone.
+- **Rules that come from security.** No inline styles or scripts and
+  nothing loaded from another origin, because the content security policy
+  forbids them.
+
 ---
 
 ## Web
 
 ### Setup wizard (Phase 1)
 
-Shown on first visit, until an admin exists. Six steps with a progress
-indicator; each can be revisited before finishing.
+Shown on first visit, until setup is complete. Five steps are built, listed
+beside the form with the current one marked. The wizard resumes at the
+right step if it is interrupted. Step 4 below (Media) is not built: it
+depends on FFmpeg, which arrives with media processing.
 
-1. **Welcome.** Language choice. If the request comes from a public
-   address, a field for the setup token with instructions on where to find
-   it.
-2. **Admin account.** Name, password with strength feedback.
+1. **Welcome.** Language choice. Unless the wizard is opened on the server
+   itself, a field for the setup token with instructions on where to find
+   it (D-012).
+2. **Admin account.** Name and password, typed twice; the password can be
+   shown while typing.
 3. **Storage.** Choose where files go: a folder on this machine, a mounted
    network share, or S3-compatible storage (with presets for AWS S3,
    Backblaze B2, Cloudflare R2, MinIO). "Test" writes, reads back and
@@ -55,9 +82,13 @@ device" is not needed on the web; pairing is for TVs.
 
 ### App shell
 
-Left navigation: Files, Photos, Movies and Shows (Phase 7), Shared
-(Phase 8), Trash. Top bar: search, upload and job activity indicator, user
-menu (Devices, Settings, Sign out). Admins see Administration.
+Built in Phase 1: a sidebar with Devices and Account, and for admins an
+Administration group with People and Storage. The signed-in person and
+sign-out are at the bottom of the sidebar. On a phone the navigation is a
+bar at the bottom and the person is in a bar at the top.
+
+Planned as the product grows: Files, Photos, Movies and Shows (Phase 7),
+Shared (Phase 8), Trash; a top bar with search, upload and job activity.
 
 The activity indicator opens a panel listing uploads and background jobs
 with progress, pause and cancel.
@@ -145,7 +176,7 @@ approval step.
 
 ### Settings
 
-Profile, language (English, Srpski, Српски), password, two-step verification with recovery codes,
+Profile, language (English, Srpski), password, two-step verification with recovery codes,
 playback defaults (preferred audio and subtitle languages, quality on
 mobile data), and storage usage against quota.
 

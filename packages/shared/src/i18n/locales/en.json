@@ -9,7 +9,12 @@
     "loading": "Loading…",
     "signOut": "Sign out",
     "close": "Close",
-    "optional": "optional"
+    "optional": "optional",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "copy": "Copy",
+    "copied": "Copied",
+    "add": "Add"
   },
   "connection": {
     "insecure": "This connection is not encrypted. Anyone on the same network can read what you send, including your password."
@@ -67,7 +72,10 @@
   "nav": {
     "devices": "Devices",
     "account": "Account",
-    "main": "Main"
+    "main": "Main",
+    "people": "People",
+    "storage": "Storage",
+    "administration": "Administration"
   },
   "language": {
     "label": "Language"
@@ -127,7 +135,10 @@
       "testOkFree": "This location works. Free space: {free}.",
       "holdsData": "This location already holds data from an Atrium server and cannot be added as new.",
       "save": "Use this location",
-      "formatNote": "Files are stored in Atrium's own layout and named by their content. Their names and folders are kept in the server's database. Back up the server's config folder together with this location so that both can be restored."
+      "formatNote": "Files are stored in Atrium's own layout and named by their content. Their names and folders are kept in the server's database. Back up the server's config folder together with this location so that both can be restored.",
+      "kindLocalHelp": "A disk inside this machine or attached to it.",
+      "kindShareHelp": "A NAS or a shared folder of another computer.",
+      "kindS3Help": "Amazon S3, Backblaze B2, Cloudflare R2, MinIO and similar."
     },
     "access": {
       "heading": "Reaching Atrium",
@@ -157,7 +168,8 @@
     "totpBody": "Enter the six-digit code from your authenticator app, or one of your recovery codes.",
     "code": "Code",
     "verify": "Verify",
-    "startOver": "Start over"
+    "startOver": "Start over",
+    "body": "Use the name and password of your Atrium account."
   },
   "devices": {
     "heading": "Devices",
@@ -208,6 +220,75 @@
     "currentPassword": "Current password",
     "newPassword": "New password",
     "changePassword": "Change password",
-    "passwordChanged": "Password changed. Your other devices were signed out."
+    "passwordChanged": "Password changed. Your other devices were signed out.",
+    "body": "Your profile and how you sign in.",
+    "profileHeading": "Profile",
+    "totp": {
+      "heading": "Two-step verification",
+      "off": "Off. Signing in asks only for your password.",
+      "on": "On. Signing in also asks for a code from your authenticator app.",
+      "enable": "Turn on",
+      "scan": "Scan this code with an authenticator app, then enter the six-digit code the app shows.",
+      "manual": "Or type this key into the app:",
+      "qrLabel": "QR code for the authenticator app",
+      "code": "Code from the app",
+      "confirm": "Confirm",
+      "recoveryHeading": "Save your recovery codes",
+      "recoveryBody": "Each code signs you in once if you lose your phone. They are shown only now, so keep them somewhere safe.",
+      "recoveryDone": "I have saved them",
+      "disable": "Turn off",
+      "disableBody": "Enter your password to turn off two-step verification.",
+      "disabled": "Two-step verification is off.",
+      "stateOn": "On",
+      "stateOff": "Off"
+    }
+  },
+  "brand": {
+    "tagline": "Your private cloud.",
+    "subline": "Files, photos and video on storage you control.",
+    "pointOwn": "Your data never leaves your server",
+    "pointApps": "Web, phone and TV on one account",
+    "pointOpen": "Open source, with no tracking"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "user": "Member",
+    "guest": "Guest"
+  },
+  "people": {
+    "heading": "People",
+    "body": "Everyone who can sign in to this server. You manage their accounts and never see their files.",
+    "you": "You",
+    "disabledBadge": "Disabled",
+    "twoStep": "Two-step verification",
+    "addHeading": "Add a person",
+    "name": "Name",
+    "password": "Password",
+    "role": "Role",
+    "create": "Add person",
+    "created": "{name} can now sign in.",
+    "roleOf": "Role of {name}",
+    "disable": "Disable",
+    "enable": "Enable",
+    "disableConfirm": "Disable {name}? They are signed out at once and cannot sign in until enabled again.",
+    "resetPassword": "Reset password",
+    "newPasswordFor": "New password for {name}",
+    "resetHelp": "They are signed out everywhere and told that an administrator reset their password.",
+    "resetConfirm": "Set password",
+    "resetDone": "Password reset. Give {name} the new password."
+  },
+  "storageAdmin": {
+    "heading": "Storage",
+    "body": "The places where files are kept.",
+    "check": "Check now",
+    "checking": "Checking…",
+    "lastChecked": "Last checked {when}",
+    "stateOnline": "Online",
+    "stateOffline": "Offline",
+    "stateUnknown": "Not checked",
+    "healthy": "Working. Free space: {free}.",
+    "healthyNoFree": "Working.",
+    "addHeading": "Add a location",
+    "added": "The location was added."
   }
 }

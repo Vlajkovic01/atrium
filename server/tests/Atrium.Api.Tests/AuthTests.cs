@@ -308,39 +308,76 @@ public sealed class AuthTests : IDisposable
         Assert.Equal(HttpStatusCode.Unauthorized, (await RefreshAsync(client, tokens.RefreshToken)).StatusCode);
     }
 
+    /// <summary>
+    /// Runs one server, stops it, and starts another on the same config
+    /// directory and keys: a restart. The first must be fully stopped
+    /// before the second starts, because only one server may use a config
+    /// directory at a time.
+    /// </summary>
+    private static async Task AcrossRestartAsync(
+        Func<AtriumFactory, HttpClient, Task<TokenResponse>> before, Func<HttpClient, TokenResponse, Task> after)
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "atrium-tests", Guid.NewGuid().ToString("N"));
+        var time = new MutableTime();
+        try
+        {
+            TokenResponse tokens;
+            using (var first = new AtriumFactory(dir, time))
+            {
+                using var client = first.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
+                tokens = await before(first, client);
+            }
+
+            using var restarted = new AtriumFactory(dir, time);
+            using var newClient = restarted.CreateClient();
+            await after(newClient, tokens);
+        }
+        finally
+        {
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            try
+            {
+                Directory.Delete(dir, recursive: true);
+            }
+            catch (IOException)
+            {
+                // Leftover temp files must not fail a test run.
+            }
+        }
+    }
+
     [Fact]
     public async Task A_revoked_session_stays_revoked_after_the_server_restarts()
     {
-        await _factory.CreateUserAsync("ana", Password);
-        using var client = NewClient();
-        var tokens = await SignInAsync(client, "ana");
-        using (var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout"))
-        {
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
-            await client.SendAsync(request);
-        }
+        await AcrossRestartAsync(
+            async (factory, client) =>
+            {
+                await factory.CreateUserAsync("ana", Password);
+                var tokens = await SignInAsync(client, "ana");
+                using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/auth/logout");
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
+                await client.SendAsync(request);
+                return tokens;
+            },
+            async (client, tokens) =>
 
-        // Same config directory and keys, new process: the in-memory
-        // revocation list is gone and must be rebuilt from the database.
-        using var restarted = new AtriumFactory(_factory.ConfigDir, _factory.Time);
-        using var newClient = restarted.CreateClient();
-
-        Assert.Equal(HttpStatusCode.Unauthorized, (await GetWithTokenAsync(newClient, SessionsUrl, tokens.AccessToken)).StatusCode);
+                // The in-memory revocation list is gone with the old process
+                // and must have been rebuilt from the database.
+                Assert.Equal(HttpStatusCode.Unauthorized, (await GetWithTokenAsync(client, SessionsUrl, tokens.AccessToken)).StatusCode));
     }
 
     [Fact]
     public async Task A_valid_token_keeps_working_after_the_server_restarts()
     {
-        await _factory.CreateUserAsync("ana", Password);
-        using var client = NewClient();
-        var tokens = await SignInAsync(client, "ana");
-
-        using var restarted = new AtriumFactory(_factory.ConfigDir, _factory.Time);
-        using var newClient = restarted.CreateClient();
-
-        Assert.Equal(HttpStatusCode.OK, (await GetWithTokenAsync(newClient, SessionsUrl, tokens.AccessToken)).StatusCode);
+        await AcrossRestartAsync(
+            async (factory, client) =>
+            {
+                await factory.CreateUserAsync("ana", Password);
+                return await SignInAsync(client, "ana");
+            },
+            async (client, tokens) =>
+                Assert.Equal(HttpStatusCode.OK, (await GetWithTokenAsync(client, SessionsUrl, tokens.AccessToken)).StatusCode));
     }
-
     [Fact]
     public async Task Web_sessions_get_the_refresh_token_only_as_an_http_only_cookie()
     {

@@ -56,16 +56,14 @@ pnpm run typecheck
 pnpm run test
 ```
 
-Two files in `packages/shared` are generated and committed. After
-changing their sources, regenerate them with `pnpm run generate`:
+`packages/shared/src/api/schema.d.ts` is generated from the OpenAPI
+contract in `packages/shared/openapi/atrium-v1.json` and committed. The
+contract itself is exported from the server by running the server tests
+once with `ATRIUM_UPDATE_OPENAPI=1`; then run `pnpm run generate`. CI
+fails if the generated file is out of date.
 
-- `src/api/schema.d.ts`, from the OpenAPI contract in
-  `openapi/atrium-v1.json`. The contract itself is exported from the
-  server by running the server tests once with `ATRIUM_UPDATE_OPENAPI=1`.
-- `src/i18n/locales/sr-Cyrl.json`, from the Serbian Latin translations.
-  Translators edit only `sr-Latn.json`.
-
-CI fails if either generated file is out of date.
+The interface is translated into English and Serbian (Latin script), in
+`packages/shared/src/i18n/locales`.
 
 ### Web app
 
@@ -89,6 +87,12 @@ pnpm --filter @atrium/web run build
 pnpm --filter @atrium/web exec playwright install chromium
 pnpm --filter @atrium/web run e2e
 ```
+
+Where Playwright's browser cannot be downloaded, use one that is already
+installed by setting `ATRIUM_BROWSER_CHANNEL` to `msedge` or `chrome`.
+
+`pnpm --filter @atrium/web run screenshots` walks through the same app
+and saves a picture of every screen into `screenshots/`.
 
 ## Contributing
 

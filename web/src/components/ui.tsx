@@ -1,10 +1,10 @@
-import { localeNames, supportedLocales, type Locale } from "@atrium/shared";
-import { errorMessageKeys } from "@atrium/shared";
-import { useId, type InputHTMLAttributes, type ReactNode } from "react";
+import { errorMessageKeys, localeNames, supportedLocales, type Locale } from "@atrium/shared";
+import { useId, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ApiError } from "../api.ts";
 import { currentLocale, setLocale } from "../i18n.ts";
+import { Icon, type IconName } from "./Icon.tsx";
 
 /** The message for an error from the API, in the user's language. */
 export function useErrorText(): (error: unknown) => string {
@@ -18,24 +18,50 @@ export function useErrorText(): (error: unknown) => string {
   };
 }
 
-export function ErrorMessage({ error }: { readonly error: unknown }) {
-  const text = useErrorText();
-  if (!error) {
-    return null;
-  }
+type Tone = "ok" | "info" | "warning" | "error";
 
+const toneIcon: Record<Tone, IconName> = { ok: "checkCircle", info: "info", warning: "alert", error: "error" };
+
+/** A message with an icon. Errors interrupt screen readers; the rest are announced politely. */
+export function Notice({ kind, children }: { readonly kind: Tone; readonly children: ReactNode }) {
   return (
-    <p className="message message-error" role="alert">
-      {text(error)}
-    </p>
+    <div className={`alert alert-${kind}`} role={kind === "error" ? "alert" : "status"}>
+      <Icon name={toneIcon[kind]} />
+      <div className="alert-text">{children}</div>
+    </div>
   );
 }
 
-export function Notice({ kind, children }: { readonly kind: "ok" | "info" | "warning"; readonly children: ReactNode }) {
+export function ErrorMessage({ error }: { readonly error: unknown }) {
+  const text = useErrorText();
+  return error ? <Notice kind="error">{text(error)}</Notice> : null;
+}
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  readonly variant?: "primary" | "secondary" | "ghost" | "danger";
+  readonly size?: "md" | "sm";
+  readonly icon?: IconName;
+  readonly block?: boolean;
+}
+
+export function Button({
+  variant = "secondary",
+  size = "md",
+  icon,
+  block,
+  children,
+  type,
+  className,
+  ...rest
+}: ButtonProps) {
+  const classes = ["btn", `btn-${variant}`, size === "sm" ? "btn-sm" : "", block ? "btn-block" : "", className ?? ""]
+    .filter(Boolean)
+    .join(" ");
   return (
-    <p className={`message message-${kind}`} role="status">
+    <button type={type ?? "button"} className={classes} {...rest}>
+      {icon ? <Icon name={icon} size={size === "sm" ? 16 : 18} /> : null}
       {children}
-    </p>
+    </button>
   );
 }
 
@@ -44,14 +70,39 @@ interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   readonly help?: ReactNode;
 }
 
-/** A labelled input. The help text is tied to the input for screen readers. */
-export function Field({ label, help, ...input }: FieldProps) {
+/**
+ * A labelled input. The help text is tied to the input for screen
+ * readers, and a password can be shown while typing it.
+ */
+export function Field({ label, help, type, ...input }: FieldProps) {
+  const { t } = useTranslation();
   const id = useId();
   const helpId = `${id}-help`;
+  const isPassword = type === "password";
+  const [shown, setShown] = useState(false);
+
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      <input id={id} aria-describedby={help ? helpId : undefined} {...input} />
+      <div className={isPassword ? "control has-toggle" : "control"}>
+        <input
+          id={id}
+          type={isPassword && shown ? "text" : type}
+          aria-describedby={help ? helpId : undefined}
+          {...input}
+        />
+        {isPassword ? (
+          <button
+            type="button"
+            className="control-toggle"
+            aria-label={shown ? t("common.hidePassword") : t("common.showPassword")}
+            aria-pressed={shown}
+            onClick={() => setShown((value) => !value)}
+          >
+            <Icon name={shown ? "eyeOff" : "eye"} size={18} />
+          </button>
+        ) : null}
+      </div>
       {help ? (
         <p id={helpId} className="help">
           {help}
@@ -75,22 +126,150 @@ export function Check({ label, ...input }: CheckProps) {
   );
 }
 
+export interface Choice<T extends string> {
+  readonly value: T;
+  readonly title: string;
+  readonly help: string;
+  readonly icon: IconName;
+}
+
+/** A choice between a few options, each explained: radio buttons drawn as cards. */
+export function ChoiceCards<T extends string>(props: {
+  readonly legend: string;
+  readonly name: string;
+  readonly value: T;
+  readonly choices: readonly Choice<T>[];
+  readonly onChange: (value: T) => void;
+}) {
+  return (
+    <fieldset className="choices">
+      <legend>{props.legend}</legend>
+      <div className="choice-grid">
+        {props.choices.map((choice) => {
+          const id = `${props.name}-${choice.value}`;
+          return (
+            <div key={choice.value} className="choice">
+              <input
+                type="radio"
+                id={id}
+                name={props.name}
+                value={choice.value}
+                checked={props.value === choice.value}
+                onChange={() => props.onChange(choice.value)}
+                aria-describedby={`${id}-help`}
+              />
+              <label htmlFor={id}>
+                <span className="choice-icon">
+                  <Icon name={choice.icon} size={22} />
+                </span>
+                <span className="choice-title">{choice.title}</span>
+              </label>
+              <p id={`${id}-help`} className="choice-help">
+                {choice.help}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}
+
 export function LanguagePicker() {
   const { t } = useTranslation();
   const id = useId();
   return (
     <div className="language">
-      <label htmlFor={id}>{t("language.label")}</label>
+      <Icon name="globe" size={16} />
+      <label htmlFor={id} className="visually-hidden">
+        {t("language.label")}
+      </label>
       <select id={id} value={currentLocale()} onChange={(event) => void setLocale(event.target.value as Locale)}>
         {supportedLocales.map((locale) => (
-          // Each language is named in its own script, so it can be found
-          // by someone who cannot read the current one.
+          // Each language is named in itself, so it can be found by
+          // someone who cannot read the current one.
           <option key={locale} value={locale} lang={locale}>
             {localeNames[locale]}
           </option>
         ))}
       </select>
     </div>
+  );
+}
+
+export function Badge({
+  tone = "muted",
+  children,
+}: {
+  readonly tone?: "accent" | "gold" | "muted" | "danger";
+  readonly children: ReactNode;
+}) {
+  return <span className={`badge badge-${tone}`}>{children}</span>;
+}
+
+/** A person's initials on a tinted disc. */
+export function Avatar({ name }: { readonly name: string }) {
+  const initials = name
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join("");
+  return (
+    <span className="avatar" aria-hidden="true">
+      {initials || "?"}
+    </span>
+  );
+}
+
+export function PageHeader({
+  title,
+  lead,
+  actions,
+}: {
+  readonly title: string;
+  readonly lead?: string;
+  readonly actions?: ReactNode;
+}) {
+  return (
+    <header className="page-header">
+      <div>
+        <h1 className="page-title">{title}</h1>
+        {lead ? <p className="page-lead">{lead}</p> : null}
+      </div>
+      {actions ? <div className="page-actions">{actions}</div> : null}
+    </header>
+  );
+}
+
+export function Card({
+  title,
+  icon,
+  children,
+  aside,
+}: {
+  readonly title?: string;
+  readonly icon?: IconName;
+  readonly children: ReactNode;
+  readonly aside?: ReactNode;
+}) {
+  return (
+    <section className="card">
+      {title ? (
+        <header className="card-header">
+          <h2 className="card-title">
+            {icon ? (
+              <span className="card-icon">
+                <Icon name={icon} size={18} />
+              </span>
+            ) : null}
+            {title}
+          </h2>
+          {aside}
+        </header>
+      ) : null}
+      <div className="card-body">{children}</div>
+    </section>
   );
 }
 
@@ -103,8 +282,9 @@ export function InsecureBanner() {
   }
 
   return (
-    <p className="insecure" role="alert">
-      {t("connection.insecure")}
-    </p>
+    <div className="insecure" role="alert">
+      <Icon name="alert" size={18} />
+      <span>{t("connection.insecure")}</span>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ using Atrium.Core.Identity;
 using Atrium.Data;
 using Atrium.Identity.Users;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Atrium.Api.Endpoints;
@@ -122,7 +123,15 @@ public static class UserEndpoints
     }
 
     private static async Task<Results<Ok<AdminUserView>, ProblemHttpResult>> UpdateAsync(
-        Guid id, UpdateUserRequest request, HttpContext http, UserService users, AtriumDbContext db, CancellationToken ct)
+        Guid id,
+        UpdateUserRequest request,
+        // Declared as a parameter so it is part of the API contract and the
+        // generated clients know to send it.
+        [FromHeader(Name = "If-Match")] string? ifMatch,
+        HttpContext http,
+        UserService users,
+        AtriumDbContext db,
+        CancellationToken ct)
     {
         if (request.Role is { } role && !Enum.IsDefined(role))
         {
@@ -131,7 +140,7 @@ public static class UserEndpoints
 
         // The admin must say which version they looked at, so two admins
         // editing the same user cannot silently undo each other.
-        if (!TryReadIfMatch(http, out var version))
+        if (!TryReadIfMatch(ifMatch, out var version))
         {
             return ApiProblem.Create(StatusCodes.Status428PreconditionRequired, ApiProblem.PreconditionRequired);
         }
@@ -182,9 +191,10 @@ public static class UserEndpoints
     private static void SetETag(HttpContext http, User user) =>
         http.Response.Headers.ETag = $"\"{user.Version.ToString(CultureInfo.InvariantCulture)}\"";
 
-    private static bool TryReadIfMatch(HttpContext http, out int version)
+    private static bool TryReadIfMatch(string? header, out int version)
     {
-        var raw = http.Request.Headers.IfMatch.ToString().Trim().Trim('"');
+        version = 0;
+        var raw = header?.Trim().Trim('"');
         return int.TryParse(raw, NumberStyles.None, CultureInfo.InvariantCulture, out version);
     }
 

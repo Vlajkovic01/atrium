@@ -362,12 +362,12 @@ public sealed class S3StorageProvider : IStorageProvider, IDisposable
             var cause = e is StorageUnavailableException { InnerException: { } inner } ? inner : e;
             return cause switch
             {
-                AmazonS3Exception { StatusCode: HttpStatusCode.Forbidden } s3 => StorageHealth.Failed("storage.access_denied", s3.ErrorCode),
+                AmazonS3Exception { StatusCode: HttpStatusCode.Forbidden } s3 => StorageHealth.Failed(StorageHealthCodes.AccessDenied, s3.ErrorCode),
                 AmazonS3Exception s3 when s3.ErrorCode == "NoSuchBucket" || s3.StatusCode == HttpStatusCode.NotFound =>
-                    StorageHealth.Failed("storage.bucket_not_found", s3.ErrorCode),
+                    StorageHealth.Failed(StorageHealthCodes.BucketNotFound, s3.ErrorCode),
 
                 // The message of a client-side failure names the endpoint, never the credentials.
-                _ => StorageHealth.Failed("storage.unavailable", cause.Message),
+                _ => StorageHealth.Failed(StorageHealthCodes.Unavailable, cause.Message),
             };
         }
     }

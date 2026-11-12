@@ -1,10 +1,11 @@
 import { isLocale } from "@atrium/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, call } from "../api.ts";
-import { ErrorMessage, Field, LanguagePicker, Notice } from "../components/ui.tsx";
+import { Badge, Button, Card, ErrorMessage, Field, LanguagePicker, Notice, PageHeader } from "../components/ui.tsx";
 import { currentLocale } from "../i18n.ts";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -37,7 +38,7 @@ export function Account() {
   }, [language, savedLocale, queryClient]);
 
   if (me.isPending) {
-    return <p>{t("common.loading")}</p>;
+    return <p className="muted">{t("common.loading")}</p>;
   }
 
   if (me.isError) {
@@ -59,30 +60,220 @@ export function Account() {
 
   return (
     <>
-      <h1>{t("account.heading")}</h1>
-      <p>{t("account.signedInAs", { name: me.data.name })}</p>
+      <PageHeader title={t("account.heading")} lead={t("account.body")} />
       {me.data.passwordResetByAdmin ? <Notice kind="warning">{t("account.resetNotice")}</Notice> : null}
 
-      <form className="panel" onSubmit={(event) => void save(event)}>
-        <Field
-          label={t("account.displayName")}
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          maxLength={128}
-          required
-        />
-        <LanguagePicker />
-        {saved ? <Notice kind="ok">{t("account.saved")}</Notice> : null}
-        <ErrorMessage error={error} />
-        <div className="actions">
-          <button type="submit" className="primary">
-            {t("common.save")}
-          </button>
-        </div>
-      </form>
+      <Card title={t("account.profileHeading")} icon="user">
+        <form className="form" onSubmit={(event) => void save(event)}>
+          <p className="card-lead">{t("account.signedInAs", { name: me.data.name })}</p>
+          <Field
+            label={t("account.displayName")}
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            maxLength={128}
+            required
+          />
+          <div className="field">
+            <span className="field-label">{t("language.label")}</span>
+            <LanguagePicker />
+          </div>
+          {saved ? <Notice kind="ok">{t("account.saved")}</Notice> : null}
+          <ErrorMessage error={error} />
+          <div className="actions">
+            <Button type="submit" variant="primary">
+              {t("common.save")}
+            </Button>
+          </div>
+        </form>
+      </Card>
 
+      <TwoStep enabled={me.data.totpEnabled} />
       <ChangePassword />
     </>
+  );
+}
+
+type TwoStepStage =
+  | { readonly kind: "idle" }
+  | { readonly kind: "enrolling"; readonly secret: string; readonly uri: string }
+  | { readonly kind: "codes"; readonly codes: readonly string[] }
+  | { readonly kind: "disabling" };
+
+/**
+ * Two-step verification. It is enforced only after the user has proven
+ * their authenticator works, and the recovery codes are shown exactly
+ * once, so the screen makes the user acknowledge them.
+ */
+function TwoStep({ enabled }: { readonly enabled: boolean }) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [stage, setStage] = useState<TwoStepStage>({ kind: "idle" });
+  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<unknown>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const run = async (action: () => Promise<void>): Promise<void> => {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await action();
+    } catch (e) {
+      setError(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const begin = (): void =>
+    void run(async () => {
+      const enrollment = await call(api.POST("/api/v1/me/totp"));
+      setCode("");
+      setStage({ kind: "enrolling", secret: enrollment.secret, uri: enrollment.provisioningUri });
+    });
+
+  const confirm = (event: FormEvent): void => {
+    event.preventDefault();
+    void run(async () => {
+      const result = await call(api.POST("/api/v1/me/totp/confirm", { body: { code } }));
+      setStage({ kind: "codes", codes: result.codes });
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+    });
+  };
+
+  const disable = (event: FormEvent): void => {
+    event.preventDefault();
+    void run(async () => {
+      await call(api.POST("/api/v1/me/totp/disable", { body: { password } }));
+      setPassword("");
+      setStage({ kind: "idle" });
+      setNotice(t("account.totp.disabled"));
+      await queryClient.invalidateQueries({ queryKey: ["me"] });
+    });
+  };
+
+  const copyCodes = async (codes: readonly string[]): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(codes.join("\n"));
+      setCopied(true);
+    } catch {
+      // Copying is a convenience; the codes are on screen to write down.
+    }
+  };
+
+  return (
+    <Card
+      title={t("account.totp.heading")}
+      icon="shield"
+      aside={
+        <Badge tone={enabled ? "accent" : "muted"}>
+          {t(enabled ? "account.totp.stateOn" : "account.totp.stateOff")}
+        </Badge>
+      }
+    >
+      <p className="card-lead">{enabled ? t("account.totp.on") : t("account.totp.off")}</p>
+      {notice ? <Notice kind="ok">{notice}</Notice> : null}
+      <ErrorMessage error={error} />
+
+      {stage.kind === "idle" && !enabled ? (
+        <div className="actions is-start">
+          <Button variant="primary" onClick={begin} disabled={busy}>
+            {t("account.totp.enable")}
+          </Button>
+        </div>
+      ) : null}
+
+      {stage.kind === "idle" && enabled ? (
+        <div className="actions is-start">
+          <Button onClick={() => setStage({ kind: "disabling" })}>{t("account.totp.disable")}</Button>
+        </div>
+      ) : null}
+
+      {stage.kind === "enrolling" ? (
+        <form className="form" onSubmit={confirm}>
+          <p>{t("account.totp.scan")}</p>
+          <div className="enroll">
+            <figure className="qr-frame">
+              <QRCodeSVG
+                value={stage.uri}
+                size={184}
+                marginSize={0}
+                bgColor="#ffffff"
+                fgColor="#10201b"
+                role="img"
+                aria-label={t("account.totp.qrLabel")}
+              />
+            </figure>
+            <div>
+              <p className="fineprint">{t("account.totp.manual")}</p>
+              <p className="secret">{stage.secret.replace(/(.{4})/g, "$1 ").trim()}</p>
+            </div>
+          </div>
+          <Field
+            label={t("account.totp.code")}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            autoComplete="one-time-code"
+            inputMode="numeric"
+            spellCheck={false}
+            required
+          />
+          <div className="actions">
+            <Button variant="ghost" onClick={() => setStage({ kind: "idle" })}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" variant="primary" disabled={busy}>
+              {t("account.totp.confirm")}
+            </Button>
+          </div>
+        </form>
+      ) : null}
+
+      {stage.kind === "codes" ? (
+        <div className="form">
+          <h3 className="section-title">{t("account.totp.recoveryHeading")}</h3>
+          <p>{t("account.totp.recoveryBody")}</p>
+          <ul className="codes">
+            {stage.codes.map((recovery) => (
+              <li key={recovery}>{recovery}</li>
+            ))}
+          </ul>
+          <div className="actions">
+            <Button icon="copy" onClick={() => void copyCodes(stage.codes)}>
+              {copied ? t("common.copied") : t("common.copy")}
+            </Button>
+            <Button variant="primary" onClick={() => setStage({ kind: "idle" })}>
+              {t("account.totp.recoveryDone")}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {stage.kind === "disabling" ? (
+        <form className="form" onSubmit={disable}>
+          <p>{t("account.totp.disableBody")}</p>
+          <Field
+            label={t("signIn.password")}
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+          />
+          <div className="actions">
+            <Button variant="ghost" onClick={() => setStage({ kind: "idle" })}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" variant="danger" disabled={busy}>
+              {t("account.totp.disable")}
+            </Button>
+          </div>
+        </form>
+      ) : null}
+    </Card>
   );
 }
 
@@ -115,33 +306,34 @@ function ChangePassword() {
   };
 
   return (
-    <form className="panel" onSubmit={(event) => void submit(event)}>
-      <h2>{t("account.passwordHeading")}</h2>
-      <Field
-        label={t("account.currentPassword")}
-        type="password"
-        value={current}
-        onChange={(e) => setCurrent(e.target.value)}
-        autoComplete="current-password"
-        required
-      />
-      <Field
-        label={t("account.newPassword")}
-        help={t("setup.admin.passwordHelp", { minLength: MIN_PASSWORD_LENGTH })}
-        type="password"
-        value={next}
-        onChange={(e) => setNext(e.target.value)}
-        autoComplete="new-password"
-        minLength={MIN_PASSWORD_LENGTH}
-        required
-      />
-      {changed ? <Notice kind="ok">{t("account.passwordChanged")}</Notice> : null}
-      <ErrorMessage error={error} />
-      <div className="actions">
-        <button type="submit" className="primary" disabled={busy}>
-          {t("account.changePassword")}
-        </button>
-      </div>
-    </form>
+    <Card title={t("account.passwordHeading")} icon="key">
+      <form className="form" onSubmit={(event) => void submit(event)}>
+        <Field
+          label={t("account.currentPassword")}
+          type="password"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+          autoComplete="current-password"
+          required
+        />
+        <Field
+          label={t("account.newPassword")}
+          help={t("setup.admin.passwordHelp", { minLength: MIN_PASSWORD_LENGTH })}
+          type="password"
+          value={next}
+          onChange={(e) => setNext(e.target.value)}
+          autoComplete="new-password"
+          minLength={MIN_PASSWORD_LENGTH}
+          required
+        />
+        {changed ? <Notice kind="ok">{t("account.passwordChanged")}</Notice> : null}
+        <ErrorMessage error={error} />
+        <div className="actions">
+          <Button type="submit" variant="primary" disabled={busy}>
+            {t("account.changePassword")}
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }

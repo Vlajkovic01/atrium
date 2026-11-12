@@ -62,13 +62,13 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # The API client and the Cyrillic translations are generated files
-      # that are committed. Regenerating them must change nothing; if it
-      # does, someone changed a source and forgot to regenerate.
+      # The API client is generated from the contract and committed.
+      # Regenerating it must change nothing; if it does, someone changed
+      # the contract and forgot to regenerate.
       - name: Generated files are up to date
         run: |
           pnpm run generate
-          git diff --exit-code -- packages/shared/src/api/schema.d.ts packages/shared/src/i18n/locales/sr-Cyrl.json
+          git diff --exit-code -- packages/shared/src/api/schema.d.ts
 
       - name: Check formatting
         run: pnpm run format:check
@@ -173,6 +173,59 @@ jobs:
           docker compose restart atrium
           docker compose up --detach --wait --wait-timeout 120
           curl --fail --silent --show-error http://localhost:8080/api/v1/setup/state | grep --quiet '"adminExists":true'
+
+      # The two optional parts of the Compose file, switched on the way the
+      # install guide says: through a .env file.
+      - name: Start again with PostgreSQL and HTTPS
+        working-directory: deploy
+        run: |
+          set -euo pipefail
+          docker compose down --volumes
+          cat > .env <<'EOF'
+          COMPOSE_PROFILES=postgres,https
+          POSTGRES_PASSWORD=ci-password
+          ATRIUM_DB_PROVIDER=postgres
+          ATRIUM_DB_CONNECTION=Host=postgres;Database=atrium;Username=atrium;Password=ci-password
+          ATRIUM_SETUP_TOKEN=a-setup-token-chosen-in-ci
+          ATRIUM_DOMAIN=localhost
+          EOF
+          docker compose up --detach --wait --wait-timeout 240
+
+      - name: A chosen setup token works and is not printed
+        working-directory: deploy
+        run: |
+          set -euo pipefail
+          ! docker compose logs atrium | grep --quiet 'a-setup-token-chosen-in-ci'
+          curl --fail --silent --show-error \
+            --header 'Content-Type: application/json' \
+            --data '{"name":"owner","password":"correct horse battery","setupToken":"a-setup-token-chosen-in-ci"}' \
+            http://localhost:8080/api/v1/setup/admin
+
+      - name: The data is in PostgreSQL
+        working-directory: deploy
+        run: |
+          set -euo pipefail
+          count=$(docker compose exec --no-TTY postgres psql --username atrium --dbname atrium --tuples-only --no-align --command 'select count(*) from "Users"')
+          test "$count" = "1"
+
+      # Through the bundled proxy the server must see HTTPS and the public
+      # host name: the pairing link it hands out starts with https, and the
+      # browser's refresh cookie is marked Secure.
+      - name: Behind the HTTPS proxy the server knows the connection is HTTPS
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            curl --insecure --fail --silent --output /dev/null https://localhost/api/v1/health/ready && break
+            sleep 2
+          done
+          curl --insecure --fail --silent --show-error \
+            --header 'Content-Type: application/json' \
+            --data '{"device":{"name":"TV","kind":"tv"}}' \
+            https://localhost/api/v1/auth/pairing | grep --quiet '"verificationUrl":"https://localhost/pair'
+          curl --insecure --fail --silent --show-error --include \
+            --header 'Content-Type: application/json' \
+            --data '{"name":"owner","password":"correct horse battery","device":{"name":"Browser","kind":"web"}}' \
+            https://localhost/api/v1/auth/login | grep --ignore-case 'set-cookie' | grep --ignore-case --quiet 'secure'
 
       - name: Show logs if something failed
         if: failure()

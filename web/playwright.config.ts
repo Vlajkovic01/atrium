@@ -22,10 +22,16 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   timeout: 60_000,
+  // Creating an account hashes a password with Argon2id on purpose-built
+  // slow settings; on a busy machine that alone can take several seconds.
+  expect: { timeout: 15_000 },
   use: {
     baseURL,
     locale: "en-US",
     trace: "retain-on-failure",
+    // Set ATRIUM_BROWSER_CHANNEL=msedge (or chrome) to use a browser that
+    // is already installed, where Playwright's own cannot be downloaded.
+    ...(process.env.ATRIUM_BROWSER_CHANNEL ? { channel: process.env.ATRIUM_BROWSER_CHANNEL } : {}),
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {

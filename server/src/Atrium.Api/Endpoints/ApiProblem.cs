@@ -35,27 +35,34 @@ public static class ApiProblem
     public const string TotpAlreadyEnabled = "auth.totp_already_enabled";
     public const string PreconditionRequired = "request.precondition_required";
     public const string VersionConflict = "request.version_conflict";
+    public const string UserInvalidName = "user.invalid_name";
+    public const string UserNameTaken = "user.name_taken";
+    public const string UserInvalidDisplayName = "user.invalid_display_name";
+    public const string UserWeakPassword = "user.weak_password";
+    public const string UserInvalidLocale = "user.invalid_locale";
+    public const string UserInvalidQuota = "user.invalid_quota";
+    public const string UserLastAdmin = "user.last_admin";
 
     public static ProblemHttpResult From(UserError error) => error switch
     {
         UserError.NotFound => Missing(),
-        UserError.InvalidName => Create(StatusCodes.Status400BadRequest, "user.invalid_name", new()
+        UserError.InvalidName => Create(StatusCodes.Status400BadRequest, UserInvalidName, new()
         {
             ["minLength"] = UserName.MinLength,
             ["maxLength"] = UserName.MaxLength,
         }),
-        UserError.NameTaken => Create(StatusCodes.Status409Conflict, "user.name_taken"),
-        UserError.InvalidDisplayName => Create(StatusCodes.Status400BadRequest, "user.invalid_display_name"),
-        UserError.WeakPassword => Create(StatusCodes.Status400BadRequest, "user.weak_password", new()
+        UserError.NameTaken => Create(StatusCodes.Status409Conflict, UserNameTaken),
+        UserError.InvalidDisplayName => Create(StatusCodes.Status400BadRequest, UserInvalidDisplayName),
+        UserError.WeakPassword => Create(StatusCodes.Status400BadRequest, UserWeakPassword, new()
         {
             ["minLength"] = PasswordPolicy.MinLength,
             ["maxLength"] = PasswordPolicy.MaxLength,
         }),
         // 403, not 401: the session is fine, and 401 would make clients try to refresh it.
         UserError.WrongPassword => Create(StatusCodes.Status403Forbidden, WrongPassword),
-        UserError.InvalidLocale => Create(StatusCodes.Status400BadRequest, "user.invalid_locale"),
-        UserError.InvalidQuota => Create(StatusCodes.Status400BadRequest, "user.invalid_quota"),
-        UserError.LastAdmin => Create(StatusCodes.Status409Conflict, "user.last_admin"),
+        UserError.InvalidLocale => Create(StatusCodes.Status400BadRequest, UserInvalidLocale),
+        UserError.InvalidQuota => Create(StatusCodes.Status400BadRequest, UserInvalidQuota),
+        UserError.LastAdmin => Create(StatusCodes.Status409Conflict, UserLastAdmin),
         UserError.VersionConflict => Create(StatusCodes.Status412PreconditionFailed, VersionConflict),
         _ => Invalid(),
     };

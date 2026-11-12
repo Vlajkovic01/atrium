@@ -9,7 +9,7 @@ namespace Atrium.Storage.Internal;
 /// </summary>
 internal static class StorageProbe
 {
-    public const string MismatchCode = "storage.read_back_mismatch";
+    public const string MismatchCode = StorageHealthCodes.ReadBackMismatch;
 
     public static string NewKey() => $"atrium-probe-{Guid.NewGuid():N}";
 

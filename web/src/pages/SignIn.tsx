@@ -2,7 +2,8 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { api, call, thisDevice } from "../api.ts";
-import { ErrorMessage, Field, InsecureBanner, LanguagePicker } from "../components/ui.tsx";
+import { AuthLayout } from "../components/AuthLayout.tsx";
+import { Button, ErrorMessage, Field } from "../components/ui.tsx";
 import { useSession } from "../session.tsx";
 
 export function SignIn() {
@@ -53,15 +54,11 @@ export function SignIn() {
   };
 
   return (
-    <main className="card">
-      <InsecureBanner />
-      <header className="card-header">
-        <h1>Atrium</h1>
-        <LanguagePicker />
-      </header>
+    <AuthLayout>
       {challenge === null ? (
-        <form onSubmit={submitPassword}>
-          <h2>{t("signIn.heading")}</h2>
+        <form onSubmit={submitPassword} className="form">
+          <h1 className="auth-title">{t("signIn.heading")}</h1>
+          <p className="lead">{t("signIn.body")}</p>
           <Field
             label={t("signIn.name")}
             value={name}
@@ -81,16 +78,14 @@ export function SignIn() {
             required
           />
           <ErrorMessage error={error} />
-          <div className="actions">
-            <button type="submit" className="primary" disabled={busy}>
-              {t("signIn.submit")}
-            </button>
-          </div>
+          <Button type="submit" variant="primary" block disabled={busy}>
+            {t("signIn.submit")}
+          </Button>
         </form>
       ) : (
-        <form onSubmit={submitCode}>
-          <h2>{t("signIn.totpHeading")}</h2>
-          <p>{t("signIn.totpBody")}</p>
+        <form onSubmit={submitCode} className="form">
+          <h1 className="auth-title">{t("signIn.totpHeading")}</h1>
+          <p className="lead">{t("signIn.totpBody")}</p>
           <Field
             label={t("signIn.code")}
             value={code}
@@ -102,23 +97,22 @@ export function SignIn() {
             autoFocus
           />
           <ErrorMessage error={error} />
-          <div className="actions">
-            <button
-              type="button"
-              onClick={() => {
-                setChallenge(null);
-                setCode("");
-                setError(null);
-              }}
-            >
-              {t("signIn.startOver")}
-            </button>
-            <button type="submit" className="primary" disabled={busy}>
-              {t("signIn.verify")}
-            </button>
-          </div>
+          <Button type="submit" variant="primary" block disabled={busy}>
+            {t("signIn.verify")}
+          </Button>
+          <Button
+            variant="ghost"
+            block
+            onClick={() => {
+              setChallenge(null);
+              setCode("");
+              setError(null);
+            }}
+          >
+            {t("signIn.startOver")}
+          </Button>
         </form>
       )}
-    </main>
+    </AuthLayout>
   );
 }

@@ -54,13 +54,13 @@ public sealed class MeTests : IDisposable
         var tokens = await client.SignInAsync("ana");
 
         var updated = await client.SendAsync(HttpMethod.Patch, "/api/v1/me", tokens.AccessToken,
-            new { displayName = "  Ana Anić ", locale = "sr-Cyrl" });
-        var badLocale = await client.SendAsync(HttpMethod.Patch, "/api/v1/me", tokens.AccessToken, new { locale = "xx" });
+            new { displayName = "  Ana Anić ", locale = "sr-Latn" });
+        var badLocale = await client.SendAsync(HttpMethod.Patch, "/api/v1/me", tokens.AccessToken, new { locale = "sr-Cyrl" });
         var emptyName = await client.SendAsync(HttpMethod.Patch, "/api/v1/me", tokens.AccessToken, new { displayName = "   " });
 
         var profile = await updated.ReadAsync<UserProfile>();
         Assert.Equal("Ana Anić", profile.DisplayName);
-        Assert.Equal("sr-Cyrl", profile.Locale);
+        Assert.Equal("sr-Latn", profile.Locale);
         Assert.Equal("user.invalid_locale", await badLocale.ProblemCodeAsync());
         Assert.Equal("user.invalid_display_name", await emptyName.ProblemCodeAsync());
         var after = await (await client.SendAsync(HttpMethod.Get, "/api/v1/me", tokens.AccessToken)).ReadAsync<UserProfile>();

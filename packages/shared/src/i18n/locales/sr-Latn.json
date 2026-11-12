@@ -9,7 +9,12 @@
     "loading": "Učitavanje…",
     "signOut": "Odjavi se",
     "close": "Zatvori",
-    "optional": "opciono"
+    "optional": "opciono",
+    "showPassword": "Prikaži lozinku",
+    "hidePassword": "Sakrij lozinku",
+    "copy": "Kopiraj",
+    "copied": "Kopirano",
+    "add": "Dodaj"
   },
   "connection": {
     "insecure": "Ova veza nije šifrovana. Svako na istoj mreži može da pročita ono što šaljete, uključujući lozinku."
@@ -67,7 +72,10 @@
   "nav": {
     "devices": "Uređaji",
     "account": "Nalog",
-    "main": "Glavni meni"
+    "main": "Glavni meni",
+    "people": "Ljudi",
+    "storage": "Skladište",
+    "administration": "Administracija"
   },
   "language": {
     "label": "Jezik"
@@ -127,7 +135,10 @@
       "testOkFree": "Ova lokacija radi. Slobodan prostor: {free}.",
       "holdsData": "Ova lokacija već sadrži podatke jednog Atrium servera i ne može da se doda kao nova.",
       "save": "Koristi ovu lokaciju",
-      "formatNote": "Fajlovi se čuvaju u posebnom rasporedu i nose naziv prema svom sadržaju. Njihova imena i folderi čuvaju se u bazi servera. Pravite rezervnu kopiju konfiguracionog foldera servera zajedno sa ovom lokacijom, da bi oboje moglo da se vrati."
+      "formatNote": "Fajlovi se čuvaju u posebnom rasporedu i nose naziv prema svom sadržaju. Njihova imena i folderi čuvaju se u bazi servera. Pravite rezervnu kopiju konfiguracionog foldera servera zajedno sa ovom lokacijom, da bi oboje moglo da se vrati.",
+      "kindLocalHelp": "Disk u ovom računaru ili priključen na njega.",
+      "kindShareHelp": "NAS ili deljeni folder drugog računara.",
+      "kindS3Help": "Amazon S3, Backblaze B2, Cloudflare R2, MinIO i slični."
     },
     "access": {
       "heading": "Pristup serveru",
@@ -157,7 +168,8 @@
     "totpBody": "Unesite šestocifreni kod iz aplikacije za potvrdu ili jedan od rezervnih kodova.",
     "code": "Kod",
     "verify": "Potvrdi",
-    "startOver": "Počni ispočetka"
+    "startOver": "Počni ispočetka",
+    "body": "Unesite ime i lozinku svog Atrium naloga."
   },
   "devices": {
     "heading": "Uređaji",
@@ -208,6 +220,75 @@
     "currentPassword": "Trenutna lozinka",
     "newPassword": "Nova lozinka",
     "changePassword": "Promeni lozinku",
-    "passwordChanged": "Lozinka je promenjena. Ostali uređaji su odjavljeni."
+    "passwordChanged": "Lozinka je promenjena. Ostali uređaji su odjavljeni.",
+    "body": "Vaš profil i način prijave.",
+    "profileHeading": "Profil",
+    "totp": {
+      "heading": "Potvrda u dva koraka",
+      "off": "Isključena. Za prijavu je potrebna samo lozinka.",
+      "on": "Uključena. Pri prijavi se traži i kod iz aplikacije za potvrdu.",
+      "enable": "Uključi",
+      "scan": "Skenirajte ovaj kod aplikacijom za potvrdu, pa unesite šestocifreni kod koji ona prikaže.",
+      "manual": "Ili ukucajte ovaj ključ u aplikaciju:",
+      "qrLabel": "QR kod za aplikaciju za potvrdu",
+      "code": "Kod iz aplikacije",
+      "confirm": "Potvrdi",
+      "recoveryHeading": "Sačuvajte rezervne kodove",
+      "recoveryBody": "Svaki kod vas jednom prijavljuje ako izgubite telefon. Prikazuju se samo sada, zato ih čuvajte na sigurnom mestu.",
+      "recoveryDone": "Sačuvao sam ih",
+      "disable": "Isključi",
+      "disableBody": "Unesite lozinku da biste isključili potvrdu u dva koraka.",
+      "disabled": "Potvrda u dva koraka je isključena.",
+      "stateOn": "Uključena",
+      "stateOff": "Isključena"
+    }
+  },
+  "brand": {
+    "tagline": "Vaš privatni oblak.",
+    "subline": "Fajlovi, fotografije i video na skladištu koje vi kontrolišete.",
+    "pointOwn": "Vaši podaci nikada ne napuštaju vaš server",
+    "pointApps": "Web, telefon i televizor na jednom nalogu",
+    "pointOpen": "Otvoren kod, bez praćenja"
+  },
+  "roles": {
+    "admin": "Administrator",
+    "user": "Član",
+    "guest": "Gost"
+  },
+  "people": {
+    "heading": "Ljudi",
+    "body": "Svi koji mogu da se prijave na ovaj server. Upravljate njihovim nalozima, a njihove fajlove nikada ne vidite.",
+    "you": "Vi",
+    "disabledBadge": "Onemogućen",
+    "twoStep": "Potvrda u dva koraka",
+    "addHeading": "Dodajte osobu",
+    "name": "Ime",
+    "password": "Lozinka",
+    "role": "Uloga",
+    "create": "Dodaj osobu",
+    "created": "{name} sada može da se prijavi.",
+    "roleOf": "Uloga korisnika {name}",
+    "disable": "Onemogući",
+    "enable": "Omogući",
+    "disableConfirm": "Onemogućiti nalog {name}? Odmah se odjavljuje i ne može da se prijavi dok se ponovo ne omogući.",
+    "resetPassword": "Resetuj lozinku",
+    "newPasswordFor": "Nova lozinka za {name}",
+    "resetHelp": "Odjavljuje se sa svih uređaja i dobija obaveštenje da je administrator resetovao lozinku.",
+    "resetConfirm": "Postavi lozinku",
+    "resetDone": "Lozinka je resetovana. Predajte novu lozinku korisniku {name}."
+  },
+  "storageAdmin": {
+    "heading": "Skladište",
+    "body": "Mesta na kojima se čuvaju fajlovi.",
+    "check": "Proveri sada",
+    "checking": "Proveravam…",
+    "lastChecked": "Poslednja provera {when}",
+    "stateOnline": "Dostupno",
+    "stateOffline": "Nedostupno",
+    "stateUnknown": "Nije provereno",
+    "healthy": "Radi. Slobodan prostor: {free}.",
+    "healthyNoFree": "Radi.",
+    "addHeading": "Dodajte lokaciju",
+    "added": "Lokacija je dodata."
   }
 }

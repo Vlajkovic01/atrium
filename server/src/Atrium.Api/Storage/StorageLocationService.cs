@@ -26,13 +26,13 @@ public sealed record CreateLocationOutcome(StorageLocation? Location, StorageTes
 public static class StorageErrors
 {
     public const string InvalidConfig = "storage.invalid_config";
-    public const string RootMissing = "storage.root_missing";
+    public const string RootMissing = StorageHealthCodes.RootMissing;
     public const string PathNotAllowed = "storage.path_not_allowed";
     public const string LocationInUse = "storage.location_in_use";
     public const string NameTaken = "storage.name_taken";
     public const string IdentityMissing = "storage.identity_missing";
     public const string IdentityMismatch = "storage.identity_mismatch";
-    public const string Unavailable = "storage.unavailable";
+    public const string Unavailable = StorageHealthCodes.Unavailable;
 }
 
 /// <summary>
@@ -116,7 +116,7 @@ public sealed class StorageLocationService(
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
-                return new CreateLocationOutcome(null, StorageTestOutcome.Fail("storage.access_denied", e.Message));
+                return new CreateLocationOutcome(null, StorageTestOutcome.Fail(StorageHealthCodes.AccessDenied, e.Message));
             }
         }
 

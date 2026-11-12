@@ -55,9 +55,18 @@ public sealed class AtriumFactory : WebApplicationFactory<Program>
 
     public MutableTime Time { get; }
 
+    /// <summary>
+    /// Extra settings for this server, set before it is first used. A test
+    /// that needs a differently configured server sets this instead of
+    /// deriving a second server from the factory: only one server may run
+    /// on a config directory.
+    /// </summary>
+    public Action<IWebHostBuilder>? Configure { get; set; }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting(BootstrapOptions.ConfigDirKey, ConfigDir);
+        Configure?.Invoke(builder);
         builder.ConfigureTestServices(services =>
         {
             services.AddSingleton<TimeProvider>(Time);

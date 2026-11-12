@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { isLocale, localeNames, messages, pickLocale, supportedLocales } from "../src/i18n/index.ts";
-import { KEEP_LATIN, messagesToCyrillic, type MessageTree } from "../src/i18n/transliterate.ts";
+
+type MessageTree = { readonly [key: string]: string | MessageTree };
 
 function flatten(tree: MessageTree, prefix = ""): Map<string, string> {
   const out = new Map<string, string>();
@@ -54,20 +55,17 @@ function pluralCategories(message: string): string[][] {
 }
 
 const english = flatten(messages.en);
-const latin = flatten(messages["sr-Latn"]);
-const cyrillic = flatten(messages["sr-Cyrl"]);
+const serbian = flatten(messages["sr-Latn"]);
 
 describe("translations", () => {
-  it("has every key in every language", () => {
-    expect([...latin.keys()].sort()).toEqual([...english.keys()].sort());
-    expect([...cyrillic.keys()].sort()).toEqual([...english.keys()].sort());
+  it("has every key in both languages", () => {
+    expect([...serbian.keys()].sort()).toEqual([...english.keys()].sort());
   });
 
   it("has no empty message", () => {
     for (const [language, table] of [
       ["en", english],
-      ["sr-Latn", latin],
-      ["sr-Cyrl", cyrillic],
+      ["sr-Latn", serbian],
     ] as const) {
       for (const [key, value] of table) {
         expect(value.trim(), `${language}: ${key}`).not.toBe("");
@@ -75,10 +73,9 @@ describe("translations", () => {
     }
   });
 
-  it("uses the same arguments in every language", () => {
+  it("uses the same arguments in both languages", () => {
     for (const [key, value] of english) {
-      expect(argumentNames(latin.get(key)!), key).toEqual(argumentNames(value));
-      expect(argumentNames(cyrillic.get(key)!), key).toEqual(argumentNames(value));
+      expect(argumentNames(serbian.get(key)!), key).toEqual(argumentNames(value));
     }
   });
 
@@ -91,66 +88,47 @@ describe("translations", () => {
   });
 
   it("gives Serbian plurals all three forms Serbian needs", () => {
-    for (const [key, value] of latin) {
+    for (const [key, value] of serbian) {
       for (const categories of pluralCategories(value)) {
         expect(categories, key).toEqual(expect.arrayContaining(["one", "few", "other"]));
       }
     }
   });
 
-  it("keeps the Cyrillic file in step with the Latin one", () => {
-    // If this fails, run: pnpm --filter @atrium/shared generate:cyrillic
-    expect(messages["sr-Cyrl"]).toEqual(messagesToCyrillic(messages["sr-Latn"]));
-  });
-
-  it("leaves no Latin word in the Cyrillic text except names that are meant to stay Latin", () => {
-    // A Latin word left behind is a foreign term the converter mangled or
-    // skipped ("буцкет", "проxy"). Either translate it, or add it to
-    // KEEP_LATIN and write case endings after a hyphen.
-    const offenders: string[] = [];
-    for (const [key, value] of cyrillic) {
-      const readable = value
-        .replace(/\{\s*[A-Za-z_][A-Za-z0-9_]*\s*(,\s*(plural|select|selectordinal)\s*,)?/g, " ")
-        .replace(/\b(one|few|many|other|zero|two)\s*\{/g, " ")
-        .replace(/<[^>]+>/g, " ");
-      for (const word of readable.match(/[\p{L}\p{N}]+/gu) ?? []) {
-        if (/[A-Za-zČĆĐŠŽčćđšž]/.test(word) && !KEEP_LATIN.has(word)) {
-          offenders.push(`${key}: ${word}`);
-        }
+  it("writes Serbian in Latin script only", () => {
+    const cyrillic: string[] = [];
+    for (const [key, value] of serbian) {
+      if (/\p{Script=Cyrillic}/u.test(value)) {
+        cyrillic.push(key);
       }
     }
 
-    expect(offenders).toEqual([]);
-  });
-
-  it("writes Cyrillic messages in Cyrillic", () => {
-    expect(cyrillic.get("common.save")).toBe("Сачувај");
-    expect(cyrillic.get("errors.storage.location_in_use")).toContain("Atrium");
-    expect(cyrillic.get("errors.auth.invalid_link_code")).toContain("QR");
+    expect(cyrillic).toEqual([]);
   });
 });
 
 describe("choosing a language", () => {
-  it("names every language in its own script", () => {
+  it("names every language", () => {
     expect(Object.keys(localeNames).sort()).toEqual([...supportedLocales].sort());
-    expect(localeNames["sr-Cyrl"]).toMatch(/Српски/);
   });
 
   it.each([
     [["sr-Latn-RS", "en"], "sr-Latn"],
-    [["sr-Cyrl-RS"], "sr-Cyrl"],
+    [["sr-Cyrl-RS"], "sr-Latn"],
     [["sr-RS"], "sr-Latn"],
     [["sr"], "sr-Latn"],
     [["en-GB", "sr"], "en"],
-    [["de-DE", "sr-Cyrl"], "sr-Cyrl"],
+    [["de-DE", "sr"], "sr-Latn"],
     [["de-DE", "fr"], "en"],
+    [["srn"], "en"],
     [[], "en"],
   ])("picks the best match for %j", (preferred, expected) => {
     expect(pickLocale(preferred)).toBe(expected);
   });
 
   it("recognizes only supported languages", () => {
-    expect(isLocale("sr-Cyrl")).toBe(true);
+    expect(isLocale("sr-Latn")).toBe(true);
+    expect(isLocale("sr-Cyrl")).toBe(false);
     expect(isLocale("sr")).toBe(false);
     expect(isLocale(null)).toBe(false);
   });
