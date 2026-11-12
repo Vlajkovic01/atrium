@@ -6,6 +6,7 @@ export type { Locale } from "./i18n/index.ts";
 export { TusUpload, encodeMetadata } from "./upload/tus.ts";
 export type { ConflictPolicy, TusTransport, UploadRequest, UploadSource, UploadStatus } from "./upload/tus.ts";
 export { UploadQueue } from "./upload/queue.ts";
+export { fingerprint, sha256 } from "./upload/sha256.ts";
 export type {
   ConflictAnswer,
   ConflictChoice,

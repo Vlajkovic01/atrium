@@ -57,13 +57,13 @@ with Phases 1 to 3, items 4 and 6 to 8 are done at the end of Phase 7.
 | 1 | Foundation | Skeleton, auth and users, sessions, device pairing server side, local and S3 storage providers, setup wizard, Docker Compose, CI |
 | 2 | Files | Job queue core, tus uploads, folders, rename, move, download, trash, file versions, deduplication, web file browser |
 | 3 | Media processing | Media jobs and small-device tuning of the queue, metadata extraction, thumbnails, previews, timeline, albums, search |
-| 4 | Mobile app | Connect, browse, upload, camera backup, offline, biometric lock |
+| 4 | Mobile app | Native Android and iOS app (React Native), installed from a store or an APK: connect, browse, upload, camera backup, offline, biometric lock |
 | 5 | Video streaming | Capability detection, direct play, HLS, hardware transcoding, players, synced position |
 | 6 | Subtitles and audio | Tracks, conversion, burn-in, styling, providers, speech-to-text, translation |
 | 7 | Movie and series library | Indexing, name parsing, metadata providers, seasons, continue watching |
 | 8 | Sharing and multi-user | Share links, shared albums and folders, quotas, activity log |
 | 9 | Player extras | Chromecast, AirPlay, picture-in-picture, background audio, speed, shortcuts |
-| 10 | TV apps | Android TV and Apple TV, pairing sign-in, home, details, player, platform rows |
+| 10 | TV apps | Native Android TV / Google TV and Apple TV apps (react-native-tvos), pairing sign-in, home, details, player, platform rows |
 | 11 | Operations | Admin dashboard, health, backup and restore UI, library relocation, Windows service, Linux packages |
 | 12 | Hardening | ASVS review, scale and low-power tests, documentation |
 
