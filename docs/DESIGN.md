@@ -633,6 +633,14 @@ ID. Thumbnails get about an hour; stream URLs are issued per playback
 session and renewed while it is alive. Revoking the session invalidates
 its URLs. URLs with signatures are redacted in logs.
 
+Built in Phase 2 for downloads: URLs are valid for one hour; a signed
+request is refused if its session is revoked or its user disabled, and
+carries the session's restrictions. A ZIP request is kept in memory for
+ten minutes behind a random token, so a large selection does not have to
+fit in a URL. Request lines, which contain the query string, are not
+logged at the default log level; redacting them for verbose logging is
+part of the log work in Phase 11.
+
 ### 6.7 Secrets and keys
 
 - A server key set is created at first start in `/config/keys` with

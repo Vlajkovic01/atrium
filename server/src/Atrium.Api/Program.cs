@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Atrium.Api.Auth;
 using Atrium.Api.Endpoints;
+using Atrium.Api.Files;
 using Atrium.Api.Hosting;
 using Atrium.Api.Setup;
 using Atrium.Api.Storage;
@@ -31,6 +32,8 @@ builder.Services.AddScoped<StorageLocationService>();
 builder.Services.AddAtriumJobs();
 builder.Services.AddJobWorker();
 builder.Services.AddAtriumFiles();
+builder.Services.AddSingleton<SignedUrls>();
+builder.Services.AddSingleton<ArchiveRequests>();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi("v1");
 
@@ -86,6 +89,7 @@ v1.MapLibraryEndpoints();
 v1.MapNodeEndpoints();
 v1.MapTrashEndpoints();
 v1.MapUploadEndpoints();
+v1.MapContentEndpoints();
 
 await app.RunAsync();
 return 0;
