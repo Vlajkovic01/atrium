@@ -400,13 +400,29 @@ A blob is deleted only by the collector job, in two passes:
 
 1. Blobs referenced by no node and no version are marked `pending delete`
    with a timestamp.
-2. After a grace period (default 7 days), the collector checks again
-   inside a transaction that no node or version references the blob, then
-   deletes the object and the row.
+2. After a grace period (default 7 days), the collector deletes the row
+   with a statement that succeeds only if the blob is still pending, still
+   past the grace period and still referenced by nothing; the foreign keys
+   refuse it otherwise. Only after the row is gone is the object deleted.
+
+Row first, content second: once the row is gone nothing can point at the
+content any more, and while it exists the database refuses to delete it
+if something does. A crash in between leaves content without a row, which
+costs space but loses nothing.
 
 An upload that produces the same hash during the grace period revives the
-blob. The grace period also covers restoring a metadata backup that is a
-few days old: its nodes still find their blobs.
+blob. Storing a hash and collecting it are serialized by an in-process
+lock per hash, which is sufficient because one process owns the database
+(D-009); without it an upload could revive a blob in the moment its
+content is deleted. The collector skips a location that cannot prove its
+identity and deletes nothing there. The grace period also covers
+restoring a metadata backup that is a few days old: its nodes still find
+their blobs.
+
+Storing also repairs what it finds: content on storage without a row (a
+crash, a restored backup) is hashed and reused if it matches, replaced if
+it does not; a row whose content went missing is restored from the new,
+verified upload.
 
 ### 4.4 External libraries
 
