@@ -124,9 +124,10 @@ function fakeTusServer(options: { chunkSize?: number; existing?: Map<string, "Fi
       body = body.map((b, i) => (i === 0 ? b ^ 1 : b));
     }
 
-    const [algorithm, sum] = (request.headers.get("Upload-Checksum") ?? "").split(" ");
+    const checksum = request.headers.get("Upload-Checksum");
+    const [algorithm, sum] = (checksum ?? "").split(" ");
     const actual = btoa(String.fromCharCode(...(await sha256(body))));
-    if (algorithm !== "sha256" || sum !== actual) {
+    if (checksum !== null && (algorithm !== "sha256" || sum !== actual)) {
       return Response.json({ code: "upload.checksum_mismatch", params: {} }, { status: 460 });
     }
 
@@ -259,6 +260,21 @@ describe("tus upload", () => {
     expect(waits).toEqual([1000, 2000, 4000, 8000, 16000, 30000, 30000]);
   });
 
+  it("works without chunk checksums where the platform cannot hash", async () => {
+    const server = fakeTusServer({ chunkSize: 4 });
+    const plain = { ...transport(server) };
+    delete (plain as { sha256?: unknown }).sha256;
+    const upload = new TusUpload(plain, {
+      source: source("plain.txt", "over plain http"),
+      parentId: "p",
+      onConflict: "fail",
+    });
+
+    await upload.start();
+
+    expect(text(server, "plain.txt")).toBe("over plain http");
+  });
+
   it("refreshes an expired token and carries on", async () => {
     const server = fakeTusServer();
     server.rotateToken("token-2");
@@ -364,6 +380,25 @@ describe("upload queue", () => {
     expect(text(server, "a.txt (2)")).toBe("1");
     expect(text(server, "b.txt (2)")).toBe("2");
     expect(text(server, "c.txt")).toBe("3");
+  });
+
+  it("keeps an item pending, not failed, while the user decides about a taken name", async () => {
+    const server = fakeTusServer({ existing: new Map([["a.txt", "File"]]) });
+    let answer: ((a: ConflictAnswer) => void) | null = null;
+    const states: string[] = [];
+    const queue = new UploadQueue({
+      transport: transport(server),
+      resolveConflict: () => new Promise<ConflictAnswer>((resolve) => (answer = resolve)),
+      onChange: (items) => states.push(items[0]!.status.state),
+    });
+
+    queue.add([source("a.txt", "x")], "p");
+    await waitFor(() => answer !== null);
+
+    expect(states).not.toContain("failed");
+    expect(queue.items[0]!.status.state).toBe("queued");
+    answer!({ choice: "rename", applyToAll: false });
+    await waitFor(() => queue.items[0]!.status.state === "completed");
   });
 
   it("skips a file the user chose to skip and never replaces a folder", async () => {
