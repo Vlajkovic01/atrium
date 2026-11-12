@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ApiError } from "../api.ts";
 import { currentLocale, setLocale } from "../i18n.ts";
 import { Icon, type IconName } from "./Icon.tsx";
+import { Select } from "./Select.tsx";
 
 /** The message for an error from the API, in the user's language. */
 export function useErrorText(): (error: unknown) => string {
@@ -177,26 +178,20 @@ export function ChoiceCards<T extends string>(props: {
 
 export function LanguagePicker() {
   const { t } = useTranslation();
-  const id = useId();
   return (
-    <div className="language">
-      <Icon name="globe" size={16} />
-      <label htmlFor={id} className="visually-hidden">
-        {t("language.label")}
-      </label>
-      <select id={id} value={currentLocale()} onChange={(event) => void setLocale(event.target.value as Locale)}>
-        {supportedLocales.map((locale) => (
-          // Each language is named in itself, so it can be found by
-          // someone who cannot read the current one.
-          <option key={locale} value={locale} lang={locale}>
-            {localeNames[locale]}
-          </option>
-        ))}
-      </select>
-    </div>
+    <Select
+      variant="pill"
+      icon="globe"
+      label={t("language.label")}
+      hideLabel
+      value={currentLocale()}
+      // Each language is named in itself, so it can be found by someone
+      // who cannot read the current one.
+      options={supportedLocales.map((locale) => ({ value: locale, label: localeNames[locale] }))}
+      onChange={(locale: Locale) => void setLocale(locale)}
+    />
   );
 }
-
 export function Badge({
   tone = "muted",
   children,

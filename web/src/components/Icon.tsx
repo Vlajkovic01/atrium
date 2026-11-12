@@ -125,6 +125,7 @@ const shapes = {
   ),
   logout: <path d="M14 4.500h3.500a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14M10 8l-4 4 4 4M6 12h9.500" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  chevronDown: <path d="m6.500 9.500 5.500 5.500 5.500-5.500" />,
   copy: (
     <>
       <rect x="8.500" y="8.500" width="12" height="12" rx="2" />

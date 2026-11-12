@@ -107,7 +107,11 @@ test("screenshots of every screen", async ({ page, request, browser }) => {
     ["marko", "guest"],
   ] as const) {
     await page.getByLabel("Name", { exact: true }).fill(name);
-    await page.getByLabel("Role", { exact: true }).selectOption(role);
+    await page
+      .getByRole("combobox", { name: /^Role / })
+      .last()
+      .click();
+    await page.getByRole("option", { name: role === "user" ? "Member" : "Guest", exact: true }).click();
     await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
     await page.getByRole("button", { name: "Add person" }).click();
     await page.getByText(`${name} can now sign in.`).waitFor();
@@ -132,7 +136,9 @@ test("screenshots of every screen", async ({ page, request, browser }) => {
   await shot(page, "sign-in-error");
 
   // --- Serbian ---
-  await page.getByLabel("Language").selectOption("sr-Latn");
+  await page.getByRole("combobox", { name: "Language" }).click();
+  await shot(page, "language-picker-open");
+  await page.getByRole("option", { name: "Srpski" }).click();
   await page.goto("/devices");
   await page.getByRole("heading", { name: "Prijava" }).waitFor();
   await shot(page, "sign-in-serbian");
