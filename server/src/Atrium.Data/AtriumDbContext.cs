@@ -1,5 +1,6 @@
 using Atrium.Core;
 using Atrium.Core.Identity;
+using Atrium.Core.Jobs;
 using Atrium.Core.Settings;
 using Atrium.Core.Storage;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
     public DbSet<RecoveryCode> RecoveryCodes => Set<RecoveryCode>();
     public DbSet<StorageLocation> StorageLocations => Set<StorageLocation>();
     public DbSet<Setting> Settings => Set<Setting>();
+    public DbSet<Job> Jobs => Set<Job>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -34,6 +36,11 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
         configurationBuilder.Properties<PairingState>().HaveConversion<string>().HaveMaxLength(32);
         configurationBuilder.Properties<StorageProviderKind>().HaveConversion<string>().HaveMaxLength(32);
         configurationBuilder.Properties<StorageLocationState>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<JobState>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<JobResourceClass>().HaveConversion<string>().HaveMaxLength(32);
+
+        // The one enum stored by number: workers order the queue by it.
+        configurationBuilder.Properties<JobPriority>().HaveConversion<int>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -120,6 +127,24 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
         {
             e.HasKey(s => s.Key);
             e.Property(s => s.Key).HasMaxLength(128);
+        });
+
+        modelBuilder.Entity<Job>(e =>
+        {
+            e.Property(j => j.Type).HasMaxLength(64);
+            e.Property(j => j.DedupeKey).HasMaxLength(256);
+            e.Property(j => j.ActiveDedupeKey).HasMaxLength(256);
+            e.HasIndex(j => j.ActiveDedupeKey).IsUnique();
+            e.Property(j => j.LeaseOwner).HasMaxLength(64);
+            e.Property(j => j.ErrorCode).HasMaxLength(128);
+            e.Property(j => j.ErrorDetail).HasMaxLength(4000);
+            e.Ignore(j => j.IsActive);
+            e.HasOne<User>().WithMany().HasForeignKey(j => j.OwnerUserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Job>().WithMany().HasForeignKey(j => j.ParentJobId).OnDelete(DeleteBehavior.Cascade);
+
+            // The claim query: the next queued job by priority and time.
+            e.HasIndex(j => new { j.State, j.Priority, j.RunAfter });
+            e.HasIndex(j => new { j.Type, j.State });
         });
     }
 

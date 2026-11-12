@@ -228,3 +228,58 @@ added. Any of them can still be overruled.
   native-speaker review they needed before 1.0.
 - Kept on purpose: the language tag stays `sr-Latn`, because platforms
   format plain `sr` in Cyrillic.
+
+## D-023 Own job queue; jobs are claimed by a conditional update (Proposed, Phase 2)
+
+- Decision: the queue is Atrium's own code over the `Jobs` table. A
+  worker claims a job with `UPDATE ... WHERE id = ? AND state = 'Queued'`
+  and owns it only if one row changed. The same code runs on SQLite and
+  PostgreSQL.
+- Alternatives: Hangfire or Quartz.NET; `FOR UPDATE SKIP LOCKED` on
+  PostgreSQL, as DESIGN.md first said.
+- Reasons: both libraries bring their own schema, which the portable
+  backup (D-008) and the per-provider migrations would have to carry, and
+  neither has the lease, checkpoint and resource-class model in DESIGN.md
+  5. With one server process (D-009) there are only a few workers, so
+  `SKIP LOCKED` would buy nothing over a conditional update, and one code
+  path means one behavior to test on both databases.
+- Details: priority is the one enum stored as a number, because the queue
+  is ordered by it. A run interrupted by shutdown goes back to the queue
+  without using an attempt; a crash does use one, so a job that brings the
+  server down stops being retried. Uniqueness of the dedupe key is
+  enforced by the database through a column that is set only while the
+  job is active.
+
+## D-024 Own tus implementation on server and client (Owner, 2026-11-12)
+
+- Decision: the tus protocol is implemented in the server and in
+  `packages/shared`, with no new dependency.
+- Alternatives: tusdotnet and tus-js-client (both MIT).
+- Reasons: the core protocol is small. tusdotnet's storage model does not
+  fit staging into content-addressed blobs or S3 parts of at least 5 MB,
+  and one client in the shared package serves web and React Native alike.
+
+## D-025 Deleting a user is scheduled and can be cancelled (Owner, 2026-11-12)
+
+- Decision: an admin deletes a user by typing the user's name. The
+  account is disabled and all its sessions are revoked at once. A job
+  removes the user's personal files 30 days later; until then the admin
+  can cancel the deletion. The admin sees how many files and how much
+  space are affected, never their names (D-004).
+- Alternatives: immediate deletion, recoverable only from a metadata
+  backup within the blob grace period; handing the files to another user.
+- Reasons: a mistaken deletion must be reversible without a restore.
+  Handing files to another user would let an admin read them, against
+  D-004.
+
+## D-026 Portable metadata backup in Phase 2; first tag at Alpha (Proposed, Phase 2)
+
+- Decision: the portable backup (D-008), its schedule, the copy into each
+  storage location and the command-line restore are built in Phase 2.
+  The initial migration keeps being regenerated until the first tagged
+  build, which is Alpha at the end of Phase 3; from then on migrations
+  are only added.
+- Alternatives: build the backup in Phase 3 or with the release gate.
+- Reasons: from Phase 2 on, file names and folders exist only in the
+  database (D-002). Losing it without a backup loses every file in a
+  usable form, so the backup has to exist as soon as files do.

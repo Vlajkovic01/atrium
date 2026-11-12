@@ -67,6 +67,14 @@
       "access_denied": "The server is not allowed to read or write there. Check the permissions or the access keys.",
       "bucket_not_found": "That bucket does not exist. Check the name.",
       "read_back_mismatch": "The location returned different data than was written to it. It cannot be trusted with files."
+    },
+    "job": {
+      "not_active": "This task has already finished.",
+      "not_retryable": "Only a task that failed or was cancelled can be tried again.",
+      "already_queued": "The same task is already waiting or running.",
+      "unexpected_error": "The task stopped because of an unexpected error.",
+      "unknown_type": "This server does not know how to run this task. It may come from a newer version.",
+      "lease_lost": "The task was interrupted and will be started again."
     }
   },
   "nav": {
