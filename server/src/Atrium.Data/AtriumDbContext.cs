@@ -25,6 +25,7 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
     public DbSet<Node> Nodes => Set<Node>();
     public DbSet<Blob> Blobs => Set<Blob>();
     public DbSet<NodeVersion> NodeVersions => Set<NodeVersion>();
+    public DbSet<Upload> Uploads => Set<Upload>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -47,6 +48,7 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
         configurationBuilder.Properties<LibraryMode>().HaveConversion<string>().HaveMaxLength(32);
         configurationBuilder.Properties<NodeKind>().HaveConversion<string>().HaveMaxLength(32);
         configurationBuilder.Properties<BlobState>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<UploadState>().HaveConversion<string>().HaveMaxLength(32);
 
         // The one enum stored by number: workers order the queue by it.
         configurationBuilder.Properties<JobPriority>().HaveConversion<int>();
@@ -206,6 +208,26 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
             e.HasOne<Blob>().WithMany().HasForeignKey(v => v.BlobId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<User>().WithMany().HasForeignKey(v => v.CreatedByUserId).OnDelete(DeleteBehavior.SetNull);
             e.HasIndex(v => new { v.NodeId, v.CreatedAt });
+        });
+
+        modelBuilder.Entity<Upload>(e =>
+        {
+            e.Property(u => u.Name).HasMaxLength(NodeName.MaxLength);
+            e.Property(u => u.MediaType).HasMaxLength(128);
+            e.Property(u => u.ConflictPolicy).HasMaxLength(32);
+            e.Property(u => u.ExpectedSha256).HasMaxLength(32);
+            e.Property(u => u.StagingKey).HasMaxLength(256);
+            e.Property(u => u.MultipartUploadId).HasMaxLength(1024);
+            e.Property(u => u.ErrorCode).HasMaxLength(128);
+            e.Property(u => u.Version).IsConcurrencyToken();
+            e.HasOne<User>().WithMany().HasForeignKey(u => u.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Library>().WithMany().HasForeignKey(u => u.LibraryId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<StorageLocation>().WithMany().HasForeignKey(u => u.StorageLocationId).OnDelete(DeleteBehavior.Restrict);
+
+            // Not a foreign key: the target folder may be trashed and removed
+            // while the upload runs; finishing then reports it.
+            e.HasIndex(u => new { u.UserId, u.State });
+            e.HasIndex(u => new { u.State, u.ExpiresAt });
         });
     }
 

@@ -8,6 +8,7 @@ using Atrium.Identity.Crypto;
 using Atrium.Jobs;
 using Atrium.Storage;
 using Atrium.Storage.Local;
+using Atrium.Storage.S3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -55,12 +56,46 @@ public sealed class FileServicesHost : IAsyncDisposable
     /// <summary>The location's files, read directly, bypassing Atrium.</summary>
     public IStorageProvider Raw { get; private set; } = null!;
 
-    public static async Task<FileServicesHost> StartAsync(FileTestDatabase database, FilesOptions? options = null)
+    /// <summary>A host whose first location, the one personal libraries use, is local, or S3 when <paramref name="s3"/> is given.</summary>
+    public static async Task<FileServicesHost> StartAsync(FileTestDatabase database, FilesOptions? options = null, S3StorageOptions? s3 = null)
     {
         var host = new FileServicesHost(database, options);
-        host.Location = await host.AddLocationAsync("main", host.StorageRoot);
-        host.Raw = new LocalStorageProvider(host.StorageRoot);
+        if (s3 is null)
+        {
+            host.Location = await host.AddLocationAsync("main", host.StorageRoot);
+            host.Raw = new LocalStorageProvider(host.StorageRoot);
+        }
+        else
+        {
+            host.Raw = new S3StorageProvider(s3);
+            host.Location = await host.AddLocationAsync(
+                "main", StorageProviderKind.S3, new StorageLocationConfig(null, s3), host.Raw);
+        }
+
         return host;
+    }
+
+    private async Task<StorageLocation> AddLocationAsync(
+        string name, StorageProviderKind kind, StorageLocationConfig config, IStorageProvider raw)
+    {
+        var providers = _services.GetRequiredService<StorageProviders>();
+        var location = new StorageLocation
+        {
+            Name = name,
+            Kind = kind,
+            EncryptedConfig = providers.ProtectConfig(config),
+            State = StorageLocationState.Online,
+            CreatedAt = Time.GetUtcNow(),
+        };
+        await LocationIdentityFile.WriteAsync(
+            raw, new LocationIdentity(location.Id, Time.GetUtcNow(), LocationIdentity.CurrentFormatVersion), default);
+        await WithDbAsync(async db =>
+        {
+            db.StorageLocations.Add(location);
+            await db.SaveChangesAsync();
+        });
+        Time.Advance(TimeSpan.FromSeconds(1));
+        return location;
     }
 
     /// <summary>Registers a local location the way the server does: identity file first, then the row.</summary>
@@ -209,6 +244,7 @@ public sealed class FileServicesHost : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        (Raw as IDisposable)?.Dispose();
         await _services.DisposeAsync();
         try
         {
