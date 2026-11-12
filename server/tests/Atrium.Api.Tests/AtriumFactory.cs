@@ -137,6 +137,12 @@ public sealed class AtriumFactory : WebApplicationFactory<Program>
         return outcome.Location!;
     }
 
+    public async Task<T> WithDbResultAsync<T>(Func<AtriumDbContext, Task<T>> action)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await action(scope.ServiceProvider.GetRequiredService<AtriumDbContext>());
+    }
+
     public async Task WithDbAsync(Func<AtriumDbContext, Task> action)
     {
         await using var scope = Services.CreateAsyncScope();

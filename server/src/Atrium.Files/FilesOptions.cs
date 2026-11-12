@@ -18,4 +18,7 @@ public sealed class FilesOptions
 
     /// <summary>At most this many earlier versions are kept per file.</summary>
     public int MaxVersions { get; init; } = 10;
+
+    /// <summary>How long after an admin deletes an account its files are removed; until then the deletion can be cancelled (D-025).</summary>
+    public TimeSpan UserDeletionDelay { get; init; } = TimeSpan.FromDays(30);
 }

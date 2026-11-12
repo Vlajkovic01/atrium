@@ -22,6 +22,9 @@ public enum UserError
 
     /// <summary>The user was changed by someone else since it was read.</summary>
     VersionConflict,
+
+    /// <summary>The account is scheduled for deletion; it cannot be enabled until the deletion is cancelled.</summary>
+    DeletionScheduled,
 }
 
 public sealed record UserResult(User? User, UserError? Error)
@@ -199,6 +202,13 @@ public sealed class UserService(
         var wasActiveAdmin = user is { Role: UserRole.Admin, Disabled: false };
         var role = change.Role ?? user.Role;
         var disabled = change.Disabled ?? user.Disabled;
+        if (!disabled && user.DeletionScheduledAt is not null)
+        {
+            // Enabling an account whose files are about to be removed would
+            // let someone work in it until the deletion runs.
+            return UserResult.Fail(UserError.DeletionScheduled);
+        }
+
         var staysActiveAdmin = role == UserRole.Admin && !disabled;
         if (wasActiveAdmin && !staysActiveAdmin
             && !await db.Users.AnyAsync(u => u.Id != userId && u.Role == UserRole.Admin && !u.Disabled, ct))

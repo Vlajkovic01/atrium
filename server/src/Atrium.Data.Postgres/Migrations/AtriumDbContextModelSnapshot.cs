@@ -586,6 +586,12 @@ namespace Atrium.Data.Postgres.Migrations
                     b.Property<long>("CreatedAt")
                         .HasColumnType("bigint");
 
+                    b.Property<long?>("DeleteAfter")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DeletionScheduledAt")
+                        .HasColumnType("bigint");
+
                     b.Property<bool>("Disabled")
                         .HasColumnType("boolean");
 

@@ -47,7 +47,11 @@
       "weak_password": "Lozinka ima najmanje {minLength} znakova.",
       "invalid_locale": "Taj jezik nije dostupan.",
       "invalid_quota": "Kvota ne može biti negativna.",
-      "last_admin": "Ovo je jedini aktivni administrator. Prvo dodelite administratorska prava nekom drugom."
+      "last_admin": "Ovo je jedini aktivni administrator. Prvo dodelite administratorska prava nekom drugom.",
+      "deletion_scheduled": "Brisanje ovog naloga je zakazano. Prvo otkažite brisanje.",
+      "deletion_not_scheduled": "Brisanje ovog naloga nije zakazano.",
+      "confirmation_mismatch": "Za potvrdu tačno upišite ime naloga.",
+      "cannot_delete_self": "Ne možete da obrišete sopstveni nalog."
     },
     "setup": {
       "already_done": "Ovaj server već ima administratora. Prijavite se.",

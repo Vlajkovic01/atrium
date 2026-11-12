@@ -43,5 +43,14 @@ public sealed class User : IVersioned
     /// </summary>
     public bool PasswordResetByAdmin { get; set; }
 
+    /// <summary>
+    /// When an admin scheduled this account for deletion (D-025). The account
+    /// is disabled meanwhile, and its files are removed at
+    /// <see cref="DeleteAfter"/> unless the deletion is cancelled.
+    /// </summary>
+    public DateTimeOffset? DeletionScheduledAt { get; set; }
+
+    public DateTimeOffset? DeleteAfter { get; set; }
+
     public int Version { get; set; }
 }

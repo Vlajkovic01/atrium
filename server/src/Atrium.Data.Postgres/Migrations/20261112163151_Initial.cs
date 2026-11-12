@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Atrium.Data.Sqlite.Migrations
+namespace Atrium.Data.Postgres.Migrations
 {
     /// <inheritdoc />
     public partial class Initial : Migration
@@ -15,10 +15,10 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "Settings",
                 columns: table => new
                 {
-                    Key = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    Value = table.Column<string>(type: "TEXT", nullable: false),
-                    IsSecret = table.Column<bool>(type: "INTEGER", nullable: false),
-                    UpdatedAt = table.Column<long>(type: "INTEGER", nullable: false)
+                    Key = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    Value = table.Column<string>(type: "text", nullable: false),
+                    IsSecret = table.Column<bool>(type: "boolean", nullable: false),
+                    UpdatedAt = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -29,14 +29,14 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "StorageLocations",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    Kind = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    EncryptedConfig = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    State = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    LastCheckedAt = table.Column<long>(type: "INTEGER", nullable: true),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    Kind = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    EncryptedConfig = table.Column<byte[]>(type: "bytea", nullable: false),
+                    State = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    LastCheckedAt = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    Version = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -47,19 +47,21 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    NameKey = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    DisplayName = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", maxLength: 512, nullable: false),
-                    Role = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    Locale = table.Column<string>(type: "TEXT", maxLength: 16, nullable: false),
-                    QuotaBytes = table.Column<long>(type: "INTEGER", nullable: true),
-                    Disabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    PasswordChangedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    PasswordResetByAdmin = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    NameKey = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    DisplayName = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    PasswordHash = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
+                    Role = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    Locale = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                    QuotaBytes = table.Column<long>(type: "bigint", nullable: true),
+                    Disabled = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    PasswordChangedAt = table.Column<long>(type: "bigint", nullable: false),
+                    PasswordResetByAdmin = table.Column<bool>(type: "boolean", nullable: false),
+                    DeletionScheduledAt = table.Column<long>(type: "bigint", nullable: true),
+                    DeleteAfter = table.Column<long>(type: "bigint", nullable: true),
+                    Version = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -70,13 +72,13 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "Blobs",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    StorageLocationId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Sha256 = table.Column<byte[]>(type: "BLOB", maxLength: 32, nullable: false),
-                    Size = table.Column<long>(type: "INTEGER", nullable: false),
-                    State = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    PendingDeleteSince = table.Column<long>(type: "INTEGER", nullable: true),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StorageLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Sha256 = table.Column<byte[]>(type: "bytea", maxLength: 32, nullable: false),
+                    Size = table.Column<long>(type: "bigint", nullable: false),
+                    State = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    PendingDeleteSince = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -93,29 +95,29 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "Jobs",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Type = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
-                    Payload = table.Column<string>(type: "TEXT", nullable: true),
-                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
-                    ResourceClass = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    State = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    OwnerUserId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    ParentJobId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    DedupeKey = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    ActiveDedupeKey = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    Progress = table.Column<double>(type: "REAL", nullable: true),
-                    Checkpoint = table.Column<string>(type: "TEXT", nullable: true),
-                    Attempts = table.Column<int>(type: "INTEGER", nullable: false),
-                    MaxAttempts = table.Column<int>(type: "INTEGER", nullable: false),
-                    RunAfter = table.Column<long>(type: "INTEGER", nullable: false),
-                    LeaseOwner = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
-                    LeaseExpiresAt = table.Column<long>(type: "INTEGER", nullable: true),
-                    CancelRequested = table.Column<bool>(type: "INTEGER", nullable: false),
-                    ErrorCode = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),
-                    ErrorDetail = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    StartedAt = table.Column<long>(type: "INTEGER", nullable: true),
-                    FinishedAt = table.Column<long>(type: "INTEGER", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Type = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    Payload = table.Column<string>(type: "text", nullable: true),
+                    Priority = table.Column<int>(type: "integer", nullable: false),
+                    ResourceClass = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    State = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    OwnerUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ParentJobId = table.Column<Guid>(type: "uuid", nullable: true),
+                    DedupeKey = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    ActiveDedupeKey = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    Progress = table.Column<double>(type: "double precision", nullable: true),
+                    Checkpoint = table.Column<string>(type: "text", nullable: true),
+                    Attempts = table.Column<int>(type: "integer", nullable: false),
+                    MaxAttempts = table.Column<int>(type: "integer", nullable: false),
+                    RunAfter = table.Column<long>(type: "bigint", nullable: false),
+                    LeaseOwner = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    LeaseExpiresAt = table.Column<long>(type: "bigint", nullable: true),
+                    CancelRequested = table.Column<bool>(type: "boolean", nullable: false),
+                    ErrorCode = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    ErrorDetail = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    StartedAt = table.Column<long>(type: "bigint", nullable: true),
+                    FinishedAt = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -138,16 +140,16 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "Libraries",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    Kind = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    Mode = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    StorageLocationId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    OwnerUserId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    RootNodeId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ReadOnly = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    Kind = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    Mode = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    StorageLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    OwnerUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    RootNodeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ReadOnly = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    Version = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -170,12 +172,12 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "LinkCodes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CodeHash = table.Column<byte[]>(type: "BLOB", maxLength: 32, nullable: false),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    ExpiresAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    UsedAt = table.Column<long>(type: "INTEGER", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CodeHash = table.Column<byte[]>(type: "bytea", maxLength: 32, nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    ExpiresAt = table.Column<long>(type: "bigint", nullable: false),
+                    UsedAt = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -192,10 +194,10 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "RecoveryCodes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    CodeHash = table.Column<byte[]>(type: "BLOB", maxLength: 32, nullable: false),
-                    UsedAt = table.Column<long>(type: "INTEGER", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CodeHash = table.Column<byte[]>(type: "bytea", maxLength: 32, nullable: false),
+                    UsedAt = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -212,18 +214,18 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "Sessions",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DeviceName = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    DeviceKind = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    Platform = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
-                    AppVersion = table.Column<string>(type: "TEXT", maxLength: 32, nullable: true),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    LastSeenAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    LastIp = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
-                    RevokedAt = table.Column<long>(type: "INTEGER", nullable: true),
-                    ReadOnly = table.Column<bool>(type: "INTEGER", nullable: false),
-                    HidePersonalLibrary = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    DeviceName = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    DeviceKind = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    Platform = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    AppVersion = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: true),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    LastSeenAt = table.Column<long>(type: "bigint", nullable: false),
+                    LastIp = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    RevokedAt = table.Column<long>(type: "bigint", nullable: true),
+                    ReadOnly = table.Column<bool>(type: "boolean", nullable: false),
+                    HidePersonalLibrary = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -240,12 +242,12 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "TotpCredentials",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    EncryptedSecret = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    ConfirmedAt = table.Column<long>(type: "INTEGER", nullable: true),
-                    LastUsedStep = table.Column<long>(type: "INTEGER", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    EncryptedSecret = table.Column<byte[]>(type: "bytea", nullable: false),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    ConfirmedAt = table.Column<long>(type: "bigint", nullable: true),
+                    LastUsedStep = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -262,22 +264,22 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "Nodes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    LibraryId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ParentId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    NameKey = table.Column<string>(type: "TEXT", maxLength: 510, nullable: false),
-                    ActiveNameKey = table.Column<string>(type: "TEXT", maxLength: 510, nullable: true),
-                    Kind = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    BlobId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    Size = table.Column<long>(type: "INTEGER", nullable: false),
-                    MediaType = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),
-                    ModifiedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    UpdatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    CreatedByUserId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    TrashedAt = table.Column<long>(type: "INTEGER", nullable: true),
-                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    LibraryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ParentId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    NameKey = table.Column<string>(type: "character varying(510)", maxLength: 510, nullable: false),
+                    ActiveNameKey = table.Column<string>(type: "character varying(510)", maxLength: 510, nullable: true),
+                    Kind = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    BlobId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Size = table.Column<long>(type: "bigint", nullable: false),
+                    MediaType = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    ModifiedAt = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    TrashedAt = table.Column<long>(type: "bigint", nullable: true),
+                    Version = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -312,29 +314,29 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "Uploads",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    LibraryId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    ParentId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    StorageLocationId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    MediaType = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),
-                    Length = table.Column<long>(type: "INTEGER", nullable: false),
-                    Offset = table.Column<long>(type: "INTEGER", nullable: false),
-                    ChunkSize = table.Column<long>(type: "INTEGER", nullable: false),
-                    ConflictPolicy = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    ModifiedAt = table.Column<long>(type: "INTEGER", nullable: true),
-                    ExpectedSha256 = table.Column<byte[]>(type: "BLOB", maxLength: 32, nullable: true),
-                    State = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    StagingKey = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
-                    MultipartUploadId = table.Column<string>(type: "TEXT", maxLength: 1024, nullable: false),
-                    Parts = table.Column<string>(type: "TEXT", nullable: false),
-                    NodeId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    ErrorCode = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    UpdatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    ExpiresAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    Version = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    LibraryId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ParentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    StorageLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    MediaType = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    Length = table.Column<long>(type: "bigint", nullable: false),
+                    Offset = table.Column<long>(type: "bigint", nullable: false),
+                    ChunkSize = table.Column<long>(type: "bigint", nullable: false),
+                    ConflictPolicy = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    ModifiedAt = table.Column<long>(type: "bigint", nullable: true),
+                    ExpectedSha256 = table.Column<byte[]>(type: "bytea", maxLength: 32, nullable: true),
+                    State = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    StagingKey = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    MultipartUploadId = table.Column<string>(type: "character varying(1024)", maxLength: 1024, nullable: false),
+                    Parts = table.Column<string>(type: "text", nullable: false),
+                    NodeId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ErrorCode = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    ExpiresAt = table.Column<long>(type: "bigint", nullable: false),
+                    Version = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -363,21 +365,21 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "PairingRequests",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    DeviceCodeHash = table.Column<byte[]>(type: "BLOB", maxLength: 32, nullable: false),
-                    UserCode = table.Column<string>(type: "TEXT", maxLength: 16, nullable: false),
-                    DeviceName = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    DeviceKind = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    Platform = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
-                    AppVersion = table.Column<string>(type: "TEXT", maxLength: 32, nullable: true),
-                    RequestIp = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
-                    State = table.Column<string>(type: "TEXT", maxLength: 32, nullable: false),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    ExpiresAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    ApprovedByUserId = table.Column<Guid>(type: "TEXT", nullable: true),
-                    ReadOnly = table.Column<bool>(type: "INTEGER", nullable: false),
-                    HidePersonalLibrary = table.Column<bool>(type: "INTEGER", nullable: false),
-                    SessionId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    DeviceCodeHash = table.Column<byte[]>(type: "bytea", maxLength: 32, nullable: false),
+                    UserCode = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
+                    DeviceName = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    DeviceKind = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    Platform = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    AppVersion = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: true),
+                    RequestIp = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    State = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    ExpiresAt = table.Column<long>(type: "bigint", nullable: false),
+                    ApprovedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReadOnly = table.Column<bool>(type: "boolean", nullable: false),
+                    HidePersonalLibrary = table.Column<bool>(type: "boolean", nullable: false),
+                    SessionId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -400,13 +402,13 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "RefreshTokens",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    SessionId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    TokenHash = table.Column<byte[]>(type: "BLOB", maxLength: 32, nullable: false),
-                    IssuedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    ExpiresAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    UsedAt = table.Column<long>(type: "INTEGER", nullable: true),
-                    ReplacedById = table.Column<Guid>(type: "TEXT", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    SessionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TokenHash = table.Column<byte[]>(type: "bytea", maxLength: 32, nullable: false),
+                    IssuedAt = table.Column<long>(type: "bigint", nullable: false),
+                    ExpiresAt = table.Column<long>(type: "bigint", nullable: false),
+                    UsedAt = table.Column<long>(type: "bigint", nullable: true),
+                    ReplacedById = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -423,13 +425,13 @@ namespace Atrium.Data.Sqlite.Migrations
                 name: "NodeVersions",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    NodeId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    BlobId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Size = table.Column<long>(type: "INTEGER", nullable: false),
-                    ModifiedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<long>(type: "INTEGER", nullable: false),
-                    CreatedByUserId = table.Column<Guid>(type: "TEXT", nullable: true)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    NodeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    BlobId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Size = table.Column<long>(type: "bigint", nullable: false),
+                    ModifiedAt = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedAt = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedByUserId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
