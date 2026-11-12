@@ -2,6 +2,7 @@ using System.Globalization;
 using Atrium.Api.Auth;
 using Atrium.Core.Identity;
 using Atrium.Data;
+using Atrium.Files.Users;
 using Atrium.Identity.Users;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -23,7 +24,9 @@ public sealed record AdminUserView(
     string Locale,
     DateTimeOffset CreatedAt,
     bool TotpEnabled,
-    int Version);
+    int Version,
+    DateTimeOffset? DeletionScheduledAt,
+    DateTimeOffset? DeleteAfter);
 
 public sealed record UserPage(IReadOnlyList<AdminUserView> Items, string? NextCursor);
 
@@ -34,6 +37,12 @@ public sealed record CreateUserRequest(
 public sealed record UpdateUserRequest(string? DisplayName, UserRole? Role, bool? Disabled, long? QuotaBytes, bool ClearQuota);
 
 public sealed record ResetPasswordRequest(string NewPassword);
+
+/// <param name="ConfirmName">The account's name, typed by the admin to show they mean this account.</param>
+public sealed record ScheduleDeletionRequest(string ConfirmName);
+
+/// <summary>What deleting the account would remove: counts and sizes only (D-004).</summary>
+public sealed record DeletionInfo(int Files, int Folders, long Bytes, DateTimeOffset? DeletionScheduledAt, DateTimeOffset? DeleteAfter);
 
 public static class UserEndpoints
 {
@@ -62,6 +71,17 @@ public static class UserEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status412PreconditionFailed)
             .ProducesProblem(StatusCodes.Status428PreconditionRequired);
+
+        users.MapGet("/{id:guid}/deletion", DeletionInfoAsync).WithName("GetUserDeletion").ProducesProblem(StatusCodes.Status404NotFound);
+        users.MapPost("/{id:guid}/deletion", ScheduleDeletionAsync)
+            .WithName("ScheduleUserDeletion")
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
+        users.MapDelete("/{id:guid}/deletion", CancelDeletionAsync)
+            .WithName("CancelUserDeletion")
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict);
 
         users.MapPost("/{id:guid}/reset-password", ResetPasswordAsync)
             .WithName("ResetUserPassword")
@@ -185,6 +205,58 @@ public static class UserEndpoints
         return TypedResults.NoContent();
     }
 
+    private static async Task<Results<Ok<DeletionInfo>, ProblemHttpResult>> DeletionInfoAsync(
+        Guid id, AtriumDbContext db, UserDeletionService deletion, CancellationToken ct)
+    {
+        var user = await db.Users.AsNoTracking().SingleOrDefaultAsync(u => u.Id == id, ct);
+        if (user is null || await deletion.ImpactAsync(id, ct) is not { } impact)
+        {
+            return ApiProblem.Missing();
+        }
+
+        return TypedResults.Ok(new DeletionInfo(impact.Files, impact.Folders, impact.Bytes, user.DeletionScheduledAt, user.DeleteAfter));
+    }
+
+    private static async Task<Results<Ok<AdminUserView>, ProblemHttpResult>> ScheduleDeletionAsync(
+        Guid id, ScheduleDeletionRequest request, HttpContext http, UserDeletionService deletion, AtriumDbContext db,
+        ILoggerFactory loggers, CancellationToken ct)
+    {
+        var adminId = http.User.UserId()!.Value;
+        var (user, error) = await deletion.ScheduleAsync(adminId, id, request.ConfirmName, ct);
+        if (user is null)
+        {
+            return Deletion(error!.Value);
+        }
+
+        loggers.CreateLogger("Atrium.Audit").LogWarning(
+            "Admin {AdminId} scheduled user {UserId} for deletion after {DeleteAfter}.", adminId, id, user.DeleteAfter);
+        return TypedResults.Ok(ToView(user, await HasTotpAsync(db, id, ct)));
+    }
+
+    private static async Task<Results<Ok<AdminUserView>, ProblemHttpResult>> CancelDeletionAsync(
+        Guid id, HttpContext http, UserDeletionService deletion, AtriumDbContext db, ILoggerFactory loggers, CancellationToken ct)
+    {
+        var (user, error) = await deletion.CancelAsync(id, ct);
+        if (user is null)
+        {
+            return Deletion(error!.Value);
+        }
+
+        loggers.CreateLogger("Atrium.Audit").LogWarning(
+            "Admin {AdminId} cancelled the deletion of user {UserId}.", http.User.UserId(), id);
+        return TypedResults.Ok(ToView(user, await HasTotpAsync(db, id, ct)));
+    }
+
+    private static ProblemHttpResult Deletion(DeletionError error) => error switch
+    {
+        DeletionError.NotFound => ApiProblem.Missing(),
+        DeletionError.Self => ApiProblem.Create(StatusCodes.Status409Conflict, ApiProblem.UserCannotDeleteSelf),
+        DeletionError.ConfirmationMismatch => ApiProblem.Create(StatusCodes.Status400BadRequest, ApiProblem.UserConfirmationMismatch),
+        DeletionError.LastAdmin => ApiProblem.Create(StatusCodes.Status409Conflict, ApiProblem.UserLastAdmin),
+        DeletionError.AlreadyScheduled => ApiProblem.Create(StatusCodes.Status409Conflict, ApiProblem.UserDeletionScheduled),
+        _ => ApiProblem.Create(StatusCodes.Status409Conflict, ApiProblem.UserNotScheduled),
+    };
+
     private static Task<bool> HasTotpAsync(AtriumDbContext db, Guid userId, CancellationToken ct) =>
         db.TotpCredentials.AnyAsync(t => t.UserId == userId && t.ConfirmedAt != null, ct);
 
@@ -200,5 +272,5 @@ public static class UserEndpoints
 
     private static AdminUserView ToView(User user, bool totpEnabled) => new(
         user.Id, user.Name, user.DisplayName, user.Role, user.Disabled, user.QuotaBytes,
-        user.Locale, user.CreatedAt, totpEnabled, user.Version);
+        user.Locale, user.CreatedAt, totpEnabled, user.Version, user.DeletionScheduledAt, user.DeleteAfter);
 }

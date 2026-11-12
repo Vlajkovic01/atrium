@@ -581,6 +581,12 @@ namespace Atrium.Data.Sqlite.Migrations
                     b.Property<long>("CreatedAt")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("DeleteAfter")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("DeletionScheduledAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("Disabled")
                         .HasColumnType("INTEGER");
 

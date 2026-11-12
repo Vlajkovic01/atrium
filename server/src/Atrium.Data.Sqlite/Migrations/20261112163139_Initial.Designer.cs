@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atrium.Data.Sqlite.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261112154148_Initial")]
+    [Migration("20261112163139_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -582,6 +582,12 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("DeleteAfter")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("DeletionScheduledAt")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("Disabled")

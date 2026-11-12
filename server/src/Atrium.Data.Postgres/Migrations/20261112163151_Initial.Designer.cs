@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Atrium.Data.Postgres.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261112154212_Initial")]
+    [Migration("20261112163151_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -587,6 +587,12 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<long>("CreatedAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DeleteAfter")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("DeletionScheduledAt")
                         .HasColumnType("bigint");
 
                     b.Property<bool>("Disabled")

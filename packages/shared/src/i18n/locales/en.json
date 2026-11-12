@@ -47,7 +47,11 @@
       "weak_password": "A password has at least {minLength} characters.",
       "invalid_locale": "That language is not available.",
       "invalid_quota": "A quota cannot be negative.",
-      "last_admin": "This is the only active admin. Make someone else an admin first."
+      "last_admin": "This is the only active admin. Make someone else an admin first.",
+      "deletion_scheduled": "This account is scheduled for deletion. Cancel the deletion first.",
+      "deletion_not_scheduled": "This account is not scheduled for deletion.",
+      "confirmation_mismatch": "Type the account's name exactly to confirm.",
+      "cannot_delete_self": "You cannot delete your own account."
     },
     "setup": {
       "already_done": "This server already has an admin. Sign in instead.",

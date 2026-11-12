@@ -42,6 +42,10 @@ public static class ApiProblem
     public const string UserInvalidLocale = "user.invalid_locale";
     public const string UserInvalidQuota = "user.invalid_quota";
     public const string UserLastAdmin = "user.last_admin";
+    public const string UserDeletionScheduled = "user.deletion_scheduled";
+    public const string UserNotScheduled = "user.deletion_not_scheduled";
+    public const string UserConfirmationMismatch = "user.confirmation_mismatch";
+    public const string UserCannotDeleteSelf = "user.cannot_delete_self";
 
     public static ProblemHttpResult From(UserError error) => error switch
     {
@@ -64,6 +68,7 @@ public static class ApiProblem
         UserError.InvalidQuota => Create(StatusCodes.Status400BadRequest, UserInvalidQuota),
         UserError.LastAdmin => Create(StatusCodes.Status409Conflict, UserLastAdmin),
         UserError.VersionConflict => Create(StatusCodes.Status412PreconditionFailed, VersionConflict),
+        UserError.DeletionScheduled => Create(StatusCodes.Status409Conflict, UserDeletionScheduled),
         _ => Invalid(),
     };
 

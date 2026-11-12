@@ -1459,6 +1459,165 @@
         }
       }
     },
+    "/api/v1/users/{id}/deletion": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "GetUserDeletion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletionInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "ScheduleUserDeletion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleDeletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "operationId": "CancelUserDeletion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/users/{id}/reset-password": {
       "post": {
         "tags": [
@@ -3060,7 +3219,47 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BackupStarted"
+                  "$ref": "#/components/schemas/JobStarted"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/integrity": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "GetIntegrity",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrityStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/integrity/check": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "StartIntegrityCheck",
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStarted"
                 }
               }
             }
@@ -3082,7 +3281,9 @@
           "locale",
           "createdAt",
           "totpEnabled",
-          "version"
+          "version",
+          "deletionScheduledAt",
+          "deleteAfter"
         ],
         "type": "object",
         "properties": {
@@ -3128,6 +3329,20 @@
               "string"
             ],
             "format": "int32"
+          },
+          "deletionScheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "deleteAfter": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -3187,18 +3402,6 @@
           },
           "reason": {
             "type": "string"
-          }
-        }
-      },
-      "BackupStarted": {
-        "required": [
-          "jobId"
-        ],
-        "type": "object",
-        "properties": {
-          "jobId": {
-            "type": "string",
-            "format": "uuid"
           }
         }
       },
@@ -3459,6 +3662,56 @@
           }
         }
       },
+      "DeletionInfo": {
+        "required": [
+          "files",
+          "folders",
+          "bytes",
+          "deletionScheduledAt",
+          "deleteAfter"
+        ],
+        "type": "object",
+        "properties": {
+          "files": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "folders": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "bytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "deletionScheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "deleteAfter": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "DeviceKind": {
         "enum": [
           "web",
@@ -3548,6 +3801,143 @@
         "properties": {
           "status": {
             "type": "string"
+          }
+        }
+      },
+      "IntegrityIssue": {
+        "required": [
+          "problem",
+          "locationId",
+          "key",
+          "blobId"
+        ],
+        "type": "object",
+        "properties": {
+          "problem": {
+            "$ref": "#/components/schemas/IntegrityProblem"
+          },
+          "locationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "blobId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "IntegrityProblem": {
+        "enum": [
+          "missing",
+          "damaged",
+          "unknown",
+          "locationUnavailable"
+        ]
+      },
+      "IntegrityReport": {
+        "required": [
+          "startedAt",
+          "finishedAt",
+          "blobsChecked",
+          "bytesChecked",
+          "missing",
+          "damaged",
+          "unknown",
+          "issues"
+        ],
+        "type": "object",
+        "properties": {
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "blobsChecked": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "bytesChecked": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "missing": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "damaged": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "unknown": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrityIssue"
+            }
+          }
+        }
+      },
+      "IntegrityStatus": {
+        "required": [
+          "report",
+          "runningJobId"
+        ],
+        "type": "object",
+        "properties": {
+          "report": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/IntegrityReport"
+              }
+            ]
+          },
+          "runningJobId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -3679,6 +4069,18 @@
           "background",
           "idle"
         ]
+      },
+      "JobStarted": {
+        "required": [
+          "jobId"
+        ],
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
       },
       "JobState": {
         "enum": [
@@ -4190,6 +4592,17 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ScheduleDeletionRequest": {
+        "required": [
+          "confirmName"
+        ],
+        "type": "object",
+        "properties": {
+          "confirmName": {
+            "type": "string"
           }
         }
       },

@@ -519,6 +519,22 @@ export interface paths {
         patch: operations["UpdateUser"];
         trace?: never;
     };
+    "/api/v1/users/{id}/deletion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetUserDeletion"];
+        put?: never;
+        post: operations["ScheduleUserDeletion"];
+        delete: operations["CancelUserDeletion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/{id}/reset-password": {
         parameters: {
             query?: never;
@@ -921,6 +937,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/integrity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetIntegrity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/integrity/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StartIntegrityCheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -940,6 +988,10 @@ export interface components {
             totpEnabled: boolean;
             /** Format: int32 */
             version: number | string;
+            /** Format: date-time */
+            deletionScheduledAt: null | string;
+            /** Format: date-time */
+            deleteAfter: null | string;
         };
         ApprovePairingRequest: {
             readOnly: boolean;
@@ -955,10 +1007,6 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             reason: string;
-        };
-        BackupStarted: {
-            /** Format: uuid */
-            jobId: string;
         };
         BatchItemResult: {
             /** Format: uuid */
@@ -1018,6 +1066,18 @@ export interface components {
             quotaBytes: null | number | string;
             locale: null | string;
         };
+        DeletionInfo: {
+            /** Format: int32 */
+            files: number | string;
+            /** Format: int32 */
+            folders: number | string;
+            /** Format: int64 */
+            bytes: number | string;
+            /** Format: date-time */
+            deletionScheduledAt: null | string;
+            /** Format: date-time */
+            deleteAfter: null | string;
+        };
         /** @enum {unknown} */
         DeviceKind: "web" | "mobile" | "tv" | "other";
         DeviceRequest: {
@@ -1038,6 +1098,38 @@ export interface components {
         };
         HealthStatus: {
             status: string;
+        };
+        IntegrityIssue: {
+            problem: components["schemas"]["IntegrityProblem"];
+            /** Format: uuid */
+            locationId: string;
+            key: null | string;
+            /** Format: uuid */
+            blobId: null | string;
+        };
+        /** @enum {unknown} */
+        IntegrityProblem: "missing" | "damaged" | "unknown" | "locationUnavailable";
+        IntegrityReport: {
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            finishedAt: null | string;
+            /** Format: int64 */
+            blobsChecked: number | string;
+            /** Format: int64 */
+            bytesChecked: number | string;
+            /** Format: int64 */
+            missing: number | string;
+            /** Format: int64 */
+            damaged: number | string;
+            /** Format: int64 */
+            unknown: number | string;
+            issues: components["schemas"]["IntegrityIssue"][];
+        };
+        IntegrityStatus: {
+            report: null | components["schemas"]["IntegrityReport"];
+            /** Format: uuid */
+            runningJobId: null | string;
         };
         JobInfo: {
             /** Format: uuid */
@@ -1070,6 +1162,10 @@ export interface components {
         };
         /** @enum {unknown} */
         JobPriority: "interactive" | "user" | "background" | "idle";
+        JobStarted: {
+            /** Format: uuid */
+            jobId: string;
+        };
         /** @enum {unknown} */
         JobState: "queued" | "running" | "succeeded" | "failed" | "cancelled";
         LibraryInfo: {
@@ -1193,6 +1289,9 @@ export interface components {
             region: null | string;
             forcePathStyle: boolean;
             keyPrefix: null | string;
+        };
+        ScheduleDeletionRequest: {
+            confirmName: string;
         };
         SessionInfo: {
             /** Format: uuid */
@@ -2614,6 +2713,130 @@ export interface operations {
             };
         };
     };
+    GetUserDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletionInfo"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ScheduleUserDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleDeletionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    CancelUserDeletion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     ResetUserPassword: {
         parameters: {
             query?: never;
@@ -3863,7 +4086,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BackupStarted"];
+                    "application/json": components["schemas"]["JobStarted"];
+                };
+            };
+        };
+    };
+    GetIntegrity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrityStatus"];
+                };
+            };
+        };
+    };
+    StartIntegrityCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobStarted"];
                 };
             };
         };
