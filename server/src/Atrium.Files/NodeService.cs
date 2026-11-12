@@ -565,7 +565,7 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
         });
 
     /// <summary>The live part of a subtree, parents before children; anything in or under a trashed node is left out.</summary>
-    internal static List<Node> LiveSubtree(Guid rootId, List<Node> descendants)
+    public static List<Node> LiveSubtree(Guid rootId, List<Node> descendants)
     {
         var byParent = descendants.ToLookup(n => n.ParentId!.Value);
         var result = new List<Node>();

@@ -128,9 +128,15 @@ Someone else's node answers 404 for every operation, the same as a node
 that does not exist; this includes admins (D-004). A full quota answers
 507 `files.quota_exceeded` with `quotaBytes`, `usedBytes` and
 `neededBytes`.
-| GET | `/nodes/{id}/content` | Download or direct play; `Range` supported |
-| POST | `/nodes/{id}/content-url` | Issue a signed URL |
-| POST | `/downloads/archive` | Several nodes or a folder as a streamed ZIP |
+| GET, HEAD | `/nodes/{id}/content` | Download or direct play. One `Range` per request (several answer with the whole file), `If-Range`, `If-None-Match`; the `ETag` is the content's SHA-256. Bearer token or signed URL |
+| POST | `/nodes/{id}/content-url` | Issue a signed URL valid for one hour. `inline: true` asks to show rather than save; `versionId` signs an earlier version |
+| GET | `/nodes/{id}/versions/{version}/content` | An earlier version, always as a download |
+| POST | `/downloads/archive` | Up to 1,000 files and folders; returns a signed URL that streams the ZIP. Folders include everything in them not in the trash, at most 50,000 items |
+
+Content is always served with `Content-Security-Policy: sandbox` and
+`nosniff`. It is shown inline only for images, video, audio, PDF and
+plain text, and only when asked; everything else, including HTML and
+SVG, is a download with the type `application/octet-stream`.
 | GET | `/trash` | The user's trashed items with size, item count and the date retention removes them |
 | POST | `/trash/{id}/restore` | Back to the original parent, or to `parentId`, which is required when the original folder is in the trash too. `onConflict`: `fail` or `rename` |
 | DELETE | `/trash/{id}`, `/trash` | Remove permanently, empty trash. Rows only; content follows through the blob collector |
