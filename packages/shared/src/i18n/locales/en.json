@@ -77,7 +77,21 @@
       "lease_lost": "The task was interrupted and will be started again."
     },
     "files": {
-      "no_storage": "This server has no storage location yet. An admin has to add one before files can be stored."
+      "no_storage": "This server has no storage location yet. An admin has to add one before files can be stored.",
+      "quota_exceeded": "There is not enough space left in your storage quota."
+    },
+    "node": {
+      "invalid_name": "That name cannot be used. Names cannot contain / or \\, end with a dot or a space, or be a reserved name such as CON.",
+      "name_conflict": "Something with that name is already in this folder.",
+      "not_a_folder": "This is a file, not a folder.",
+      "not_a_file": "This is a folder, not a file.",
+      "move_into_itself": "A folder cannot be moved or copied into itself.",
+      "read_only": "You can look at this, but not change it.",
+      "in_trash": "This item is in the trash. Restore it first.",
+      "not_in_trash": "This item is not in the trash.",
+      "is_root": "The top folder of a library cannot be changed.",
+      "cross_library": "Items cannot be moved between libraries.",
+      "too_many_items": "This folder holds too many items to copy at once (more than {max})."
     }
   },
   "nav": {

@@ -83,6 +83,8 @@ v1.MapUserEndpoints();
 v1.MapStorageLocationEndpoints();
 v1.MapJobEndpoints();
 v1.MapLibraryEndpoints();
+v1.MapNodeEndpoints();
+v1.MapTrashEndpoints();
 
 await app.RunAsync();
 return 0;

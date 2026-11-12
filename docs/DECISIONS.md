@@ -283,3 +283,18 @@ added. Any of them can still be overruled.
 - Reasons: from Phase 2 on, file names and folders exist only in the
   database (D-002). Losing it without a backup loses every file in a
   usable form, so the backup has to exist as soon as files do.
+
+## D-027 The change feed moves to Phase 4 (Proposed, Phase 2)
+
+- Decision: `GET /changes` and its change log are built with the mobile
+  app in Phase 4, not in Phase 2.
+- Alternatives: build the log now so that history exists from the start.
+- Reasons: its only consumers are sync and offline copies on mobile, and
+  their needs (what a change entry carries, how long the log is kept,
+  what a client does when its cursor is too old) are best settled with
+  them. A client that starts syncing lists the tree once and follows the
+  feed from then on, so no history is lost by starting the log later.
+- Also decided in this PR: a folder listing pages by offset. Keyset
+  paging over several sort orders is more code than a folder of a few
+  thousand items needs; it can change without breaking clients, because
+  the cursor is opaque.

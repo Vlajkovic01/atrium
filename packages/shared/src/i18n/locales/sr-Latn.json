@@ -77,7 +77,21 @@
       "lease_lost": "Zadatak je prekinut i biće ponovo pokrenut."
     },
     "files": {
-      "no_storage": "Ovaj server još nema lokaciju za skladištenje. Administrator mora da je doda pre nego što fajlovi mogu da se čuvaju."
+      "no_storage": "Ovaj server još nema lokaciju za skladištenje. Administrator mora da je doda pre nego što fajlovi mogu da se čuvaju.",
+      "quota_exceeded": "U vašoj kvoti nema dovoljno slobodnog prostora."
+    },
+    "node": {
+      "invalid_name": "To ime ne može da se koristi. Ime ne sme da sadrži / ili \\, da se završava tačkom ili razmakom, niti da bude rezervisano ime kao što je CON.",
+      "name_conflict": "U ovom folderu već postoji nešto sa tim imenom.",
+      "not_a_folder": "Ovo je fajl, a ne folder.",
+      "not_a_file": "Ovo je folder, a ne fajl.",
+      "move_into_itself": "Folder ne može da se premesti ili kopira u samog sebe.",
+      "read_only": "Ovo možete da pregledate, ali ne i da menjate.",
+      "in_trash": "Ova stavka je u korpi. Prvo je vratite.",
+      "not_in_trash": "Ova stavka nije u korpi.",
+      "is_root": "Glavni folder biblioteke ne može da se menja.",
+      "cross_library": "Stavke ne mogu da se premeštaju između biblioteka.",
+      "too_many_items": "Ovaj folder ima previše stavki da bi se kopirao odjednom (više od {max})."
     }
   },
   "nav": {

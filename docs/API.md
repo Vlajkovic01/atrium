@@ -115,21 +115,27 @@ approve pairings or create link codes.
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/nodes/{id}` | Metadata |
-| GET | `/nodes/{id}/children` | Sort by name, date, size, type; filter by type |
-| GET | `/nodes/{id}/path` | Ancestors for breadcrumbs |
-| POST | `/nodes` | Create a folder |
-| PATCH | `/nodes/{id}` | Rename or move (`name`, `parentId`) |
-| POST | `/nodes/{id}/copy` | Copy; no bytes move in a managed library |
-| DELETE | `/nodes/{id}` | Move to trash |
-| POST | `/nodes/batch` | Move, copy or trash many, one result per item |
+| GET | `/nodes/{id}` | Metadata, with `ETag` set to the version |
+| GET | `/nodes/{id}/children` | Folders first, then `sort` = `name`, `modified`, `size` or `type`, `descending`; filter by `kind`. Cursor pagination with a total |
+| GET | `/nodes/{id}/path` | Ancestors for breadcrumbs, root first |
+| POST | `/nodes` | Create a folder. 409 `node.name_conflict` carries `existingId`, so a retried request can recognize its own folder |
+| PATCH | `/nodes/{id}` | Rename or move (`name`, `parentId`). Requires `If-Match` |
+| POST | `/nodes/{id}/copy` | Copy; no bytes move in a managed library. Without a name in the same folder the copy is numbered. At most 10,000 items |
+| DELETE | `/nodes/{id}` | Move to trash; `If-Match` optional |
+| POST | `/nodes/batch` | Move, copy or trash up to 1,000 items, one result per item |
+
+Someone else's node answers 404 for every operation, the same as a node
+that does not exist; this includes admins (D-004). A full quota answers
+507 `files.quota_exceeded` with `quotaBytes`, `usedBytes` and
+`neededBytes`.
 | GET | `/nodes/{id}/content` | Download or direct play; `Range` supported |
 | POST | `/nodes/{id}/content-url` | Issue a signed URL |
 | POST | `/downloads/archive` | Several nodes or a folder as a streamed ZIP |
-| GET | `/trash` | The user's trashed items |
-| POST | `/trash/{id}/restore` | Back to the original parent, or a given one if it is gone |
-| DELETE | `/trash/{id}`, `/trash` | Remove permanently, empty trash |
-| GET | `/changes?cursor=` | Change feed for sync and offline copies |
+| GET | `/trash` | The user's trashed items with size, item count and the date retention removes them |
+| POST | `/trash/{id}/restore` | Back to the original parent, or to `parentId`, which is required when the original folder is in the trash too. `onConflict`: `fail` or `rename` |
+| DELETE | `/trash/{id}`, `/trash` | Remove permanently, empty trash. Rows only; content follows through the blob collector |
+| GET | `/changes?cursor=` | Change feed for sync and offline copies. Moved to Phase 4 (D-027) |
+| GET | `/me/usage` | Used bytes split into files, trash and versions, and the quota |
 
 Uploads use the tus protocol with the creation, termination, checksum and
 expiration extensions:
