@@ -127,7 +127,7 @@ added. Any of them can still be overruled.
   `docker compose logs`. Security outranks ease of installation in the
   priority order.
 
-## D-013 First public release after Phase 7, with a release gate (Owner, gate Proposed)
+## D-013 First public release after Phase 7, with a release gate (Owner, gate Proposed; superseded by D-030)
 
 - Owner decision: 1.0 after Phase 7 so the media library promise is met
   at launch.
@@ -272,7 +272,7 @@ added. Any of them can still be overruled.
   Handing files to another user would let an admin read them, against
   D-004.
 
-## D-026 Portable metadata backup in Phase 2; first tag at Alpha (Proposed, Phase 2)
+## D-026 Portable metadata backup in Phase 2; first tag at Alpha (Proposed, Phase 2; tag timing revised by D-030)
 
 - Decision: the portable backup (D-008), its schedule, the copy into each
   storage location and the command-line restore are built in Phase 2.
@@ -351,3 +351,55 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   works, but loses everything sent so far when that request breaks off.
   An S3 upload holds one chunk in memory while it is sent (16 MB by
   default).
+
+## D-030 No Alpha, Beta or tagged builds; one release after Phase 12 (Owner, 2026-11-12)
+
+- Decision: there are no Alpha or Beta milestones and no version tags
+  while Atrium is developed. The first release, and with it the first
+  tag, comes when every phase up to and including Phase 12 is done.
+- Supersedes the release plan of D-013 (1.0 after Phase 7, then 1.1 to
+  2.0) and the "first tag at Alpha" part of D-026.
+- Consequences:
+  - D-026 applies until the release: whenever the schema changes, the
+    initial migration of each database is generated again instead of a
+    new migration being added. A database made by an earlier development
+    build cannot be upgraded; it has to be created again. The owner is
+    warned before a change that needs a new demo database.
+  - The release gate of D-013 becomes the list of release requirements
+    in ROADMAP.md. Most of it now falls into Phases 11 and 12 naturally;
+    items already built (backup and restore, integrity report) stay.
+  - The release workflow still publishes an image only for a version
+    tag, so nothing is published before the release.
+- Reasons: the owner is the only user until the release, so a
+  checkpoint release would only add upgrade paths to maintain.
+
+## D-031 Photo and video location is left out (Owner, 2026-11-12)
+
+- Decision: Phase 3 reads no GPS coordinates from photos or videos. There
+  are no place names, no search by location and no map.
+- Alternatives: coordinates plus offline place names from GeoNames
+  (CC BY 4.0), as first planned; coordinates only.
+- Reasons: the owner does not need to know where a photo was taken. Not
+  storing coordinates also means they cannot leak through Atrium.
+- Consequences: the original files are untouched, so their EXIF still
+  holds whatever location the camera wrote, and a download gives the
+  file as it is. Adding location later is an additive column and one
+  re-extraction job. Removing location data from files given out through
+  share links is a question for Phase 8.
+
+## D-032 Media libraries for Phase 3 (Owner, 2026-11-12)
+
+- Image decoding and thumbnails: libvips through NetVips. Alternatives:
+  SkiaSharp, FFmpeg only, ImageSharp. libvips decodes at reduced size
+  while reading (shrink-on-load) and streams, so a thumbnail of a large
+  photo needs little memory on a 2 GB device. In the image it is the
+  distribution's libvips, built with libheif, so iPhone HEIC photos
+  decode; the NetVips.Native binaries, which lack HEIC, are used only to
+  run the tests on Windows. ImageSharp's license restricts commercial use.
+- EXIF and container metadata: MetadataExtractor. Alternatives: ExifTool
+  as a process (needs Perl in the image), an own parser.
+- FFmpeg and ffprobe: the distribution's package in the image (the .NET
+  10 base image is Ubuntu 24.04). Alternatives: jellyfin-ffmpeg, static
+  builds. Phase 3 only probes, grabs frames and makes short previews;
+  the choice is revisited for hardware transcoding in Phase 5.
+- Licenses and flags are in LICENSES.md.

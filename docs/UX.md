@@ -142,15 +142,15 @@ and states the count and size.
   scrubber on the right that works instantly even with hundreds of
   thousands of items. Multi-select by click and drag or shift-click.
 - **Viewer.** Full-window photo or video, previous and next, zoom,
-  information panel (date, camera, location on a map), add to album,
-  download, delete.
+  information panel (date, camera, size), add to album, download,
+  delete.
 - **Albums.** Grid of albums; an album is a timeline of its items with a
   cover and title. Create from a selection.
-- **Search.** One field. Understands names, types ("video"), years
-  and months ("2024", "May 2024") and places. Date ranges use a date
-  picker; natural-language dates such as "last summer" are out of scope.
-  Filters appear as chips below the field.
-- **Map.** Clusters of photos; selecting a cluster opens it as a timeline.
+- **Search.** One field. Understands names, types ("video") and years
+  and months ("2024", "May 2024"). Date ranges use a date picker;
+  natural-language dates such as "last summer" are out of scope. Filters
+  appear as chips below the field. There is no search by place and no
+  map (D-031).
 
 ### Movies and shows (Phases 5 to 7)
 
