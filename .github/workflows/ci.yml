@@ -263,7 +263,7 @@ jobs:
           p=r.get('payload',r)
           print('signal', p.get('signal') or r.get('signal'))
           for t in p.get('threads',[]):
-            if t.get('crashed') or t.get('exception'):
+            if t.get('crashed'):
               print('crashed thread', t.get('native_thread_id'), t.get('managed_exception_type'))
               for f in t.get('stack_frames',[])[:40]:
                 print('  ', f.get('module_name'), f.get('method_name') or f.get('native_address'), f.get('unmanaged_name',''))
