@@ -218,9 +218,19 @@ the phases that need them.
 
 | Entity | Key fields | Notes |
 |---|---|---|
-| `MediaInfo` | content key, kind, width, height, duration, container, streams (JSON), taken at, latitude, longitude, camera, orientation | Technical facts from EXIF and ffprobe. Keyed by content, so duplicates share it. |
-| `Derivative` | content key, kind, variant, cache key, state | Index of thumbnails and previews in the cache |
-| `Album`, `AlbumItem` | owner, name, cover; node, position | |
+| `MediaInfo` | content key, kind, width, height, duration, container, streams (JSON), taken at, camera, orientation; no location (D-031) | Technical facts from EXIF and ffprobe. Keyed by content, so duplicates share it. |
+| `Album`, `AlbumItem` | owner, name, cover; node, added at | Items are ordered by capture time; removing a node row removes its items |
+
+Built in Phase 3 (D-033): `MediaInfo` belongs to a blob, shared by
+duplicates, or in an external library to a node, together with the size
+and time it was read from. There is no `Derivative` table: thumbnails are
+cache files named by content and variant, and only a failure is recorded,
+in `MediaInfo`. `Node` gains `InTrash` (set on a whole trashed subtree),
+`MediaKind`, `CapturedAt` (local clock time, D-034), a diacritic-free
+`SearchKey`, and for external libraries `ExternalPath` and `MissingSince`.
+`Library` gains `ExternalPath`, `State`, `LastScanAt` and who enabled
+writes; an external library has no storage location. `LibraryGrant`
+gives a user read or write access to a non-personal library.
 | `MediaItem` | library, kind (`movie`, `show`, `season`, `episode`), parent, title, sort title, year, numbers, overview, provider ids, locked fields | Field locks keep user edits from being overwritten by a refresh |
 | `MediaItemFile` | item, node, part, edition | A movie can have several files |
 | `Artwork` | item, kind, language, metadata file key | |
@@ -439,6 +449,13 @@ verified upload.
   removed from the index. Vanished files are marked missing and kept, with
   their watch state and metadata, for a retention period. A network share
   that drops for a day must not wipe a library's history.
+- Built in Phase 3 for photo folders, read-only (D-035): an admin adds a
+  folder path, which is checked against Atrium's own directories, storage
+  locations and other libraries, and grants access. The `library.scan`
+  job walks it with a checkpoint, skips links and hidden or system
+  entries, and is repeated every six hours. "Most files vanished" means
+  more than half and at least 50. Missing entries leave the index after
+  the trash retention. Content is read from disk at every request.
 
 ### 4.5 Consistency checks
 
@@ -466,7 +483,7 @@ Nothing is held only in memory, so a restart loses no work.
 |---|---|
 | Priority | `interactive`, `user`, `background`, `idle`. Stored as a number, because the queue is ordered by it. |
 | Resource class | `cpu`, `io`, `transcode`, `network`, `gpu`. Each class has a concurrency limit. |
-| State | `queued`, `running`, `succeeded`, `failed`, `cancelled`. Pausing background work arrives with the small-device tuning in Phase 3. |
+| State | `queued`, `running`, `succeeded`, `failed`, `cancelled`. A pause of background work is not a job state; see 5.4. |
 | Lease | Owner and expiry, renewed by heartbeat. An expired lease returns the job to the queue. A run that lost its lease can no longer write progress, checkpoints or an outcome. |
 | Checkpoint | Opaque progress data the handler writes so it can resume |
 | Dedupe key | Prevents a second identical job (for example two scans of one library). The database enforces it with a unique column that holds the key only while the job is queued or running. |
@@ -523,6 +540,22 @@ pauses background work in the `cpu` class while it runs.
 All limits are editable in the admin UI. Background and idle jobs pause
 while a stream is transcoding in software, and run at reduced process
 priority.
+
+Built in Phase 3:
+
+- The profile is read at startup from the cores and memory .NET reports,
+  which are the container's limits, not the host's. `network` defaults
+  to 2, 2 and 4 jobs and `gpu` to 1, 1 and 2.
+- An admin overrides any class (1 to 32) or returns it to its default.
+  Overrides and the pause are stored as settings, survive a restart and
+  take effect at once.
+- An admin pauses background work for a time (up to 7 days) or until
+  resumed. While paused, only `interactive` and `user` jobs are claimed.
+  A `background` or `idle` job that is running when the pause begins is
+  stopped at once and goes back to the queue without using an attempt,
+  exactly like at shutdown, and continues from its checkpoint later.
+- Work that needs the machine for someone waiting, such as a software
+  transcode in Phase 5, holds the same pause for as long as it runs.
 
 ### 5.5 Visibility
 
@@ -717,11 +750,10 @@ depending on type:
    `MediaInfo`.
 2. Thumbnails: a small grid size and a larger preview size.
 3. Video previews: a short low-bitrate clip and seek-bar thumbnails.
-4. Indexing: name, date, type, location for search.
+4. Indexing: name, date and type for search.
 
-Location search uses stored coordinates. Turning coordinates into place
-names needs a data set; an offline one is proposed in Phase 3 so the
-feature works without any external service.
+Location is not read or stored (D-031): no coordinates, place names or
+map.
 
 ### 7.2 Client capability profile
 

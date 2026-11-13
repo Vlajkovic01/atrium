@@ -72,6 +72,38 @@ public static class NodeName
         name.Normalize(NormalizationForm.FormC).ToUpperInvariant().ToLowerInvariant();
 
     /// <summary>
+    /// The form a name is searched by: case-folded and without diacritics,
+    /// so "suma" finds "Šuma" and "cafe" finds "Café". Serbian đ, which
+    /// does not decompose, is written as "dj".
+    /// </summary>
+    public static string SearchKeyOf(string name)
+    {
+        var decomposed = KeyOf(name).Normalize(NormalizationForm.FormD);
+        var result = new StringBuilder(decomposed.Length);
+        foreach (var c in decomposed)
+        {
+            switch (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c))
+            {
+                case System.Globalization.UnicodeCategory.NonSpacingMark:
+                    continue;
+                default:
+                    if (c == 'đ')
+                    {
+                        result.Append("dj");
+                    }
+                    else
+                    {
+                        result.Append(c);
+                    }
+
+                    break;
+            }
+        }
+
+        return result.ToString().Normalize(NormalizationForm.FormC);
+    }
+
+    /// <summary>
     /// "Report.pdf" becomes "Report (2).pdf", "Report (3).pdf" and so on, for
     /// the "keep both" choice. The extension is kept so the file still opens.
     /// </summary>

@@ -8,6 +8,7 @@ using Atrium.Api.Setup;
 using Atrium.Api.Storage;
 using Atrium.Data;
 using Atrium.Files;
+using Atrium.Files.External;
 using Atrium.Jobs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,10 @@ builder.Services.AddSingleton<SetupService>();
 builder.Services.AddScoped<StorageLocationService>();
 builder.Services.AddAtriumJobs();
 builder.Services.AddJobWorker();
+
+// External libraries must stay clear of Atrium's own directories.
+builder.Services.AddSingleton(new ExternalLibraryOptions([bootstrap.ConfigDir, bootstrap.CacheDir]));
+builder.Services.AddSingleton(new MediaTypeResolver(MediaTypes.For));
 builder.Services.AddAtriumFiles();
 builder.Services.AddSingleton<SignedUrls>();
 builder.Services.AddSingleton<ArchiveRequests>();
@@ -98,6 +103,8 @@ v1.MapUploadEndpoints();
 v1.MapContentEndpoints();
 v1.MapBackupEndpoints();
 v1.MapIntegrityEndpoints();
+v1.MapBackgroundWorkEndpoints();
+v1.MapAdminLibraryEndpoints();
 
 await app.RunAsync();
 return 0;

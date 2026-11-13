@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Atrium.Data.Postgres.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261112163151_Initial")]
+    [Migration("20261113011522_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -72,10 +72,20 @@ namespace Atrium.Data.Postgres.Migrations
                     b.Property<long>("CreatedAt")
                         .HasColumnType("bigint");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ExternalPath")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<long?>("LastScanAt")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Mode")
                         .IsRequired()
@@ -96,21 +106,63 @@ namespace Atrium.Data.Postgres.Migrations
                     b.Property<Guid>("RootNodeId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("StorageLocationId")
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("StateReason")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid?>("StorageLocationId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
                         .HasColumnType("integer");
 
+                    b.Property<long?>("WritesEnabledAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("WritesEnabledByUserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("OwnerUserId")
                         .IsUnique();
 
                     b.HasIndex("StorageLocationId");
 
+                    b.HasIndex("WritesEnabledByUserId");
+
                     b.ToTable("Libraries");
+                });
+
+            modelBuilder.Entity("Atrium.Core.Files.LibraryGrant", b =>
+                {
+                    b.Property<Guid>("LibraryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Access")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("LibraryId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LibraryGrants");
                 });
 
             modelBuilder.Entity("Atrium.Core.Files.Node", b =>
@@ -126,23 +178,47 @@ namespace Atrium.Data.Postgres.Migrations
                     b.Property<Guid?>("BlobId")
                         .HasColumnType("uuid");
 
+                    b.Property<long?>("CapturedAt")
+                        .HasColumnType("bigint");
+
                     b.Property<long>("CreatedAt")
                         .HasColumnType("bigint");
 
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ExternalPath")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<byte[]>("ExternalPathHash")
+                        .HasMaxLength(32)
+                        .HasColumnType("bytea");
+
+                    b.Property<bool>("InTrash")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<long?>("LastSeenAt")
+                        .HasColumnType("bigint");
+
                     b.Property<Guid>("LibraryId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("MediaKind")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("MediaType")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
+
+                    b.Property<long?>("MissingSince")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("ModifiedAt")
                         .HasColumnType("bigint");
@@ -159,6 +235,11 @@ namespace Atrium.Data.Postgres.Migrations
 
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .HasMaxLength(510)
+                        .HasColumnType("character varying(510)");
 
                     b.Property<long>("Size")
                         .HasColumnType("bigint");
@@ -179,10 +260,15 @@ namespace Atrium.Data.Postgres.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
+                    b.HasIndex("LibraryId", "ExternalPathHash")
+                        .IsUnique();
+
                     b.HasIndex("LibraryId", "TrashedAt");
 
                     b.HasIndex("ParentId", "ActiveNameKey")
                         .IsUnique();
+
+                    b.HasIndex("LibraryId", "MediaKind", "CapturedAt");
 
                     b.ToTable("Nodes");
                 });
@@ -748,6 +834,150 @@ namespace Atrium.Data.Postgres.Migrations
                     b.ToTable("Jobs");
                 });
 
+            modelBuilder.Entity("Atrium.Core.Media.Album", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CoverNodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("UpdatedAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CoverNodeId");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.ToTable("Albums");
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.AlbumItem", b =>
+                {
+                    b.Property<Guid>("AlbumId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("NodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("AddedAt")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("AlbumId", "NodeId");
+
+                    b.HasIndex("NodeId");
+
+                    b.ToTable("AlbumItems");
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.MediaInfo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AudioCodec")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid?>("BlobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CameraMake")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("CameraModel")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<long?>("CapturedAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("CapturedOffsetMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("DurationMs")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<long>("ExtractedAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("ExtractorVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Format")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid?>("NodeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Orientation")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("SourceModifiedAt")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SourceSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ThumbnailState")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("VideoCodec")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlobId")
+                        .IsUnique();
+
+                    b.HasIndex("NodeId")
+                        .IsUnique();
+
+                    b.ToTable("MediaInfos", t =>
+                        {
+                            t.HasCheckConstraint("CK_MediaInfos_OneSource", "(\"BlobId\" IS NULL) <> (\"NodeId\" IS NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Atrium.Core.Settings.Setting", b =>
                 {
                     b.Property<string>("Key")
@@ -825,13 +1055,37 @@ namespace Atrium.Data.Postgres.Migrations
                 {
                     b.HasOne("Atrium.Core.Identity.User", null)
                         .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Atrium.Core.Identity.User", null)
+                        .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Atrium.Core.Storage.StorageLocation", null)
                         .WithMany()
                         .HasForeignKey("StorageLocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Atrium.Core.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("WritesEnabledByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Atrium.Core.Files.LibraryGrant", b =>
+                {
+                    b.HasOne("Atrium.Core.Files.Library", null)
+                        .WithMany()
+                        .HasForeignKey("LibraryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Atrium.Core.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -968,6 +1222,48 @@ namespace Atrium.Data.Postgres.Migrations
                     b.HasOne("Atrium.Core.Jobs.Job", null)
                         .WithMany()
                         .HasForeignKey("ParentJobId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.Album", b =>
+                {
+                    b.HasOne("Atrium.Core.Files.Node", null)
+                        .WithMany()
+                        .HasForeignKey("CoverNodeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Atrium.Core.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.AlbumItem", b =>
+                {
+                    b.HasOne("Atrium.Core.Media.Album", null)
+                        .WithMany()
+                        .HasForeignKey("AlbumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Atrium.Core.Files.Node", null)
+                        .WithMany()
+                        .HasForeignKey("NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.MediaInfo", b =>
+                {
+                    b.HasOne("Atrium.Core.Files.Blob", null)
+                        .WithMany()
+                        .HasForeignKey("BlobId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Atrium.Core.Files.Node", null)
+                        .WithMany()
+                        .HasForeignKey("NodeId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

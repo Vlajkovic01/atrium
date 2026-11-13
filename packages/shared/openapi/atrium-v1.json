@@ -3268,10 +3268,494 @@
           }
         }
       }
+    },
+    "/api/v1/admin/background-work": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "GetBackgroundWork",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundWorkInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/background-work/limits": {
+      "put": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "SetJobLimits",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetJobLimitsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundWorkInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/background-work/pause": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "PauseBackgroundWork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PauseBackgroundRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundWorkInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/background-work/resume": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "ResumeBackgroundWork",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundWorkInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/libraries": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "ListAdminLibraries",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminLibraryView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "CreateExternalLibrary",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExternalLibraryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLibraryView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/libraries/check-path": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "description": "Tries a folder before adding it as a library. Reads only; always 200 with the outcome inside.",
+        "operationId": "CheckLibraryPath",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckPathRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckPathResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/libraries/{id}": {
+      "patch": {
+        "tags": [
+          "Administration"
+        ],
+        "description": "Rename, or replace who may see the library. Requires If-Match with the version read.",
+        "operationId": "UpdateLibrary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLibraryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLibraryView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Precondition Failed",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition Required",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Administration"
+        ],
+        "description": "Removes an external library from Atrium. Its folder and files are not touched. confirmName must be the library\u0027s name.",
+        "operationId": "DeleteLibrary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "confirmName",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/libraries/{id}/scan": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "ScanLibrary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStarted"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AdminLibraryView": {
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "mode",
+          "path",
+          "readOnly",
+          "state",
+          "stateReason",
+          "lastScanAt",
+          "fileCount",
+          "userIds",
+          "writesEnabledAt",
+          "scan",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LibraryKind"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/LibraryMode"
+          },
+          "path": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "readOnly": {
+            "type": "boolean"
+          },
+          "state": {
+            "$ref": "#/components/schemas/LibraryState"
+          },
+          "stateReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastScanAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "fileCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "writesEnabledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "scan": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JobInfoBrief"
+              }
+            ]
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "AdminUserView": {
         "required": [
           "id",
@@ -3375,6 +3859,67 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "BackgroundWorkInfo": {
+        "required": [
+          "profile",
+          "processorCount",
+          "memoryBytes",
+          "maxLimit",
+          "classes",
+          "paused",
+          "pausedByAdmin",
+          "pausedUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/HardwareProfile"
+          },
+          "processorCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "memoryBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "maxLimit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "classes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobClassLimit"
+            }
+          },
+          "paused": {
+            "type": "boolean"
+          },
+          "pausedByAdmin": {
+            "type": "boolean"
+          },
+          "pausedUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -3511,6 +4056,48 @@
           }
         }
       },
+      "CheckPathRequest": {
+        "required": [
+          "path"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CheckPathResponse": {
+        "required": [
+          "ok",
+          "errorCode",
+          "entryCount"
+        ],
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "errorCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entryCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ConflictPolicy": {
         "enum": [
           "fail",
@@ -3557,6 +4144,32 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreateExternalLibraryRequest": {
+        "required": [
+          "name",
+          "path",
+          "userIds"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "userIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -3758,6 +4371,13 @@
           }
         }
       },
+      "HardwareProfile": {
+        "enum": [
+          "small",
+          "medium",
+          "large"
+        ]
+      },
       "HashCheckRequest": {
         "required": [
           "hashes"
@@ -3934,6 +4554,84 @@
           }
         }
       },
+      "JobClassLimit": {
+        "required": [
+          "resourceClass",
+          "default",
+          "override",
+          "effective",
+          "running",
+          "queued"
+        ],
+        "type": "object",
+        "properties": {
+          "resourceClass": {
+            "$ref": "#/components/schemas/JobResourceClass"
+          },
+          "default": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "override": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "effective": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "running": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "queued": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "JobClassLimitSetting": {
+        "required": [
+          "resourceClass",
+          "limit"
+        ],
+        "type": "object",
+        "properties": {
+          "resourceClass": {
+            "$ref": "#/components/schemas/JobResourceClass"
+          },
+          "limit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "JobInfo": {
         "required": [
           "id",
@@ -4034,6 +4732,32 @@
           }
         }
       },
+      "JobInfoBrief": {
+        "required": [
+          "id",
+          "state",
+          "progress"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "$ref": "#/components/schemas/JobState"
+          },
+          "progress": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d\u002B)?(?:[eE][\u002B-]?\\d\u002B)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "JobPage": {
         "required": [
           "items",
@@ -4061,6 +4785,15 @@
           "user",
           "background",
           "idle"
+        ]
+      },
+      "JobResourceClass": {
+        "enum": [
+          "cpu",
+          "io",
+          "network",
+          "transcode",
+          "gpu"
         ]
       },
       "JobStarted": {
@@ -4091,7 +4824,8 @@
           "kind",
           "mode",
           "rootNodeId",
-          "readOnly"
+          "readOnly",
+          "state"
         ],
         "type": "object",
         "properties": {
@@ -4114,6 +4848,9 @@
           },
           "readOnly": {
             "type": "boolean"
+          },
+          "state": {
+            "$ref": "#/components/schemas/LibraryState"
           }
         }
       },
@@ -4130,6 +4867,12 @@
         "enum": [
           "managed",
           "external"
+        ]
+      },
+      "LibraryState": {
+        "enum": [
+          "online",
+          "offline"
         ]
       },
       "LinkCodeResponse": {
@@ -4446,6 +5189,23 @@
           }
         }
       },
+      "PauseBackgroundRequest": {
+        "required": [
+          "minutes"
+        ],
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -4675,6 +5435,20 @@
           },
           "current": {
             "type": "boolean"
+          }
+        }
+      },
+      "SetJobLimitsRequest": {
+        "required": [
+          "limits"
+        ],
+        "type": "object",
+        "properties": {
+          "limits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobClassLimitSetting"
+            }
           }
         }
       },
@@ -5055,6 +5829,31 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/LocationSegment"
+            }
+          }
+        }
+      },
+      "UpdateLibraryRequest": {
+        "required": [
+          "name",
+          "userIds"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "userIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         }

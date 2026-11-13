@@ -499,5 +499,123 @@ public abstract class JobQueueContractTests : IAsyncLifetime
             j => Assert.Equal(JobState.Succeeded, j.State));
     }
 
+    [Fact]
+    public async Task While_background_work_is_paused_only_jobs_for_people_run()
+    {
+        var limits = Host.Services.GetRequiredService<JobLimits>();
+        var background = await Host.EnqueueAsync(new JobRequest("test.a") { Priority = JobPriority.Background });
+        var idle = await Host.EnqueueAsync(new JobRequest("test.b") { Priority = JobPriority.Idle });
+        var user = await Host.EnqueueAsync(new JobRequest("test.c") { Priority = JobPriority.User });
+
+        limits.PauseBackground(until: null);
+
+        Assert.True(await Host.RunNextAsync());
+        Assert.False(await Host.RunNextAsync());
+        Assert.Equal(JobState.Succeeded, (await Host.GetAsync(user.Id)).State);
+        Assert.Equal(JobState.Queued, (await Host.GetAsync(background.Id)).State);
+        Assert.Equal(JobState.Queued, (await Host.GetAsync(idle.Id)).State);
+
+        limits.ResumeBackground();
+
+        Assert.True(await Host.RunNextAsync());
+        Assert.True(await Host.RunNextAsync());
+    }
+
+    [Fact]
+    public async Task A_pause_with_an_end_ends_by_itself()
+    {
+        var limits = Host.Services.GetRequiredService<JobLimits>();
+        await Host.EnqueueAsync(new JobRequest("test.a") { Priority = JobPriority.Background });
+
+        limits.PauseBackground(Host.Time.GetUtcNow().AddHours(1));
+        Assert.False(await Host.RunNextAsync());
+
+        Host.Time.Advance(TimeSpan.FromHours(1));
+        Assert.False(limits.Pause.Paused);
+        Assert.True(await Host.RunNextAsync());
+    }
+
+    [Fact]
+    public async Task A_pause_stops_a_running_background_job_without_using_an_attempt()
+    {
+        var limits = Host.Services.GetRequiredService<JobLimits>();
+        var seen = new List<string?>();
+        Host.Behaviors.ByType["test.a"] = async (context, ct) =>
+        {
+            seen.Add(context.Checkpoint);
+            if (context.Checkpoint is null)
+            {
+                await context.SaveCheckpointAsync("half", ct);
+                limits.PauseBackground(until: null);
+                await Task.Delay(Timeout.Infinite, ct);
+            }
+        };
+        var job = await Host.EnqueueAsync(new JobRequest("test.a") { Priority = JobPriority.Background });
+
+        await Host.RunNextAsync().WaitAsync(TimeSpan.FromSeconds(10));
+
+        var paused = await Host.GetAsync(job.Id);
+        Assert.Equal(JobState.Queued, paused.State);
+        Assert.Equal(0, paused.Attempts);
+        Assert.Equal("half", paused.Checkpoint);
+
+        limits.ResumeBackground();
+        await Host.RunNextAsync();
+
+        Assert.Equal([null, "half"], seen);
+        Assert.Equal(JobState.Succeeded, (await Host.GetAsync(job.Id)).State);
+    }
+
+    [Fact]
+    public async Task A_pause_does_not_stop_a_job_someone_waits_for()
+    {
+        var limits = Host.Services.GetRequiredService<JobLimits>();
+        Host.Behaviors.ByType["test.a"] = async (_, ct) =>
+        {
+            limits.PauseBackground(until: null);
+            await Task.Delay(50, ct);
+        };
+        var job = await Host.EnqueueAsync(new JobRequest("test.a") { Priority = JobPriority.Interactive });
+
+        await Host.RunNextAsync();
+
+        Assert.Equal(JobState.Succeeded, (await Host.GetAsync(job.Id)).State);
+    }
+
+    [Fact]
+    public async Task Limits_and_pause_survive_a_restart()
+    {
+        var until = Host.Time.GetUtcNow().AddHours(2);
+        await using (var scope = Host.Services.CreateAsyncScope())
+        {
+            var store = scope.ServiceProvider.GetRequiredService<JobSettingsStore>();
+            await store.SaveLimitsAsync(new Dictionary<JobResourceClass, int> { [JobResourceClass.Cpu] = 5 }, CancellationToken.None);
+            await store.PauseAsync(until, CancellationToken.None);
+        }
+
+        await using var restarted = CreateHost();
+        await using (var scope = restarted.Services.CreateAsyncScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<JobSettingsStore>().LoadAsync(CancellationToken.None);
+        }
+
+        var limits = restarted.Services.GetRequiredService<JobLimits>();
+        Assert.Equal(5, limits.LimitFor(JobResourceClass.Cpu));
+        Assert.Equal(new PauseState(true, until), limits.Pause);
+
+        await using (var scope = restarted.Services.CreateAsyncScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<JobSettingsStore>().ResumeAsync(CancellationToken.None);
+        }
+
+        await using var again = CreateHost();
+        await using (var scope = again.Services.CreateAsyncScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<JobSettingsStore>().LoadAsync(CancellationToken.None);
+        }
+
+        Assert.False(again.Services.GetRequiredService<JobLimits>().IsBackgroundPaused);
+    }
+
     private sealed record TestPayload(string Name);
 }

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atrium.Data.Sqlite.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261112163139_Initial")]
+    [Migration("20261113011459_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -67,10 +67,20 @@ namespace Atrium.Data.Sqlite.Migrations
                     b.Property<long>("CreatedAt")
                         .HasColumnType("INTEGER");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExternalPath")
+                        .HasMaxLength(4096)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
+
+                    b.Property<long?>("LastScanAt")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Mode")
                         .IsRequired()
@@ -91,21 +101,63 @@ namespace Atrium.Data.Sqlite.Migrations
                     b.Property<Guid>("RootNodeId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("StorageLocationId")
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StateReason")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("StorageLocationId")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("WritesEnabledAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("WritesEnabledByUserId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("OwnerUserId")
                         .IsUnique();
 
                     b.HasIndex("StorageLocationId");
 
+                    b.HasIndex("WritesEnabledByUserId");
+
                     b.ToTable("Libraries");
+                });
+
+            modelBuilder.Entity("Atrium.Core.Files.LibraryGrant", b =>
+                {
+                    b.Property<Guid>("LibraryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Access")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("LibraryId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LibraryGrants");
                 });
 
             modelBuilder.Entity("Atrium.Core.Files.Node", b =>
@@ -121,23 +173,47 @@ namespace Atrium.Data.Sqlite.Migrations
                     b.Property<Guid?>("BlobId")
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("CapturedAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("CreatedAt")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid?>("CreatedByUserId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ExternalPath")
+                        .HasMaxLength(4096)
+                        .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("ExternalPathHash")
+                        .HasMaxLength(32)
+                        .HasColumnType("BLOB");
+
+                    b.Property<bool>("InTrash")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("LastSeenAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("LibraryId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MediaKind")
+                        .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MediaType")
                         .HasMaxLength(128)
                         .HasColumnType("TEXT");
+
+                    b.Property<long?>("MissingSince")
+                        .HasColumnType("INTEGER");
 
                     b.Property<long>("ModifiedAt")
                         .HasColumnType("INTEGER");
@@ -153,6 +229,11 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("ParentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SearchKey")
+                        .IsRequired()
+                        .HasMaxLength(510)
                         .HasColumnType("TEXT");
 
                     b.Property<long>("Size")
@@ -174,10 +255,15 @@ namespace Atrium.Data.Sqlite.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
+                    b.HasIndex("LibraryId", "ExternalPathHash")
+                        .IsUnique();
+
                     b.HasIndex("LibraryId", "TrashedAt");
 
                     b.HasIndex("ParentId", "ActiveNameKey")
                         .IsUnique();
+
+                    b.HasIndex("LibraryId", "MediaKind", "CapturedAt");
 
                     b.ToTable("Nodes");
                 });
@@ -743,6 +829,150 @@ namespace Atrium.Data.Sqlite.Migrations
                     b.ToTable("Jobs");
                 });
 
+            modelBuilder.Entity("Atrium.Core.Media.Album", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CoverNodeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("CreatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("UpdatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CoverNodeId");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.ToTable("Albums");
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.AlbumItem", b =>
+                {
+                    b.Property<Guid>("AlbumId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("NodeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("AddedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("AlbumId", "NodeId");
+
+                    b.HasIndex("NodeId");
+
+                    b.ToTable("AlbumItems");
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.MediaInfo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AudioCodec")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("BlobId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CameraMake")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CameraModel")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("CapturedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("CapturedOffsetMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("DurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ErrorCode")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("ExtractedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ExtractorVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Format")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("NodeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Orientation")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("SourceModifiedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("SourceSize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ThumbnailState")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VideoCodec")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlobId")
+                        .IsUnique();
+
+                    b.HasIndex("NodeId")
+                        .IsUnique();
+
+                    b.ToTable("MediaInfos", t =>
+                        {
+                            t.HasCheckConstraint("CK_MediaInfos_OneSource", "(\"BlobId\" IS NULL) <> (\"NodeId\" IS NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Atrium.Core.Settings.Setting", b =>
                 {
                     b.Property<string>("Key")
@@ -820,13 +1050,37 @@ namespace Atrium.Data.Sqlite.Migrations
                 {
                     b.HasOne("Atrium.Core.Identity.User", null)
                         .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Atrium.Core.Identity.User", null)
+                        .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Atrium.Core.Storage.StorageLocation", null)
                         .WithMany()
                         .HasForeignKey("StorageLocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Atrium.Core.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("WritesEnabledByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("Atrium.Core.Files.LibraryGrant", b =>
+                {
+                    b.HasOne("Atrium.Core.Files.Library", null)
+                        .WithMany()
+                        .HasForeignKey("LibraryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Atrium.Core.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -963,6 +1217,48 @@ namespace Atrium.Data.Sqlite.Migrations
                     b.HasOne("Atrium.Core.Jobs.Job", null)
                         .WithMany()
                         .HasForeignKey("ParentJobId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.Album", b =>
+                {
+                    b.HasOne("Atrium.Core.Files.Node", null)
+                        .WithMany()
+                        .HasForeignKey("CoverNodeId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Atrium.Core.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.AlbumItem", b =>
+                {
+                    b.HasOne("Atrium.Core.Media.Album", null)
+                        .WithMany()
+                        .HasForeignKey("AlbumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Atrium.Core.Files.Node", null)
+                        .WithMany()
+                        .HasForeignKey("NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.MediaInfo", b =>
+                {
+                    b.HasOne("Atrium.Core.Files.Blob", null)
+                        .WithMany()
+                        .HasForeignKey("BlobId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Atrium.Core.Files.Node", null)
+                        .WithMany()
+                        .HasForeignKey("NodeId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
