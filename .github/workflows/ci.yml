@@ -246,6 +246,34 @@ jobs:
             --data '{"name":"owner","password":"correct horse battery","device":{"name":"Browser","kind":"web"}}' \
             https://localhost/api/v1/auth/login | grep --ignore-case 'set-cookie' | grep --ignore-case --quiet 'secure'
 
+      # When the server crashed, run it once more with the runtime's crash
+      # report on, so the log shows where it died.
+      - name: Crash report if the server crashed
+        if: failure()
+        working-directory: deploy
+        run: |
+          docker compose stop atrium || true
+          mkdir -p /tmp/crash && chmod 777 /tmp/crash
+          timeout 120 docker compose run --rm --no-deps \
+            -v /tmp/crash:/crash \
+            -e DOTNET_DbgEnableMiniDump=1 -e DOTNET_DbgMiniDumpType=1 \
+            -e DOTNET_EnableCrashReport=1 -e DOTNET_DbgMiniDumpName=/crash/dump \
+            atrium > /tmp/crash/server.log 2>&1 || echo "server ended with $?"
+          tail -n 60 /tmp/crash/server.log | grep -v 'Microsoft.EntityFrameworkCore' || true
+          for report in /tmp/crash/*.crashreport.json; do
+            [ -f "$report" ] && python3 -c "
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          p=r.get('payload',r)
+          print('signal', p.get('signal') or r.get('signal'))
+          for t in p.get('threads',[]):
+            if t.get('crashed') or t.get('exception'):
+              print('crashed thread', t.get('native_thread_id'), t.get('managed_exception_type'))
+              for f in t.get('stack_frames',[])[:40]:
+                print('  ', f.get('module_name'), f.get('method_name') or f.get('native_address'), f.get('unmanaged_name',''))
+          " "$report" || head -c 20000 "$report"
+          done
+
       - name: Show logs if something failed
         if: failure()
         working-directory: deploy
