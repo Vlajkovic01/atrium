@@ -971,6 +971,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/background-work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetBackgroundWork"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/background-work/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetJobLimits"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/background-work/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PauseBackgroundWork"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/background-work/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ResumeBackgroundWork"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1001,6 +1065,20 @@ export interface components {
         };
         ArchiveRequest: {
             ids: string[];
+        };
+        BackgroundWorkInfo: {
+            profile: components["schemas"]["HardwareProfile"];
+            /** Format: int32 */
+            processorCount: number | string;
+            /** Format: int64 */
+            memoryBytes: number | string;
+            /** Format: int32 */
+            maxLimit: number | string;
+            classes: components["schemas"]["JobClassLimit"][];
+            paused: boolean;
+            pausedByAdmin: boolean;
+            /** Format: date-time */
+            pausedUntil: null | string;
         };
         BackupInfo: {
             name: string;
@@ -1090,6 +1168,8 @@ export interface components {
             /** Format: int32 */
             removed: number | string;
         };
+        /** @enum {unknown} */
+        HardwareProfile: "small" | "medium" | "large";
         HashCheckRequest: {
             hashes: string[];
         };
@@ -1131,6 +1211,24 @@ export interface components {
             /** Format: uuid */
             runningJobId: null | string;
         };
+        JobClassLimit: {
+            resourceClass: components["schemas"]["JobResourceClass"];
+            /** Format: int32 */
+            default: number | string;
+            /** Format: int32 */
+            override: null | number | string;
+            /** Format: int32 */
+            effective: number | string;
+            /** Format: int32 */
+            running: number | string;
+            /** Format: int32 */
+            queued: number | string;
+        };
+        JobClassLimitSetting: {
+            resourceClass: components["schemas"]["JobResourceClass"];
+            /** Format: int32 */
+            limit: null | number | string;
+        };
         JobInfo: {
             /** Format: uuid */
             id: string;
@@ -1162,6 +1260,8 @@ export interface components {
         };
         /** @enum {unknown} */
         JobPriority: "interactive" | "user" | "background" | "idle";
+        /** @enum {unknown} */
+        JobResourceClass: "cpu" | "io" | "network" | "transcode" | "gpu";
         JobStarted: {
             /** Format: uuid */
             jobId: string;
@@ -1261,6 +1361,10 @@ export interface components {
             status: components["schemas"]["PairingStatus"];
             tokens: null | components["schemas"]["TokenResponse"];
         };
+        PauseBackgroundRequest: {
+            /** Format: int32 */
+            minutes: null | number | string;
+        };
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -1313,6 +1417,9 @@ export interface components {
             lastIp: null | string;
             readOnly: boolean;
             current: boolean;
+        };
+        SetJobLimitsRequest: {
+            limits: components["schemas"]["JobClassLimitSetting"][];
         };
         SetupState: {
             adminExists: boolean;
@@ -4134,6 +4241,112 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobStarted"];
+                };
+            };
+        };
+    };
+    GetBackgroundWork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundWorkInfo"];
+                };
+            };
+        };
+    };
+    SetJobLimits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetJobLimitsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundWorkInfo"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PauseBackgroundWork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PauseBackgroundRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundWorkInfo"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ResumeBackgroundWork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundWorkInfo"];
                 };
             };
         };

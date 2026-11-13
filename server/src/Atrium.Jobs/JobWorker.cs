@@ -1,4 +1,5 @@
 using Atrium.Core.Jobs;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +15,8 @@ public sealed class JobWorker(
     RecurringJobScheduler scheduler,
     JobSignal signal,
     JobOptions options,
+    JobLimits limits,
+    IServiceScopeFactory scopes,
     TimeProvider time,
     ILogger<JobWorker> logger) : BackgroundService
 {
@@ -27,6 +30,18 @@ public sealed class JobWorker(
     {
         // Let the server finish starting before background work competes with it.
         await Task.Yield();
+
+        await using (var scope = scopes.CreateAsyncScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<JobSettingsStore>().LoadAsync(stoppingToken);
+        }
+
+        logger.LogInformation(
+            "Hardware profile {Profile} ({Cores} cores, {MemoryMiB} MiB); background work {State}.",
+            limits.Profile,
+            limits.Hardware.ProcessorCount,
+            limits.Hardware.MemoryBytes / (1024 * 1024),
+            limits.IsBackgroundPaused ? "paused" : "running");
 
         await runner.RecoverAfterRestartAsync(stoppingToken);
         var nextHousekeeping = DateTimeOffset.MinValue;
@@ -119,7 +134,7 @@ public sealed class JobWorker(
         lock (_gate)
         {
             return Enum.GetValues<JobResourceClass>()
-                .Where(c => _running.GetValueOrDefault(c) < options.LimitFor(c))
+                .Where(c => _running.GetValueOrDefault(c) < limits.LimitFor(c))
                 .ToList();
         }
     }

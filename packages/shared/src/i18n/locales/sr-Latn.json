@@ -118,7 +118,8 @@
     "storage": "Skladište",
     "administration": "Administracija",
     "files": "Fajlovi",
-    "trash": "Korpa"
+    "trash": "Korpa",
+    "backgroundWork": "Pozadinski rad"
   },
   "files": {
     "title": "Fajlovi",
@@ -441,5 +442,38 @@
     "healthyNoFree": "Radi.",
     "addHeading": "Dodajte lokaciju",
     "added": "Lokacija je dodata."
+  },
+  "backgroundWork": {
+    "heading": "Pozadinski rad",
+    "body": "Sličice, skeniranje i održavanje rade u pozadini. Ovde birate koliko ovog računara smeju da koriste.",
+    "machine": "Ovaj računar",
+    "profile": "Profil hardvera",
+    "profileSmall": "Mali",
+    "profileMedium": "Srednji",
+    "profileLarge": "Veliki",
+    "machineFacts": "{cores, plural, one {# jezgro} few {# jezgra} other {# jezgara}}, {memory} memorije",
+    "pauseHeading": "Pauza",
+    "running": "Pozadinski rad je u toku.",
+    "pausedUntil": "Pozadinski rad je pauziran do {when}.",
+    "pausedOpen": "Pozadinski rad je pauziran dok ga ne nastavite.",
+    "pausedBusy": "Pozadinski rad je pauziran dok je server zauzet poslom koji neko čeka.",
+    "pauseNote": "Ono što sami pokrenete, na primer otpremanje, i dalje radi. Pauzirani poslovi nastavljaju tamo gde su stali.",
+    "pauseHour": "Pauziraj na sat",
+    "pauseDay": "Pauziraj na dan",
+    "pauseOpen": "Pauziraj do nastavka",
+    "resume": "Nastavi",
+    "limitsHeading": "Poslova u isto vreme",
+    "limitsNote": "Podrazumevane vrednosti odgovaraju ovom računaru. Veći broj brže završava posao, ali ostavlja manje mesta za sve ostalo.",
+    "class": {
+      "cpu": "Zahtevni za procesor (sličice)",
+      "io": "Zahtevni za disk (skeniranje, provere)",
+      "network": "Mreža",
+      "transcode": "Konverzija videa",
+      "gpu": "Grafička kartica"
+    },
+    "default": "Podrazumevano ({value})",
+    "activity": "{running} radi, {queued} čeka",
+    "save": "Sačuvaj ograničenja",
+    "saved": "Ograničenja su sačuvana."
   }
 }

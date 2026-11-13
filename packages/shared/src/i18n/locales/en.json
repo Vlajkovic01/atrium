@@ -118,7 +118,8 @@
     "storage": "Storage",
     "administration": "Administration",
     "files": "Files",
-    "trash": "Trash"
+    "trash": "Trash",
+    "backgroundWork": "Background work"
   },
   "files": {
     "title": "Files",
@@ -441,5 +442,38 @@
     "healthyNoFree": "Working.",
     "addHeading": "Add a location",
     "added": "The location was added."
+  },
+  "backgroundWork": {
+    "heading": "Background work",
+    "body": "Thumbnails, scans and housekeeping run in the background. Here you choose how much of this machine they may use.",
+    "machine": "This machine",
+    "profile": "Hardware profile",
+    "profileSmall": "Small",
+    "profileMedium": "Medium",
+    "profileLarge": "Large",
+    "machineFacts": "{cores, plural, one {# core} other {# cores}}, {memory} of memory",
+    "pauseHeading": "Pause",
+    "running": "Background work is running.",
+    "pausedUntil": "Background work is paused until {when}.",
+    "pausedOpen": "Background work is paused until you resume it.",
+    "pausedBusy": "Background work is paused while the server is busy with work someone is waiting for.",
+    "pauseNote": "Work you start yourself, such as uploads, keeps running. Paused jobs continue where they stopped.",
+    "pauseHour": "Pause for an hour",
+    "pauseDay": "Pause for a day",
+    "pauseOpen": "Pause until resumed",
+    "resume": "Resume",
+    "limitsHeading": "Jobs at the same time",
+    "limitsNote": "The defaults suit this machine. A higher number finishes sooner but leaves less room for everything else.",
+    "class": {
+      "cpu": "Processor-heavy (thumbnails)",
+      "io": "Disk-heavy (scans, checks)",
+      "network": "Network",
+      "transcode": "Video conversion",
+      "gpu": "Graphics card"
+    },
+    "default": "Default ({value})",
+    "activity": "{running} running, {queued} waiting",
+    "save": "Save limits",
+    "saved": "The limits were saved."
   }
 }

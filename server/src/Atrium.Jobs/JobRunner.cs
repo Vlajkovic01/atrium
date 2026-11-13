@@ -15,6 +15,7 @@ public sealed class JobRunner(
     IServiceScopeFactory scopes,
     TimeProvider time,
     JobOptions options,
+    JobLimits limits,
     IEnumerable<JobHandlerRegistration> registrations,
     ILogger<JobRunner> logger)
 {
@@ -60,7 +61,8 @@ public sealed class JobRunner(
     /// <summary>
     /// Claims the most urgent job of one of the given classes. The claim is
     /// a conditional update, so two workers can never both win the same job,
-    /// on SQLite and PostgreSQL alike.
+    /// on SQLite and PostgreSQL alike. While background work is paused only
+    /// interactive and user jobs are claimed.
     /// </summary>
     public async Task<Job?> ClaimAsync(IReadOnlyCollection<JobResourceClass> classes, CancellationToken ct)
     {
@@ -72,8 +74,13 @@ public sealed class JobRunner(
         await using var scope = scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AtriumDbContext>();
         var now = time.GetUtcNow();
-        var candidates = await db.Jobs
-            .Where(j => j.State == JobState.Queued && j.RunAfter <= now && classes.Contains(j.ResourceClass))
+        var query = db.Jobs.Where(j => j.State == JobState.Queued && j.RunAfter <= now && classes.Contains(j.ResourceClass));
+        if (limits.IsBackgroundPaused)
+        {
+            query = query.Where(j => j.Priority < JobPriority.Background);
+        }
+
+        var candidates = await query
             .OrderBy(j => j.Priority)
             .ThenBy(j => j.RunAfter)
             .ThenBy(j => j.Id)
@@ -124,7 +131,11 @@ public sealed class JobRunner(
         var owner = job.LeaseOwner ?? throw new InvalidOperationException("The job was not claimed.");
         await using var scope = scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AtriumDbContext>();
-        using var run = CancellationTokenSource.CreateLinkedTokenSource(stopping);
+        // A pause of background work stops a background run the same way
+        // shutdown does: back to the queue, without using an attempt.
+        var paused = JobLimits.IsBackground(job.Priority) ? limits.BackgroundStopToken : CancellationToken.None;
+        using var interrupt = CancellationTokenSource.CreateLinkedTokenSource(stopping, paused);
+        using var run = CancellationTokenSource.CreateLinkedTokenSource(interrupt.Token);
         var context = new JobContext(job, owner, db, time, options);
         using var heartbeat = new CancellationTokenSource();
         var heartbeatTask = HeartbeatAsync(job.Id, owner, run, heartbeat.Token);
@@ -145,7 +156,7 @@ public sealed class JobRunner(
         {
             outcome = Outcome.LeaseLost();
         }
-        catch (OperationCanceledException) when (stopping.IsCancellationRequested)
+        catch (OperationCanceledException) when (interrupt.IsCancellationRequested)
         {
             outcome = Outcome.Interrupted();
         }

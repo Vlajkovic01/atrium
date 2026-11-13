@@ -3268,6 +3268,126 @@
           }
         }
       }
+    },
+    "/api/v1/admin/background-work": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "GetBackgroundWork",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundWorkInfo"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/background-work/limits": {
+      "put": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "SetJobLimits",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetJobLimitsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundWorkInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/background-work/pause": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "PauseBackgroundWork",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PauseBackgroundRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundWorkInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/background-work/resume": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "ResumeBackgroundWork",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackgroundWorkInfo"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3375,6 +3495,67 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "BackgroundWorkInfo": {
+        "required": [
+          "profile",
+          "processorCount",
+          "memoryBytes",
+          "maxLimit",
+          "classes",
+          "paused",
+          "pausedByAdmin",
+          "pausedUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "profile": {
+            "$ref": "#/components/schemas/HardwareProfile"
+          },
+          "processorCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "memoryBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "maxLimit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "classes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobClassLimit"
+            }
+          },
+          "paused": {
+            "type": "boolean"
+          },
+          "pausedByAdmin": {
+            "type": "boolean"
+          },
+          "pausedUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -3758,6 +3939,13 @@
           }
         }
       },
+      "HardwareProfile": {
+        "enum": [
+          "small",
+          "medium",
+          "large"
+        ]
+      },
       "HashCheckRequest": {
         "required": [
           "hashes"
@@ -3934,6 +4122,84 @@
           }
         }
       },
+      "JobClassLimit": {
+        "required": [
+          "resourceClass",
+          "default",
+          "override",
+          "effective",
+          "running",
+          "queued"
+        ],
+        "type": "object",
+        "properties": {
+          "resourceClass": {
+            "$ref": "#/components/schemas/JobResourceClass"
+          },
+          "default": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "override": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "effective": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "running": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "queued": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "JobClassLimitSetting": {
+        "required": [
+          "resourceClass",
+          "limit"
+        ],
+        "type": "object",
+        "properties": {
+          "resourceClass": {
+            "$ref": "#/components/schemas/JobResourceClass"
+          },
+          "limit": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "JobInfo": {
         "required": [
           "id",
@@ -4061,6 +4327,15 @@
           "user",
           "background",
           "idle"
+        ]
+      },
+      "JobResourceClass": {
+        "enum": [
+          "cpu",
+          "io",
+          "network",
+          "transcode",
+          "gpu"
         ]
       },
       "JobStarted": {
@@ -4446,6 +4721,23 @@
           }
         }
       },
+      "PauseBackgroundRequest": {
+        "required": [
+          "minutes"
+        ],
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -4675,6 +4967,20 @@
           },
           "current": {
             "type": "boolean"
+          }
+        }
+      },
+      "SetJobLimitsRequest": {
+        "required": [
+          "limits"
+        ],
+        "type": "object",
+        "properties": {
+          "limits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JobClassLimitSetting"
+            }
           }
         }
       },

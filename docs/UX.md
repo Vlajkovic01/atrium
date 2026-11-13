@@ -219,6 +219,11 @@ with the server name, and shows only the shared content.
   folder.
 - **Transcoding.** Hardware results, limits.
 - **Jobs.** All jobs with filters, pause background work.
+- **Background work** (built in Phase 3). The detected hardware profile,
+  a pause (an hour, a day, or until resumed) with a note that work a
+  person starts keeps running, and the number of jobs per kind of work
+  that may run at once, each showing its default and how many are
+  running and waiting.
 - **Integrations.** Metadata, subtitle and translation providers, each off
   by default and stating what it sends.
 - **Backups.** List, create now, schedule, restore.
