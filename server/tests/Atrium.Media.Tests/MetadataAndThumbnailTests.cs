@@ -146,6 +146,24 @@ public sealed class MetadataAndThumbnailTests : IDisposable
     }
 
     [Fact]
+    public async Task The_same_thumbnail_asked_for_at_once_is_made_once_and_never_replaced_while_it_is_read()
+    {
+        var path = Save("photo.jpg", Samples.JpegWithExif(300, 200));
+        var thumbnails = new Thumbnailer(Options());
+        var key = new string('d', 64);
+
+        var made = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(() =>
+            thumbnails.MakeAsync(path, MediaKind.Photo, key, ThumbnailVariant.Small, background: true, CancellationToken.None))));
+        Assert.Single(made.Distinct());
+
+        // Being sent to someone: open for reading, as a web server holds it.
+        await using var reading = new FileStream(made[0], FileMode.Open, FileAccess.Read, FileShare.Read);
+        var again = await thumbnails.MakeAsync(path, MediaKind.Photo, key, ThumbnailVariant.Small, background: false, CancellationToken.None);
+        Assert.Equal(made[0], again);
+        Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(made[0])!, "*.tmp"));
+    }
+
+    [Fact]
     public async Task A_file_that_is_not_a_picture_is_reported_as_unsupported()
     {
         var path = Save("broken.jpg", "this is not a picture"u8.ToArray());
