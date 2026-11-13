@@ -1,5 +1,6 @@
 using Atrium.Core.Files;
 using Atrium.Core.Identity;
+using Atrium.Core.Media;
 using Microsoft.EntityFrameworkCore;
 
 namespace Atrium.Files.Tests;
@@ -157,7 +158,7 @@ public abstract class FileModelContractTests<TDatabase> : IAsyncLifetime
         var (_, library) = await PersonalLibraryAsync();
         await using (var db = Db.CreateContext())
         {
-            var locationId = library.StorageLocationId;
+            var locationId = library.StorageLocationId!.Value;
             var blob = NewBlob(locationId, 1);
             var older = NewBlob(locationId, 2);
             var folder = Db.NewNode(library, library.RootNodeId, "Trip");
@@ -182,8 +183,8 @@ public abstract class FileModelContractTests<TDatabase> : IAsyncLifetime
     public async Task A_blob_that_a_node_or_a_version_points_at_cannot_be_deleted()
     {
         var (_, library) = await PersonalLibraryAsync();
-        var current = NewBlob(library.StorageLocationId, 1);
-        var older = NewBlob(library.StorageLocationId, 2);
+        var current = NewBlob(library.StorageLocationId!.Value, 1);
+        var older = NewBlob(library.StorageLocationId!.Value, 2);
         var file = Db.NewNode(library, library.RootNodeId, "a.txt", NodeKind.File, current.Id);
         await AddAsync(current, older, file);
         await AddAsync(new NodeVersion { NodeId = file.Id, BlobId = older.Id, CreatedAt = Db.Time.GetUtcNow() });
@@ -198,9 +199,9 @@ public abstract class FileModelContractTests<TDatabase> : IAsyncLifetime
     public async Task One_location_holds_each_content_hash_once()
     {
         var (_, library) = await PersonalLibraryAsync();
-        await AddAsync(NewBlob(library.StorageLocationId, 7));
+        await AddAsync(NewBlob(library.StorageLocationId!.Value, 7));
 
-        await Assert.ThrowsAsync<DbUpdateException>(() => AddAsync(NewBlob(library.StorageLocationId, 7)));
+        await Assert.ThrowsAsync<DbUpdateException>(() => AddAsync(NewBlob(library.StorageLocationId!.Value, 7)));
     }
 
     [Fact]
@@ -211,6 +212,43 @@ public abstract class FileModelContractTests<TDatabase> : IAsyncLifetime
         await using var db = Db.CreateContext();
         await Assert.ThrowsAnyAsync<Exception>(() => db.Users.Where(u => u.Id == user.Id).ExecuteDeleteAsync());
         Assert.True(await db.Users.AnyAsync(u => u.Id == user.Id));
+    }
+
+    [Fact]
+    public async Task Media_info_belongs_to_exactly_one_blob_or_one_node()
+    {
+        var (_, library) = await PersonalLibraryAsync();
+        var blob = NewBlob(library.StorageLocationId!.Value, 1);
+        var file = Db.NewNode(library, library.RootNodeId, "a.jpg", NodeKind.File, blob.Id);
+        await AddAsync(blob, file);
+
+        await Assert.ThrowsAsync<DbUpdateException>(() => AddAsync(new MediaInfo { Kind = MediaKind.Photo }));
+        await Assert.ThrowsAsync<DbUpdateException>(() =>
+            AddAsync(new MediaInfo { Kind = MediaKind.Photo, BlobId = blob.Id, NodeId = file.Id }));
+        await AddAsync(new MediaInfo { Kind = MediaKind.Photo, BlobId = blob.Id });
+        await Assert.ThrowsAsync<DbUpdateException>(() => AddAsync(new MediaInfo { Kind = MediaKind.Photo, BlobId = blob.Id }));
+    }
+
+    [Fact]
+    public async Task Media_info_and_album_items_go_with_their_content_and_the_album_survives()
+    {
+        var (user, library) = await PersonalLibraryAsync();
+        var blob = NewBlob(library.StorageLocationId!.Value, 1);
+        var file = Db.NewNode(library, library.RootNodeId, "a.jpg", NodeKind.File, blob.Id);
+        var album = new Album { OwnerUserId = user.Id, Name = "Summer", CoverNodeId = file.Id, CreatedAt = Db.Time.GetUtcNow() };
+        await AddAsync(blob, file, album);
+        await AddAsync(
+            new MediaInfo { Kind = MediaKind.Photo, BlobId = blob.Id },
+            new AlbumItem { AlbumId = album.Id, NodeId = file.Id, AddedAt = Db.Time.GetUtcNow() });
+
+        await using var db = Db.CreateContext();
+        await db.Nodes.Where(n => n.Id == file.Id).ExecuteDeleteAsync();
+        Assert.False(await db.AlbumItems.AnyAsync());
+        Assert.Null((await db.Albums.SingleAsync()).CoverNodeId);
+
+        // The collector removes the blob row once nothing uses it; its facts go with it.
+        await db.Blobs.Where(b => b.Id == blob.Id).ExecuteDeleteAsync();
+        Assert.False(await db.MediaInfos.AnyAsync());
     }
 
     [Fact]

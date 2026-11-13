@@ -97,10 +97,17 @@ public sealed class UploadService(
             return FileResult<Upload>.Fail(FileErrors.QuotaExceeded, refusal);
         }
 
+        // Uploads stage into the library's storage location; an external
+        // library has none and is written to differently.
+        if (library.StorageLocationId is not { } locationId)
+        {
+            return FileResult<Upload>.Fail(FileErrors.ReadOnly);
+        }
+
         IStorageProvider provider;
         try
         {
-            provider = await providers.OpenAsync(db, library.StorageLocationId, ct);
+            provider = await providers.OpenAsync(db, locationId, ct);
         }
         catch (LocationUnavailableException e)
         {
@@ -115,7 +122,7 @@ public sealed class UploadService(
             UserId = actor.UserId,
             LibraryId = library.Id,
             ParentId = request.ParentId,
-            StorageLocationId = library.StorageLocationId,
+            StorageLocationId = locationId,
             Name = name,
             MediaType = request.MediaType,
             Length = request.Length,

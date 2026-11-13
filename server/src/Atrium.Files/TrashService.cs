@@ -81,19 +81,28 @@ public sealed class TrashService(AtriumDbContext db, NodeService nodes, TimeProv
         node.NameKey = key;
         node.ActiveNameKey = key;
         node.TrashedAt = null;
+        node.InTrash = false;
         node.UpdatedAt = time.GetUtcNow();
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
         try
         {
             await db.SaveChangesAsync(ct);
         }
         catch (DbUpdateException)
         {
+            await transaction.RollbackAsync(ct);
             db.ChangeTracker.Clear();
             return await nodes.SiblingAsync(parentId, key, except: id, ct) is { } taken
                 ? NodeService.Conflict<Node>(taken)
                 : FileResult<Node>.Fail(FileErrors.VersionConflict);
         }
 
+        if (node.IsFolder)
+        {
+            await NodeTree.MarkInTrashBelowAsync(db, node.Id, inTrash: false, ct);
+        }
+
+        await transaction.CommitAsync(ct);
         return FileResult<Node>.Success(node);
     }
 

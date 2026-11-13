@@ -403,3 +403,47 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   builds. Phase 3 only probes, grabs frames and makes short previews;
   the choice is revisited for hardware transcoding in Phase 5.
 - Licenses and flags are in LICENSES.md.
+
+## D-033 Media data model (Proposed, Phase 3)
+
+- **External library is a folder path, not a storage location.** A
+  storage location gets an identity file written into it (DESIGN.md
+  6.8), and Atrium must not write anything into a read-only external
+  folder. So an external library carries its own absolute path and no
+  storage location; an unmounted share is caught by the missing-folder
+  guard instead (4.4). S3 prefixes as external libraries can come later.
+- **`InTrash` on every node of a trashed subtree.** Only the node a user
+  deletes carries `TrashedAt`. The timeline and search list nodes across
+  a whole library and must leave out everything inside a trashed folder;
+  walking up the tree for each row would not scale. The flag is set on
+  the subtree in the same transaction as the trash and cleared on
+  restore, except below items that were trashed on their own.
+  Alternative: a recursive query per listing.
+- **Timeline fields on the node.** `MediaKind`, `CapturedAt` and a
+  diacritic-free `SearchKey` live on `Node` and are set by the database
+  context whenever a node is saved, so no code path can forget them.
+  `MediaInfo` holds the technical details, keyed by blob (shared by
+  duplicates) or, in an external library, by node. Alternative: join
+  `MediaInfo` for every timeline page, which needs an OR across two keys.
+- **No `Derivative` table.** Thumbnails are files in the cache named by
+  the content (the blob hash, or a hash of the external file's path, size
+  and time) and the variant. A file that exists is ready; deleting the
+  cache is always safe and just causes regeneration. Only a failure is
+  remembered, in `MediaInfo`, so a broken file is not retried forever.
+  Alternative: an index table, as DESIGN.md first said, which can drift
+  from the cache directory.
+
+## D-034 Capture time is local clock time (Proposed, Phase 3)
+
+- Decision: the timeline is ordered and grouped by the local clock time
+  at which a photo was taken, stored with a zero offset. EXIF gives that
+  time directly (`DateTimeOriginal`), with the offset when the camera
+  recorded one. Without EXIF (screenshots, many videos), the file's
+  modification time is converted to the server's time zone, which is the
+  `TZ` setting of the container.
+- Alternative: store true instants and convert to the viewer's zone.
+  Most EXIF has no offset, so the instant is unknown; and a holiday photo
+  should stay on the day it was taken wherever it is viewed.
+- Until metadata is read, the modification time in UTC is used, so a new
+  photo appears on the timeline at once and moves to its exact place
+  when its metadata job has run.
