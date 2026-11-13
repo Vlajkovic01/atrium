@@ -98,6 +98,7 @@ v1.MapUploadEndpoints();
 v1.MapContentEndpoints();
 v1.MapBackupEndpoints();
 v1.MapIntegrityEndpoints();
+v1.MapBackgroundWorkEndpoints();
 
 await app.RunAsync();
 return 0;

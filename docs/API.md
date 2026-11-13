@@ -253,7 +253,10 @@ returned.
 | Method | Path | Notes |
 |---|---|---|
 | GET, PATCH | `/admin/settings` | Limits, retention, providers; secrets write-only |
-| GET | `/admin/hardware` | Profile, encoders, last detection result |
+| GET | `/admin/hardware` | Encoders and last detection result, Phase 5 |
+| GET | `/admin/background-work` | Built in Phase 3. Hardware profile, cores and memory, per resource class the default, override and effective limit with running and waiting counts, and the pause |
+| PUT | `/admin/background-work/limits` | Replace the overrides: a list of `resourceClass` and `limit` (1 to 32, null for the default) |
+| POST | `/admin/background-work/pause`, `/admin/background-work/resume` | Pause background and idle jobs for `minutes` (1 to 10080) or, with null, until resumed |
 | POST | `/admin/hardware/detect` | Rerun detection |
 | GET | `/admin/storage/usage` | Per location and per user totals |
 | GET | `/admin/sessions` | All sessions; revoke |

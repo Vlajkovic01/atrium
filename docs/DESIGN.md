@@ -466,7 +466,7 @@ Nothing is held only in memory, so a restart loses no work.
 |---|---|
 | Priority | `interactive`, `user`, `background`, `idle`. Stored as a number, because the queue is ordered by it. |
 | Resource class | `cpu`, `io`, `transcode`, `network`, `gpu`. Each class has a concurrency limit. |
-| State | `queued`, `running`, `succeeded`, `failed`, `cancelled`. Pausing background work arrives with the small-device tuning in Phase 3. |
+| State | `queued`, `running`, `succeeded`, `failed`, `cancelled`. A pause of background work is not a job state; see 5.4. |
 | Lease | Owner and expiry, renewed by heartbeat. An expired lease returns the job to the queue. A run that lost its lease can no longer write progress, checkpoints or an outcome. |
 | Checkpoint | Opaque progress data the handler writes so it can resume |
 | Dedupe key | Prevents a second identical job (for example two scans of one library). The database enforces it with a unique column that holds the key only while the job is queued or running. |
@@ -523,6 +523,22 @@ pauses background work in the `cpu` class while it runs.
 All limits are editable in the admin UI. Background and idle jobs pause
 while a stream is transcoding in software, and run at reduced process
 priority.
+
+Built in Phase 3:
+
+- The profile is read at startup from the cores and memory .NET reports,
+  which are the container's limits, not the host's. `network` defaults
+  to 2, 2 and 4 jobs and `gpu` to 1, 1 and 2.
+- An admin overrides any class (1 to 32) or returns it to its default.
+  Overrides and the pause are stored as settings, survive a restart and
+  take effect at once.
+- An admin pauses background work for a time (up to 7 days) or until
+  resumed. While paused, only `interactive` and `user` jobs are claimed.
+  A `background` or `idle` job that is running when the pause begins is
+  stopped at once and goes back to the queue without using an attempt,
+  exactly like at shutdown, and continues from its checkpoint later.
+- Work that needs the machine for someone waiting, such as a software
+  transcode in Phase 5, holds the same pause for as long as it runs.
 
 ### 5.5 Visibility
 
