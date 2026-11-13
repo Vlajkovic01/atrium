@@ -252,8 +252,8 @@ with the server name, and shows only the shared content.
 ### Administration (Phases 1, 3, 11)
 
 One menu entry, "Administration", with a badge counting warnings (D-042),
-set apart above the person's name and also in the menu their name opens
-(D-043).
+set apart above the person's name; on a phone, in the menu their name
+opens instead (D-043).
 It opens the overview; each section below is a tab on top of it, with
 its own warning count.
 

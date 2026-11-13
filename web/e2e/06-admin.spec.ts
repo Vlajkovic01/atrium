@@ -21,9 +21,10 @@ test("administration is one menu entry that opens an overview of the server", as
   await signIn(page, "/files");
   const menu = page.getByRole("navigation", { name: "Main" });
   await expect(menu.getByRole("link", { name: "People" })).toHaveCount(0);
-  // It sits apart from the files, just above the name, and is also in the person's own menu.
+  // It sits apart from the files, just above the name, and only there: not again in the person's menu.
   await page.getByRole("button", { name: /your menu$/ }).click();
-  await expect(page.getByRole("menuitem", { name: /^Administration/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Customize menu" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /^Administration/ })).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   await page
@@ -91,4 +92,15 @@ test("a person is found, given a limit, and scheduled for deletion and spared", 
   await manage.getByRole("button", { name: "Cancel deletion" }).click();
   await expect(manage.getByText(/The deletion was cancelled/)).toBeVisible();
   await expect(rows.getByText("Turned off")).toBeVisible();
+});
+
+test("on a phone administration is in the person's menu", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "en-US" });
+  const page = await context.newPage();
+  await signIn(page, "/files");
+  await expect(page.getByRole("navigation", { name: "Administration" })).toBeHidden();
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await page.getByRole("menuitem", { name: /^Administration/ }).click();
+  await expect(page.getByRole("heading", { name: "Administration", exact: true })).toBeVisible();
+  await context.close();
 });

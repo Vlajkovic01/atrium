@@ -692,8 +692,10 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   Administration looked like any other entry. Owner's idea, adopted:
   clicking one's name opens a menu.
 - The name and avatar at the foot of the sidebar (top right on a phone)
-  open a menu: Account and settings, Customize menu, Administration for
-  admins (with the warning count), Sign out. It follows the menu button
+  open a menu: Account and settings, Customize menu, Sign out, and on a
+  phone Administration for admins (with the warning count). On a
+  computer Administration is not repeated there: it has its own place
+  (owner: "now I have Administration in two places"). It follows the menu button
   pattern (arrows, Enter, Escape back to the name). The separate pencil
   and sign-out buttons are gone; a red dot on the name shows warnings.
 - Administration is not among the person's entries: unless the admin

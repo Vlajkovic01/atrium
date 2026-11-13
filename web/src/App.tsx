@@ -210,7 +210,7 @@ function Shell() {
               {administration}
             </nav>
           ) : null}
-          <UserMenu adminWarnings={isAdmin ? adminWarnings : 0} />
+          <UserMenu adminWarnings={isAdmin ? adminWarnings : 0} adminElsewhere={adminOnTop} />
         </aside>
 
         <div className="app-main">
