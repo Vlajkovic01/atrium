@@ -2,6 +2,7 @@ using Atrium.Core;
 using Atrium.Core.Files;
 using Atrium.Core.Identity;
 using Atrium.Core.Jobs;
+using Atrium.Core.Media;
 using Atrium.Core.Settings;
 using Atrium.Core.Storage;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,10 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
     public DbSet<Blob> Blobs => Set<Blob>();
     public DbSet<NodeVersion> NodeVersions => Set<NodeVersion>();
     public DbSet<Upload> Uploads => Set<Upload>();
+    public DbSet<LibraryGrant> LibraryGrants => Set<LibraryGrant>();
+    public DbSet<MediaInfo> MediaInfos => Set<MediaInfo>();
+    public DbSet<Album> Albums => Set<Album>();
+    public DbSet<AlbumItem> AlbumItems => Set<AlbumItem>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -49,6 +54,10 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
         configurationBuilder.Properties<NodeKind>().HaveConversion<string>().HaveMaxLength(32);
         configurationBuilder.Properties<BlobState>().HaveConversion<string>().HaveMaxLength(32);
         configurationBuilder.Properties<UploadState>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<LibraryState>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<LibraryAccess>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<MediaKind>().HaveConversion<string>().HaveMaxLength(32);
+        configurationBuilder.Properties<ThumbnailState>().HaveConversion<string>().HaveMaxLength(32);
 
         // The one enum stored by number: workers order the queue by it.
         configurationBuilder.Properties<JobPriority>().HaveConversion<int>();
@@ -164,9 +173,21 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
             e.Property(l => l.Version).IsConcurrencyToken();
             e.HasOne<StorageLocation>().WithMany().HasForeignKey(l => l.StorageLocationId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<User>().WithMany().HasForeignKey(l => l.OwnerUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<User>().WithMany().HasForeignKey(l => l.CreatedByUserId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne<User>().WithMany().HasForeignKey(l => l.WritesEnabledByUserId).OnDelete(DeleteBehavior.SetNull);
+            e.Property(l => l.ExternalPath).HasMaxLength(4096);
+            e.Property(l => l.StateReason).HasMaxLength(128);
 
             // At most one personal library per user.
             e.HasIndex(l => l.OwnerUserId).IsUnique();
+        });
+
+        modelBuilder.Entity<LibraryGrant>(e =>
+        {
+            e.HasKey(g => new { g.LibraryId, g.UserId });
+            e.HasOne<Library>().WithMany().HasForeignKey(g => g.LibraryId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<User>().WithMany().HasForeignKey(g => g.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(g => g.UserId);
         });
 
         modelBuilder.Entity<Node>(e =>
@@ -191,6 +212,52 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
             // Siblings that are not in the trash have distinct names (D-011).
             e.HasIndex(n => new { n.ParentId, n.ActiveNameKey }).IsUnique();
             e.HasIndex(n => new { n.LibraryId, n.TrashedAt });
+
+            // An external file is found again by its path at every scan.
+            e.Property(n => n.ExternalPath).HasMaxLength(4096);
+            e.Property(n => n.ExternalPathHash).HasMaxLength(32);
+            e.HasIndex(n => new { n.LibraryId, n.ExternalPathHash }).IsUnique();
+
+            // The timeline: photos and videos of some libraries, newest first.
+            e.Property(n => n.SearchKey).HasMaxLength(NodeName.MaxLength * 2);
+            e.HasIndex(n => new { n.LibraryId, n.MediaKind, n.CapturedAt });
+        });
+
+        modelBuilder.Entity<MediaInfo>(e =>
+        {
+            // Facts about content go when the content goes.
+            e.HasOne<Blob>().WithMany().HasForeignKey(m => m.BlobId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Node>().WithMany().HasForeignKey(m => m.NodeId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(m => m.BlobId).IsUnique();
+            e.HasIndex(m => m.NodeId).IsUnique();
+            e.Property(m => m.Format).HasMaxLength(64);
+            e.Property(m => m.VideoCodec).HasMaxLength(64);
+            e.Property(m => m.AudioCodec).HasMaxLength(64);
+            e.Property(m => m.CameraMake).HasMaxLength(128);
+            e.Property(m => m.CameraModel).HasMaxLength(128);
+            e.Property(m => m.ErrorCode).HasMaxLength(128);
+            e.ToTable(t => t.HasCheckConstraint(
+                "CK_MediaInfos_OneSource",
+                "(\"BlobId\" IS NULL) <> (\"NodeId\" IS NULL)"));
+        });
+
+        modelBuilder.Entity<Album>(e =>
+        {
+            e.Property(a => a.Name).HasMaxLength(NodeName.MaxLength);
+            e.Property(a => a.Version).IsConcurrencyToken();
+            e.HasOne<User>().WithMany().HasForeignKey(a => a.OwnerUserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Node>().WithMany().HasForeignKey(a => a.CoverNodeId).OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(a => a.OwnerUserId);
+        });
+
+        modelBuilder.Entity<AlbumItem>(e =>
+        {
+            e.HasKey(i => new { i.AlbumId, i.NodeId });
+            e.HasOne<Album>().WithMany().HasForeignKey(i => i.AlbumId).OnDelete(DeleteBehavior.Cascade);
+
+            // An item removed from the trash for good leaves every album.
+            e.HasOne<Node>().WithMany().HasForeignKey(i => i.NodeId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(i => i.NodeId);
         });
 
         modelBuilder.Entity<Blob>(e =>
@@ -234,13 +301,57 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         BumpVersions();
+        DeriveNodeFields();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         BumpVersions();
+        DeriveNodeFields();
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    // Fields that follow from others are set here, in one place, so no code
+    // path that saves a node can forget them. Bulk updates bypass this and
+    // must set them themselves.
+    private void DeriveNodeFields()
+    {
+        foreach (var entry in ChangeTracker.Entries<Node>())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified))
+            {
+                continue;
+            }
+
+            var node = entry.Entity;
+            var added = entry.State == EntityState.Added;
+            if (added || entry.Property(n => n.Name).IsModified)
+            {
+                node.SearchKey = NodeName.SearchKeyOf(node.Name);
+            }
+
+            if (added || entry.Property(n => n.MediaType).IsModified)
+            {
+                node.MediaKind = node.IsFolder ? null : MediaKinds.FromMediaType(node.MediaType);
+            }
+
+            // New content is dated anew once its metadata is read.
+            if (!added && entry.Property(n => n.BlobId).IsModified)
+            {
+                node.CapturedAt = null;
+            }
+
+            // Until metadata is read, a photo sorts by its modification time.
+            if (node.MediaKind is null)
+            {
+                node.CapturedAt = null;
+            }
+            else if (node.CapturedAt is null)
+            {
+                node.CapturedAt = new DateTimeOffset(node.ModifiedAt.UtcDateTime, TimeSpan.Zero);
+            }
+        }
     }
 
     // The update's WHERE clause still carries the version that was read, so a

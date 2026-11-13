@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router";
 
+import type { components } from "@atrium/shared";
+
 import { api, call } from "./api.ts";
 import { AuthLayout } from "./components/AuthLayout.tsx";
 import type { IconName } from "./components/Icon.tsx";
@@ -9,10 +11,17 @@ import { Icon } from "./components/Icon.tsx";
 import { Logo } from "./components/Logo.tsx";
 import { Avatar, Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
 import { Account } from "./pages/Account.tsx";
+import { BackgroundWork } from "./pages/BackgroundWork.tsx";
 import { FileBrowser } from "./files/FileBrowser.tsx";
 import { Trash } from "./files/Trash.tsx";
 import { UploadsProvider } from "./files/uploads.tsx";
+import { AlbumPage, Albums } from "./photos/Albums.tsx";
+import { Photos } from "./photos/Photos.tsx";
+import { Search } from "./photos/Search.tsx";
+import { MenuSettings } from "./pages/MenuSettings.tsx";
+import { ViewPage } from "./pages/ViewPage.tsx";
 import { Devices } from "./pages/Devices.tsx";
+import { Libraries } from "./pages/Libraries.tsx";
 import { People } from "./pages/People.tsx";
 import { Setup } from "./pages/Setup.tsx";
 import { SignIn } from "./pages/SignIn.tsx";
@@ -58,6 +67,8 @@ export function App() {
   return user ? <Shell /> : <SignIn />;
 }
 
+type NavItemView = components["schemas"]["NavItemView"];
+
 interface NavItem {
   readonly to: string;
   readonly label: string;
@@ -70,16 +81,45 @@ function Shell() {
   const location = useLocation();
   const isAdmin = user?.role === "admin";
 
-  const personal: readonly NavItem[] = [
-    { to: "/files", label: t("nav.files"), icon: "folder" },
-    { to: "/trash", label: t("nav.trash"), icon: "trash" },
-    { to: "/devices", label: t("nav.devices"), icon: "devices" },
-    { to: "/account", label: t("nav.account"), icon: "user" },
-  ];
+  // The menu as this person arranged it (D-041): order, hidden entries,
+  // own names, groups, folders shared with them and their saved views.
+  const navigation = useQuery({ queryKey: ["navigation"], queryFn: () => call(api.GET("/api/v1/me/navigation")) });
+  const items = (navigation.data?.items ?? []).filter((item) => !item.hidden);
+  const groups = navigation.data?.groups ?? [];
   const admin: readonly NavItem[] = [
     { to: "/people", label: t("nav.people"), icon: "users" },
     { to: "/storage", label: t("nav.storage"), icon: "drive" },
+    { to: "/libraries", label: t("nav.libraries"), icon: "folder" },
+    { to: "/background-work", label: t("nav.backgroundWork"), icon: "history" },
   ];
+
+  const navEntry = (item: NavItemView) => {
+    const builtIn: Record<string, { to: string; icon: IconName }> = {
+      files: { to: "/files", icon: "folder" },
+      photos: { to: "/photos", icon: "image" },
+      trash: { to: "/trash", icon: "trash" },
+      devices: { to: "/devices", icon: "devices" },
+      account: { to: "/account", icon: "user" },
+    };
+    const target =
+      item.kind === "library"
+        ? { to: `/files/${item.targetId ?? ""}`, icon: (item.readOnly ? "lock" : "folder") as IconName }
+        : item.kind === "view"
+          ? { to: `/views/${item.targetId ?? ""}`, icon: "search" as IconName }
+          : builtIn[item.kind];
+    if (!target) {
+      return null;
+    }
+
+    const label = item.label ?? item.name ?? t(`nav.${item.kind}`);
+    const extra = item.kind === "library" || item.kind === "view";
+    return (
+      <NavLink key={item.key} to={target.to} className={extra ? "nav-link nav-extra" : "nav-link"}>
+        <Icon name={target.icon} size={20} />
+        <span>{label}</span>
+      </NavLink>
+    );
+  };
 
   const link = (item: NavItem) => (
     <NavLink key={item.to} to={item.to} className="nav-link">
@@ -96,7 +136,20 @@ function Shell() {
             <Logo size={30} />
           </div>
           <nav className="nav" aria-label={t("nav.main")}>
-            {personal.map(link)}
+            {items.filter((item) => !item.group).map((item) => navEntry(item))}
+            {groups.map((group) => {
+              const members = items.filter((item) => item.group === group.id);
+              return members.length > 0 ? (
+                <div key={group.id} className="nav-group" role="group" aria-label={group.name}>
+                  <p className="nav-heading">{group.name}</p>
+                  {members.map((item) => navEntry(item))}
+                </div>
+              ) : null;
+            })}
+            <NavLink to="/menu" className="nav-link nav-customize">
+              <Icon name="pencil" size={16} />
+              <span>{t("nav.customize")}</span>
+            </NavLink>
             {isAdmin ? (
               <>
                 <p className="nav-heading">{t("nav.administration")}</p>
@@ -127,6 +180,12 @@ function Shell() {
             <Routes>
               <Route path="/files" element={<FileBrowser />} />
               <Route path="/files/:folderId" element={<FileBrowser />} />
+              <Route path="/photos" element={<Photos />} />
+              <Route path="/photos/albums" element={<Albums />} />
+              <Route path="/photos/albums/:albumId" element={<AlbumPage />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/views/:viewId" element={<ViewPage />} />
+              <Route path="/menu" element={<MenuSettings />} />
               <Route path="/trash" element={<Trash />} />
               <Route path="/devices" element={<Devices />} />
               {/* The address a device's QR code points at: opens the approval with the code filled in. */}
@@ -136,6 +195,8 @@ function Shell() {
                 <>
                   <Route path="/people" element={<People />} />
                   <Route path="/storage" element={<StorageLocations />} />
+                  <Route path="/libraries" element={<Libraries />} />
+                  <Route path="/background-work" element={<BackgroundWork />} />
                 </>
               ) : null}
               <Route path="*" element={<Navigate to="/files" replace />} />

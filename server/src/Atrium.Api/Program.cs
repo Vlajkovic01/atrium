@@ -8,7 +8,17 @@ using Atrium.Api.Setup;
 using Atrium.Api.Storage;
 using Atrium.Data;
 using Atrium.Files;
+using Atrium.Files.External;
 using Atrium.Jobs;
+using Atrium.Media;
+
+// The image decoder process the server starts (D-039). Before anything
+// else, so nothing but its answers reaches standard output.
+if (args.Length >= 1 && args[0] == ImageWorker.Argument)
+{
+    return await ImageWorker.RunAsync(
+        Console.In, Console.Out, args.Length > 1 && int.TryParse(args[1], out var threads) ? threads : 1);
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +29,14 @@ if (args.Contains(HealthCheckCommand.Argument))
 }
 
 var bootstrap = BootstrapOptions.From(builder.Configuration);
+
+// Checks the media tools without starting the server or opening any data.
+if (args.Contains(MediaSelfCheck.Argument))
+{
+    return await MediaSelfCheck.RunAsync(
+        new MediaOptions { CacheDir = bootstrap.CacheDir, ImageWorker = ImageWorker.StartInfoForThisServer(concurrency: 1) },
+        Console.Out);
+}
 Directory.CreateDirectory(bootstrap.ConfigDir);
 
 // Held until the process ends. A second server on the same directory stops here.
@@ -31,7 +49,24 @@ builder.Services.AddSingleton<SetupService>();
 builder.Services.AddScoped<StorageLocationService>();
 builder.Services.AddAtriumJobs();
 builder.Services.AddJobWorker();
+
+// External libraries must stay clear of Atrium's own directories.
+builder.Services.AddSingleton(new ExternalLibraryOptions([bootstrap.ConfigDir, bootstrap.CacheDir]));
+builder.Services.AddSingleton(new MediaTypeResolver(MediaTypes.For));
 builder.Services.AddAtriumFiles();
+// libvips runs in decoder processes, never in the server: loaded here it
+// damaged the server's memory, and a broken or hostile picture must not be
+// able to take the server down (D-039).
+var hardware = HardwareInfo.Detect();
+var decoders = Math.Max(1, hardware.DefaultLimits()[Atrium.Core.Jobs.JobResourceClass.Cpu]) + 1;
+builder.Services.AddAtriumMedia(new MediaOptions
+{
+    CacheDir = bootstrap.CacheDir,
+    ImageWorker = ImageWorker.StartInfoForThisServer(concurrency: hardware.Profile == HardwareProfile.Small ? 1 : 2),
+    ImageWorkerProcesses = decoders,
+});
+builder.Services.AddSingleton<ThumbnailGate>();
+builder.Services.AddScoped<Atrium.Api.Preferences.PreferencesStore>();
 builder.Services.AddSingleton<SignedUrls>();
 builder.Services.AddSingleton<ArchiveRequests>();
 builder.Services.AddProblemDetails();
@@ -98,6 +133,11 @@ v1.MapUploadEndpoints();
 v1.MapContentEndpoints();
 v1.MapBackupEndpoints();
 v1.MapIntegrityEndpoints();
+v1.MapBackgroundWorkEndpoints();
+v1.MapAdminLibraryEndpoints();
+v1.MapMediaEndpoints();
+v1.MapPhotoEndpoints();
+v1.MapNavigationEndpoints();
 
 await app.RunAsync();
 return 0;

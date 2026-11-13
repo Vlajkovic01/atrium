@@ -28,6 +28,9 @@ services:
       # The reverse proxy of the "https" profile runs on this network.
       # Its forwarding headers are believed; nobody else's are.
       ATRIUM_TRUSTED_PROXIES: ${ATRIUM_TRUSTED_PROXIES:-172.31.250.0/24}
+      # Photos without a recorded time (screenshots, many videos) are dated
+      # by their file time in this zone, for example Europe/Belgrade.
+      TZ: ${TZ:-UTC}
     volumes:
       # Database, server keys, backups. Back this up.
       - config:/config
@@ -37,6 +40,10 @@ services:
       - data:/data
       # Thumbnails and other things that can be rebuilt. Safe to delete.
       - cache:/cache
+      # Existing folders to show in Atrium without copying them. Mount each
+      # one read-only (:ro), then add it under Administration, Libraries
+      # with the path on the right, for example:
+      #   - /mnt/storage/archive:/media/archive:ro
     depends_on:
       postgres:
         condition: service_healthy

@@ -151,6 +151,73 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/nodes/{id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description size: small (grid) or large (viewer). A WebP image without any metadata. Bearer token or signed URL. */
+        get: operations["GetThumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nodes/{id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A video's short silent preview clip (MP4). Bearer token or signed URL. */
+        get: operations["GetPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nodes/{id}/media-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetMediaInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description type: photo, video, document or folder. q matches names ignoring case and diacritics. */
+        get: operations["Search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/setup/state": {
         parameters: {
             query?: never;
@@ -971,10 +1038,383 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/background-work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetBackgroundWork"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/background-work/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetJobLimits"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/background-work/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PauseBackgroundWork"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/background-work/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ResumeBackgroundWork"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/libraries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListAdminLibraries"];
+        put?: never;
+        post: operations["CreateExternalLibrary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/libraries/check-path": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Tries a folder before adding it as a library. Reads only; always 200 with the outcome inside. */
+        post: operations["CheckLibraryPath"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/libraries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Removes an external library from Atrium. Its folder and files are not touched. confirmName must be the library's name. */
+        delete: operations["DeleteLibrary"];
+        options?: never;
+        head?: never;
+        /** @description Rename, or replace who may see the library. Requires If-Match with the version read. */
+        patch: operations["UpdateLibrary"];
+        trace?: never;
+    };
+    "/api/v1/admin/libraries/{id}/writes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Lets Atrium change the folder's files (rename, move, delete into the library's own trash, upload). Enabling needs confirmName, the library's name; disabling takes effect at once. */
+        put: operations["SetLibraryWrites"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/libraries/{id}/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ScanLibrary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/timeline/buckets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Months with photos or videos, newest first, with their counts. */
+        get: operations["GetTimelineBuckets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Photos and videos newest first. from and to are local dates and times (inclusive, exclusive). */
+        get: operations["GetTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/albums": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListAlbums"];
+        put?: never;
+        post: operations["CreateAlbum"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/albums/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAlbum"];
+        put?: never;
+        post?: never;
+        /** @description Deletes the album only; its photos stay where they are. */
+        delete: operations["DeleteAlbum"];
+        options?: never;
+        head?: never;
+        /** @description Rename, or choose the cover among the album's items. Requires If-Match. */
+        patch: operations["UpdateAlbum"];
+        trace?: never;
+    };
+    "/api/v1/albums/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAlbumItems"];
+        put?: never;
+        post: operations["AddAlbumItems"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/albums/{id}/items/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RemoveAlbumItems"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/navigation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetNavigation"];
+        /** @description Replaces the person's menu layout: order, hidden entries, own names and groups. */
+        put: operations["SaveNavigation"];
+        post?: never;
+        /** @description Back to the default menu. */
+        delete: operations["ResetNavigation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListViews"];
+        put?: never;
+        post: operations["CreateView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/views/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetViewItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/views/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description What a view with these rules would show, without saving it. */
+        post: operations["PreviewView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/views/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UpdateView"];
+        post?: never;
+        delete: operations["DeleteView"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/navigation-default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetDefaultNavigation"];
+        /** @description The menu new people start with, and everyone who has not arranged their own. */
+        put: operations["SaveDefaultNavigation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdminLibraryView: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["LibraryKind"];
+            mode: components["schemas"]["LibraryMode"];
+            /** Format: uuid */
+            rootNodeId: string;
+            path: null | string;
+            readOnly: boolean;
+            state: components["schemas"]["LibraryState"];
+            stateReason: null | string;
+            /** Format: date-time */
+            lastScanAt: null | string;
+            /** Format: int32 */
+            fileCount: number | string;
+            userIds: string[];
+            writerIds: string[];
+            showInTimeline: boolean;
+            /** Format: date-time */
+            writesEnabledAt: null | string;
+            scan: null | components["schemas"]["JobInfoBrief"];
+            /** Format: int32 */
+            version: number | string;
+        };
         AdminUserView: {
             /** Format: uuid */
             id: string;
@@ -995,12 +1435,51 @@ export interface components {
             /** Format: date-time */
             deleteAfter: null | string;
         };
+        AlbumItemsRequest: {
+            nodeIds: string[];
+        };
+        AlbumItemsResult: {
+            /** Format: int32 */
+            changed: number | string;
+        };
+        AlbumView: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: int32 */
+            itemCount: number | string;
+            /** Format: uuid */
+            coverNodeId: null | string;
+            coverUrl: null | string;
+            /** Format: date-time */
+            newestAt: null | string;
+            /** Format: date-time */
+            oldestAt: null | string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: int32 */
+            version: number | string;
+        };
         ApprovePairingRequest: {
             readOnly: boolean;
             hidePersonalLibrary: boolean;
         };
         ArchiveRequest: {
             ids: string[];
+        };
+        BackgroundWorkInfo: {
+            profile: components["schemas"]["HardwareProfile"];
+            /** Format: int32 */
+            processorCount: number | string;
+            /** Format: int64 */
+            memoryBytes: number | string;
+            /** Format: int32 */
+            maxLimit: number | string;
+            classes: components["schemas"]["JobClassLimit"][];
+            paused: boolean;
+            pausedByAdmin: boolean;
+            /** Format: date-time */
+            pausedUntil: null | string;
         };
         BackupInfo: {
             name: string;
@@ -1033,6 +1512,15 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        CheckPathRequest: {
+            path: null | string;
+        };
+        CheckPathResponse: {
+            ok: boolean;
+            errorCode: null | string;
+            /** Format: int32 */
+            entryCount: null | number | string;
+        };
         /** @enum {unknown} */
         ConflictPolicy: "fail" | "rename" | "replace" | null;
         ContentUrlRequest: {
@@ -1044,6 +1532,16 @@ export interface components {
             /** Format: uuid */
             parentId: string;
             name: null | string;
+        };
+        CreateAlbumRequest: {
+            name: string;
+            nodeIds: null | string[];
+        };
+        CreateExternalLibraryRequest: {
+            name: string;
+            path: string;
+            userIds: null | string[];
+            showInTimeline: null | boolean;
         };
         CreateFirstAdminRequest: {
             name: string;
@@ -1090,6 +1588,8 @@ export interface components {
             /** Format: int32 */
             removed: number | string;
         };
+        /** @enum {unknown} */
+        HardwareProfile: "small" | "medium" | "large";
         HashCheckRequest: {
             hashes: string[];
         };
@@ -1131,6 +1631,24 @@ export interface components {
             /** Format: uuid */
             runningJobId: null | string;
         };
+        JobClassLimit: {
+            resourceClass: components["schemas"]["JobResourceClass"];
+            /** Format: int32 */
+            default: number | string;
+            /** Format: int32 */
+            override: null | number | string;
+            /** Format: int32 */
+            effective: number | string;
+            /** Format: int32 */
+            running: number | string;
+            /** Format: int32 */
+            queued: number | string;
+        };
+        JobClassLimitSetting: {
+            resourceClass: components["schemas"]["JobResourceClass"];
+            /** Format: int32 */
+            limit: null | number | string;
+        };
         JobInfo: {
             /** Format: uuid */
             id: string;
@@ -1156,12 +1674,21 @@ export interface components {
             /** Format: date-time */
             finishedAt: null | string;
         };
+        JobInfoBrief: {
+            /** Format: uuid */
+            id: string;
+            state: components["schemas"]["JobState"];
+            /** Format: double */
+            progress: null | number | string;
+        };
         JobPage: {
             items: components["schemas"]["JobInfo"][];
             nextCursor: null | string;
         };
         /** @enum {unknown} */
         JobPriority: "interactive" | "user" | "background" | "idle";
+        /** @enum {unknown} */
+        JobResourceClass: "cpu" | "io" | "network" | "transcode" | "gpu";
         JobStarted: {
             /** Format: uuid */
             jobId: string;
@@ -1177,11 +1704,15 @@ export interface components {
             /** Format: uuid */
             rootNodeId: string;
             readOnly: boolean;
+            state: components["schemas"]["LibraryState"];
+            changesAllowed: boolean;
         };
         /** @enum {unknown} */
-        LibraryKind: "personal" | "shared" | "photos" | "movies" | "shows";
+        LibraryKind: "personal" | "shared" | "photos" | "movies" | "shows" | "folder";
         /** @enum {unknown} */
         LibraryMode: "managed" | "external";
+        /** @enum {unknown} */
+        LibraryState: "online" | "offline";
         LinkCodeResponse: {
             code: string;
             /** Format: int32 */
@@ -1209,6 +1740,57 @@ export interface components {
         };
         /** @enum {unknown} */
         LoginStatus: "signedIn" | "totpRequired";
+        MediaInfoView: {
+            kind: components["schemas"]["MediaKind"];
+            /** Format: int32 */
+            width: null | number | string;
+            /** Format: int32 */
+            height: null | number | string;
+            /** Format: int64 */
+            durationMs: null | number | string;
+            format: null | string;
+            videoCodec: null | string;
+            audioCodec: null | string;
+            /** Format: date-time */
+            capturedAt: null | string;
+            /** Format: int32 */
+            capturedOffsetMinutes: null | number | string;
+            cameraMake: null | string;
+            cameraModel: null | string;
+            thumbnailState: components["schemas"]["ThumbnailState"];
+        };
+        /** @enum {unknown} */
+        MediaKind: "photo" | "video";
+        NavEntry: {
+            key: string;
+            hidden: boolean;
+            label: null | string;
+            group: null | string;
+        };
+        NavGroup: {
+            id: string;
+            name: string;
+        };
+        NavigationLayout: {
+            entries: components["schemas"]["NavEntry"][];
+            groups: components["schemas"]["NavGroup"][];
+        };
+        NavigationView: {
+            items: components["schemas"]["NavItemView"][];
+            groups: components["schemas"]["NavGroup"][];
+            custom: boolean;
+        };
+        NavItemView: {
+            key: string;
+            kind: string;
+            label: null | string;
+            name: null | string;
+            hidden: boolean;
+            group: null | string;
+            /** Format: uuid */
+            targetId: null | string;
+            readOnly: boolean;
+        };
         NodeInfo: {
             /** Format: uuid */
             id: string;
@@ -1261,6 +1843,36 @@ export interface components {
             status: components["schemas"]["PairingStatus"];
             tokens: null | components["schemas"]["TokenResponse"];
         };
+        PauseBackgroundRequest: {
+            /** Format: int32 */
+            minutes: null | number | string;
+        };
+        PhotoItemView: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            libraryId: string;
+            /** Format: uuid */
+            parentId: null | string;
+            name: string;
+            kind: components["schemas"]["MediaKind"];
+            mediaType: null | string;
+            /** Format: int64 */
+            size: number | string;
+            /** Format: date-time */
+            capturedAt: string;
+            /** Format: int32 */
+            width: null | number | string;
+            /** Format: int32 */
+            height: null | number | string;
+            /** Format: int64 */
+            durationMs: null | number | string;
+            thumbnailUrl: string;
+        };
+        PhotoPageView: {
+            items: components["schemas"]["PhotoItemView"][];
+            nextCursor: null | string;
+        };
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -1296,9 +1908,36 @@ export interface components {
             forcePathStyle: boolean;
             keyPrefix: null | string;
         };
+        SavedView: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            rules: components["schemas"]["ViewRulesData"];
+        };
+        SaveViewRequest: {
+            name: string;
+            rules: components["schemas"]["ViewRulesData"];
+        };
         ScheduleDeletionRequest: {
             confirmName: string;
         };
+        SearchPageView: {
+            items: components["schemas"]["SearchResultView"][];
+            nextCursor: null | string;
+        };
+        SearchResultView: {
+            node: components["schemas"]["NodeInfo"];
+            kind: null | components["schemas"]["MediaKind"];
+            /** Format: date-time */
+            capturedAt: null | string;
+            /** Format: int32 */
+            width: null | number | string;
+            /** Format: int32 */
+            height: null | number | string;
+            thumbnailUrl: null | string;
+        };
+        /** @enum {unknown} */
+        SearchType: "photo" | "video" | "document" | "folder";
         SessionInfo: {
             /** Format: uuid */
             id: string;
@@ -1313,6 +1952,14 @@ export interface components {
             lastIp: null | string;
             readOnly: boolean;
             current: boolean;
+        };
+        SetJobLimitsRequest: {
+            limits: components["schemas"]["JobClassLimitSetting"][];
+        };
+        SetLibraryWritesRequest: {
+            enabled: boolean;
+            confirmName: null | string;
+            writerIds: null | string[];
         };
         SetupState: {
             adminExists: boolean;
@@ -1373,6 +2020,16 @@ export interface components {
             minClientVersion: string;
             setupComplete: boolean;
         };
+        /** @enum {unknown} */
+        ThumbnailState: "pending" | "ready" | "failed" | "unsupported";
+        TimelineBucketView: {
+            /** Format: int32 */
+            year: number | string;
+            /** Format: int32 */
+            month: number | string;
+            /** Format: int32 */
+            count: number | string;
+        };
         TokenResponse: {
             accessToken: string;
             /** Format: int32 */
@@ -1406,6 +2063,17 @@ export interface components {
             /** Format: date-time */
             deleteAt: string;
             location: components["schemas"]["LocationSegment"][];
+        };
+        UpdateAlbumRequest: {
+            name: null | string;
+            /** Format: uuid */
+            coverNodeId: null | string;
+        };
+        UpdateLibraryRequest: {
+            name: null | string;
+            userIds: null | string[];
+            writerIds: null | string[];
+            showInTimeline: null | boolean;
         };
         UpdateNodeRequest: {
             name: null | string;
@@ -1495,6 +2163,36 @@ export interface components {
             /** Format: date-time */
             replacedAt: string;
         };
+        ViewPageView: {
+            items: components["schemas"]["SearchResultView"][];
+            nextCursor: null | string;
+            /** Format: int32 */
+            total: number | string;
+        };
+        ViewPreviewRequest: {
+            rules: components["schemas"]["ViewRulesData"];
+            /** Format: int32 */
+            limit: null | number | string;
+        };
+        ViewRulesData: {
+            words: null | string;
+            types: null | components["schemas"]["SearchType"][];
+            extensions: null | string[];
+            libraryIds: null | string[];
+            /** Format: date-time */
+            from: null | string;
+            /** Format: date-time */
+            to: null | string;
+            /** Format: int32 */
+            lastDays: null | number | string;
+            /** Format: int64 */
+            minSize: null | number | string;
+            /** Format: int64 */
+            maxSize: null | number | string;
+            sort: null | components["schemas"]["ViewSort"];
+        };
+        /** @enum {unknown} */
+        ViewSort: "newest" | "oldest" | "name" | "largest" | null;
     };
     responses: never;
     parameters: never;
@@ -1778,6 +2476,116 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    GetThumbnail: {
+        parameters: {
+            query?: {
+                size?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetMediaInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaInfoView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    Search: {
+        parameters: {
+            query?: {
+                q?: string;
+                type?: string;
+                from?: string;
+                to?: string;
+                libraryId?: string;
+                cursor?: string;
+                limit?: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchPageView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };
@@ -4134,6 +4942,1048 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobStarted"];
+                };
+            };
+        };
+    };
+    GetBackgroundWork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundWorkInfo"];
+                };
+            };
+        };
+    };
+    SetJobLimits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetJobLimitsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundWorkInfo"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PauseBackgroundWork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PauseBackgroundRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundWorkInfo"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ResumeBackgroundWork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BackgroundWorkInfo"];
+                };
+            };
+        };
+    };
+    ListAdminLibraries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLibraryView"][];
+                };
+            };
+        };
+    };
+    CreateExternalLibrary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExternalLibraryRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLibraryView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    CheckLibraryPath: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckPathRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckPathResponse"];
+                };
+            };
+        };
+    };
+    DeleteLibrary: {
+        parameters: {
+            query?: {
+                confirmName?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UpdateLibrary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLibraryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLibraryView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SetLibraryWrites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetLibraryWritesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLibraryView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ScanLibrary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobStarted"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetTimelineBuckets: {
+        parameters: {
+            query?: {
+                libraryId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimelineBucketView"][];
+                };
+            };
+        };
+    };
+    GetTimeline: {
+        parameters: {
+            query?: {
+                libraryId?: string;
+                from?: string;
+                to?: string;
+                cursor?: string;
+                limit?: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoPageView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListAlbums: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumView"][];
+                };
+            };
+        };
+    };
+    CreateAlbum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAlbumRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetAlbum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    DeleteAlbum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UpdateAlbum: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAlbumRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetAlbumItems: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number | string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoPageView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    AddAlbumItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumItemsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumItemsResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RemoveAlbumItems: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumItemsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumItemsResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationView"];
+                };
+            };
+        };
+    };
+    SaveNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NavigationLayout"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ResetNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationView"];
+                };
+            };
+        };
+    };
+    ListViews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedView"][];
+                };
+            };
+        };
+    };
+    CreateView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveViewRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetViewItems: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number | string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ViewPageView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PreviewView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ViewPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ViewPageView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UpdateView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveViewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    DeleteView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetDefaultNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationLayout"];
+                };
+            };
+        };
+    };
+    SaveDefaultNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NavigationLayout"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationLayout"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
         };
