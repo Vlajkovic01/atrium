@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Photos and videos: metadata (EXIF, ffprobe), thumbnails and previews
+       (DESIGN.md 7.1). libvips is loaded from the system in the image; see
+       docs/LICENSES.md and D-032. -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Atrium.Media.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MetadataExtractor" />
+    <PackageReference Include="NetVips" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Atrium.Core\Atrium.Core.csproj" />
+    <ProjectReference Include="..\Atrium.Data\Atrium.Data.csproj" />
+    <ProjectReference Include="..\Atrium.Files\Atrium.Files.csproj" />
+    <ProjectReference Include="..\Atrium.Jobs\Atrium.Jobs.csproj" />
+    <ProjectReference Include="..\Atrium.Storage\Atrium.Storage.csproj" />
+  </ItemGroup>
+
+</Project>

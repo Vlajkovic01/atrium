@@ -17,6 +17,7 @@ import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Select } from "../components/Select.tsx";
 import { Badge, Button, ErrorMessage, Field, Notice, PageHeader, useErrorText } from "../components/ui.tsx";
+import { useSession } from "../session.tsx";
 import { batch, downloadArchive, downloadFile, restore, type BatchItem, type NodeInfo } from "./actions.ts";
 import { Details } from "./Details.tsx";
 import { FolderPicker } from "./FolderPicker.tsx";
@@ -50,11 +51,12 @@ export function FileBrowser() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { upload } = useUploads();
+  const { user } = useSession();
   const params = useParams();
 
   const libraries = useQuery({ queryKey: ["libraries"], queryFn: () => call(api.GET("/api/v1/libraries")) });
-  const library = libraries.data?.[0];
-  const folderId = params["folderId"] ?? library?.rootNodeId;
+  const home = libraries.data?.find((l) => l.kind === "personal") ?? libraries.data?.[0];
+  const folderId = params["folderId"] ?? home?.rootNodeId;
 
   const [sort, setSort] = useState<Sort>("name");
   const [descending, setDescending] = useState(false);
@@ -95,6 +97,9 @@ export function FileBrowser() {
     getNextPageParam: (page) => page.nextCursor ?? null,
   });
 
+  // The library the open folder belongs to: the personal one, or an
+  // existing folder shared through a library.
+  const library = libraries.data?.find((l) => l.id === folder.data?.libraryId) ?? home;
   const items = useMemo(() => children.data?.pages.flatMap((p) => p.items) ?? [], [children.data]);
   const canWrite = folder.data?.canWrite ?? false;
   const selection = items.filter((i) => selected.has(i.id));
@@ -233,7 +238,10 @@ export function FileBrowser() {
   }
 
   const crumbs = [...(path.data ?? []), ...(folder.data ? [folder.data] : [])];
-  const name = (node: NodeInfo) => (node.id === library.rootNodeId ? t("files.myFiles") : node.name);
+  const rootName = (l: { kind: string; name: string }) => (l.kind === "personal" ? t("files.myFiles") : l.name);
+  const name = (node: NodeInfo) => (node.id === library.rootNodeId ? rootName(library) : node.name);
+  const rootLink = (l: { kind: string; rootNodeId: string }) =>
+    l.kind === "personal" ? "/files" : `/files/${l.rootNodeId}`;
 
   return (
     <div
@@ -305,6 +313,39 @@ export function FileBrowser() {
         }
       />
 
+      {(libraries.data?.length ?? 0) > 1 ? (
+        <nav className="library-tabs" aria-label={t("files.libraries")}>
+          {libraries.data!.map((l) => (
+            <Link
+              key={l.id}
+              to={rootLink(l)}
+              className={l.id === library.id ? "library-tab is-current" : "library-tab"}
+              aria-current={l.id === library.id ? "page" : undefined}
+            >
+              <Icon name={l.mode === "external" ? (l.readOnly ? "lock" : "folder") : "user"} size={16} />
+              {rootName(l)}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
+
+      {/* Saying why nothing can be changed, and who can change that. */}
+      {!canWrite && library.mode === "external" ? (
+        <Notice kind="info">
+          {library.changesAllowed
+            ? t("files.readOnlyNotWriter")
+            : user?.role === "admin"
+              ? t("files.readOnlyFolderAdmin")
+              : t("files.readOnlyFolder")}
+          {!library.changesAllowed && user?.role === "admin" ? (
+            <>
+              {" "}
+              <Link to="/libraries">{t("files.manageLibraries")}</Link>
+            </>
+          ) : null}
+        </Notice>
+      ) : null}
+
       {/* At the top of the library the title already says where you are. */}
       {crumbs.length > 1 ? (
         <nav className="crumbs" aria-label={t("files.location")}>
@@ -314,7 +355,7 @@ export function FileBrowser() {
               {index === crumbs.length - 1 ? (
                 <span aria-current="page">{name(node)}</span>
               ) : (
-                <Link to={node.id === library.rootNodeId ? "/files" : `/files/${node.id}`}>{name(node)}</Link>
+                <Link to={node.id === library.rootNodeId ? rootLink(library) : `/files/${node.id}`}>{name(node)}</Link>
               )}
             </span>
           ))}
@@ -338,9 +379,12 @@ export function FileBrowser() {
                 <Button size="sm" variant="ghost" icon="move" onClick={() => setDialog("move")}>
                   {t("files.move")}
                 </Button>
-                <Button size="sm" variant="ghost" icon="copy" onClick={() => setDialog("copy")}>
-                  {t("files.copy")}
-                </Button>
+                {/* Copying inside an existing folder would duplicate files on its own disk. */}
+                {library.mode === "managed" ? (
+                  <Button size="sm" variant="ghost" icon="copy" onClick={() => setDialog("copy")}>
+                    {t("files.copy")}
+                  </Button>
+                ) : null}
                 <Button size="sm" variant="ghost" icon="trash" onClick={trashSelection}>
                   {t("files.delete")}
                 </Button>

@@ -6,17 +6,11 @@ namespace Atrium.Jobs;
 public sealed class JobOptions
 {
     /// <summary>
-    /// How many jobs of each class run at once. Phase 3 derives these from
-    /// the hardware profile and makes them editable (DESIGN.md 5.4).
+    /// Fixed default limits per class instead of those of the hardware
+    /// profile (<see cref="HardwareInfo.DefaultLimits"/>). For tests; an
+    /// admin changes limits through <see cref="JobLimits"/>.
     /// </summary>
-    public Dictionary<JobResourceClass, int> Concurrency { get; init; } = new()
-    {
-        [JobResourceClass.Cpu] = 1,
-        [JobResourceClass.Io] = 2,
-        [JobResourceClass.Network] = 2,
-        [JobResourceClass.Transcode] = 1,
-        [JobResourceClass.Gpu] = 1,
-    };
+    public Dictionary<JobResourceClass, int>? Concurrency { get; init; }
 
     /// <summary>A running job whose lease is not renewed for this long is returned to the queue.</summary>
     public TimeSpan LeaseDuration { get; init; } = TimeSpan.FromMinutes(2);
@@ -39,9 +33,6 @@ public sealed class JobOptions
 
     /// <summary>Failed jobs are kept longer, so an admin can still find out what went wrong.</summary>
     public TimeSpan FailedRetention { get; init; } = TimeSpan.FromDays(30);
-
-    public int LimitFor(JobResourceClass resourceClass) =>
-        Concurrency.TryGetValue(resourceClass, out var limit) ? Math.Max(0, limit) : 1;
 
     public TimeSpan BackoffAfter(int attempts)
     {

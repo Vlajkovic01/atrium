@@ -89,6 +89,37 @@ writable by that user:
 sudo chown 1654 /mnt/storage/atrium
 ```
 
+### Showing folders you already have
+
+Atrium can show any folder you already have, with every file and
+subfolder in it, without copying it. Mount the folder into the
+container in `docker-compose.yml`, read-only unless you will let Atrium
+change it:
+
+```yaml
+    volumes:
+      - /mnt/storage/archive:/media/archive:ro
+```
+
+Restart with `docker compose up -d`, then add `/media/archive` under
+Administration, Libraries, and choose who may see it. It then appears in
+the menu under Files. Its photos and videos also join the timeline,
+unless you turn that off for the folder. Until you allow changes, Atrium
+only reads the folder: it never creates, renames, changes or deletes
+anything in it, and keeps its thumbnails in the cache. If you allow
+changes (Libraries, Allow changes, for the people you choose, with the
+mount not `:ro`), deleting moves files into `.atrium-trash` inside the
+folder for 30 days. It checks for changes every
+six hours, or when you press Scan now.
+
+If the folder ever looks empty or unreachable, for example because a
+disk is not mounted, Atrium marks the library offline and keeps
+everything it knew about it.
+
+Set `TZ` in `.env` to your time zone (for example `TZ=Europe/Belgrade`).
+Photos that do not record when they were taken, such as screenshots,
+are placed on the timeline by their file time in that zone.
+
 ### Network shares and external disks
 
 Mount the share or disk on the host first, then bind-mount it as above.

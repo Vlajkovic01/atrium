@@ -40,6 +40,63 @@ public abstract class NodeServiceContractTests<TDatabase> : IAsyncLifetime
         return page.Value.Items.Select(i => i.Name).ToList();
     }
 
+    private async Task<Dictionary<string, bool>> InTrashByNameAsync(Guid libraryId)
+    {
+        var result = new Dictionary<string, bool>();
+        await Host.WithDbAsync(async db =>
+        {
+            foreach (var node in await db.Nodes.AsNoTracking().Where(n => n.LibraryId == libraryId && n.ParentId != null).ToListAsync())
+            {
+                result[node.Name] = node.InTrash;
+            }
+        });
+        return result;
+    }
+
+    [Fact]
+    public async Task Trashing_a_folder_marks_everything_below_it_and_restoring_clears_only_the_live_part()
+    {
+        var (actor, library) = await Host.NewUserAsync();
+        var trip = (await FolderAsync(actor, library.RootNodeId, "Trip")).Value!;
+        var day = (await FolderAsync(actor, trip.Id, "Day")).Value!;
+        await Host.UploadAsync(actor, day.Id, "kept.txt", "a");
+        var gone = (await Host.UploadAsync(actor, day.Id, "gone.txt", "b")).Value!;
+        await FolderAsync(actor, library.RootNodeId, "Other");
+
+        // Trashed on its own first, then its folder goes too.
+        await Host.NodesAsync(n => n.TrashAsync(actor, gone.Id, null, None));
+        await Host.NodesAsync(n => n.TrashAsync(actor, trip.Id, null, None));
+
+        var trashed = await InTrashByNameAsync(library.Id);
+        Assert.True(trashed["Trip"] && trashed["Day"] && trashed["kept.txt"] && trashed["gone.txt"]);
+        Assert.False(trashed["Other"]);
+
+        Assert.True((await Host.TrashAsync(t => t.RestoreAsync(actor, trip.Id, null, ConflictPolicy.Fail, None))).Ok);
+
+        var restored = await InTrashByNameAsync(library.Id);
+        Assert.False(restored["Trip"] || restored["Day"] || restored["kept.txt"] || restored["Other"]);
+        Assert.True(restored["gone.txt"]);
+    }
+
+    [Fact]
+    public async Task A_new_file_gets_its_search_key_and_media_kind_when_saved()
+    {
+        var (actor, library) = await Host.NewUserAsync();
+        var blob = await Host.StoreAsync("x"u8.ToArray());
+
+        var photo = await Host.NodesAsync(n => n.AddFileAsync(actor, library.RootNodeId, "Šuma Đerdap.JPG", blob, "image/jpeg", null, ConflictPolicy.Fail, None));
+        var text = (await Host.UploadAsync(actor, library.RootNodeId, "notes.txt", "n")).Value!;
+
+        Assert.Equal("suma djerdap.jpg", photo.Value!.SearchKey);
+        Assert.Equal(MediaKind.Photo, photo.Value.MediaKind);
+        Assert.Equal(photo.Value.ModifiedAt, photo.Value.CapturedAt);
+        Assert.Null(text.MediaKind);
+        Assert.Null(text.CapturedAt);
+
+        var renamed = await Host.NodesAsync(n => n.UpdateAsync(actor, photo.Value.Id, photo.Value.Version, "Café.jpg", null, None));
+        Assert.Equal("cafe.jpg", renamed.Value!.SearchKey);
+    }
+
     [Fact]
     public async Task A_folder_name_is_unique_among_siblings_ignoring_case()
     {

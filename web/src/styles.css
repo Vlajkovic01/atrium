@@ -2152,3 +2152,497 @@ a {
 .trash-origin a {
   color: var(--ink-soft);
 }
+
+/* Switching between the personal library and shared folders. */
+.library-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+}
+
+.library-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: var(--surface-sunk);
+  border: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+
+.library-tab:hover {
+  background: var(--accent-wash);
+  color: var(--accent-wash-ink);
+}
+
+.library-tab.is-current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.plain-list {
+  margin: 0.75rem 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.35rem;
+  color: var(--ink-soft);
+}
+
+/* ---- Photos ------------------------------------------------------------ */
+
+.photos-body {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.photos-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.photo-grid {
+  width: 100%;
+}
+
+.photo-day {
+  margin-bottom: 1.25rem;
+}
+
+.photo-day-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 0 0 0.5rem;
+}
+
+.photo-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.photo-tile {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--radius-s);
+  background: var(--surface-sunk);
+}
+
+.photo-open {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.photo-open img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-open:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+.photo-tile.is-selected .photo-open img {
+  transform: scale(0.9);
+  border-radius: var(--radius-s);
+  transition: transform 0.12s var(--ease);
+}
+
+.photo-badge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 60%);
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.photo-check {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 25%);
+  color: transparent;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.photo-tile:hover .photo-check,
+.photo-check:focus-visible,
+.photo-check[aria-pressed="true"],
+.photo-grid:has(.photo-check[aria-pressed="true"]) .photo-check {
+  opacity: 1;
+}
+
+.photo-check[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.selection-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin-bottom: 0.75rem;
+}
+
+.scrubber {
+  position: sticky;
+  top: 1rem;
+  flex: none;
+  width: 4.5rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  font-size: 0.8rem;
+}
+
+.scrubber-year {
+  display: grid;
+  gap: 1px;
+  margin-bottom: 0.6rem;
+}
+
+.scrubber-year-label {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.scrubber-month {
+  padding: 1px 4px;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--ink-soft);
+  text-align: left;
+  cursor: pointer;
+}
+
+.scrubber-month:hover,
+.scrubber-month.is-current {
+  background: var(--accent-wash);
+  color: var(--accent-wash-ink);
+}
+
+.load-more {
+  min-height: 2rem;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+/* The viewer covers the whole window, on a dark stage whatever the theme. */
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: #0b0f0d;
+  color: #eef2ef;
+}
+
+.viewer:focus {
+  outline: none;
+}
+
+.viewer .icon-button,
+.viewer .btn-ghost {
+  color: #eef2ef;
+}
+
+.viewer-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.viewer-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.viewer-stage {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.viewer-media {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.viewer-nav {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+  cursor: pointer;
+}
+
+.viewer-nav:hover {
+  background: rgb(255 255 255 / 22%);
+}
+
+.viewer-nav.is-prev {
+  left: 1rem;
+}
+
+.viewer-nav.is-next {
+  right: 1rem;
+}
+
+.viewer-info {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(20rem, 90vw);
+  padding: 1rem 1.25rem;
+  overflow-y: auto;
+  background: #141a17;
+}
+
+.viewer-info dl {
+  display: grid;
+  gap: 0.2rem 0;
+  margin: 0;
+}
+
+.viewer-info dt {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: #9aa79f;
+}
+
+.viewer-info dd {
+  margin: 0;
+}
+
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.album-card {
+  display: grid;
+  gap: 0.25rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.album-cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-m);
+  background: var(--surface-sunk);
+  color: var(--ink-faint);
+}
+
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-card:hover .album-cover {
+  outline: 2px solid var(--accent);
+}
+
+.album-name {
+  font-weight: 600;
+}
+
+.album-picks {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.album-pick {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.album-pick:hover {
+  border-color: var(--accent);
+}
+
+.album-pick img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: var(--radius-s);
+}
+
+.album-pick > span {
+  display: grid;
+}
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.inline-form .field {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.search-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.search-field input {
+  flex: 1;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.search-field:focus-within {
+  border-color: var(--accent);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.chip.is-on {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+  color: var(--accent-wash-ink);
+}
+
+.chip.is-static {
+  cursor: default;
+}
+
+.search-others {
+  margin-top: 1rem;
+}
+
+@media (max-width: 760px) {
+  .scrubber {
+    display: none;
+  }
+
+  .viewer-actions .btn span {
+    display: none;
+  }
+}
+
+/* A shared folder, listed under Files. */
+.nav-sublink {
+  padding-left: 2.4rem;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 760px) {
+  .nav-sublink {
+    display: none;
+  }
+}
