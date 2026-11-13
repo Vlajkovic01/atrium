@@ -160,6 +160,7 @@
     "readOnlyFolder": "Ovaj folder se prikazuje onakav kakav je na serveru; ovde se u njemu ništa ne može menjati. Administrator može da dozvoli izmene.",
     "readOnlyFolderAdmin": "Ovaj folder se prikazuje onakav kakav je na serveru; ovde se u njemu još ništa ne može menjati. Izmene i ko ih pravi birate u Bibliotekama.",
     "readOnlyNotWriter": "Izmene su u ovom folderu dozvoljene, ali ne i vama. Administrator vam to može dozvoliti u Bibliotekama.",
+    "firstReading": "Ovaj folder se još čita prvi put; fajlovi se ovde pojavljuju kako se pronalaze.",
     "manageLibraries": "Otvori Biblioteke",
     "libraries": "Biblioteke",
     "noLibrary": "Još nema gde da se čuvaju fajlovi. Administrator prvo mora da doda lokaciju za skladištenje.",

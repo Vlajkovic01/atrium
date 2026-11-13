@@ -11,6 +11,7 @@ namespace Atrium.Api.Endpoints;
 /// <param name="Name">Clients show a translated name for a personal library, chosen by <paramref name="Kind"/>.</param>
 /// <param name="ReadOnly">Whether the caller cannot change anything here.</param>
 /// <param name="ChangesAllowed">Whether the library allows changes at all; when it does but <paramref name="ReadOnly"/> is set, the caller is not among those who may change it.</param>
+/// <param name="FirstReading">An existing folder just added whose files are still being read for the first time; its contents fill in as they are found.</param>
 public sealed record LibraryInfo(
     Guid Id,
     string Name,
@@ -19,7 +20,8 @@ public sealed record LibraryInfo(
     Guid RootNodeId,
     bool ReadOnly,
     LibraryState State,
-    bool ChangesAllowed);
+    bool ChangesAllowed,
+    bool FirstReading = false);
 
 public static class LibraryEndpoints
 {
@@ -67,7 +69,8 @@ public static class LibraryEndpoints
             var library = item.Library;
             var writable = NodeService.CanWrite(actor, library, item.Grant);
             result.Add(new LibraryInfo(
-                library.Id, library.Name, library.Kind, library.Mode, library.RootNodeId, !writable, library.State, !library.ReadOnly));
+                library.Id, library.Name, library.Kind, library.Mode, library.RootNodeId, !writable, library.State, !library.ReadOnly,
+                library.Mode == LibraryMode.External && library.LastScanAt is null && library.State == LibraryState.Online));
         }
 
         return TypedResults.Ok(result);

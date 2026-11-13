@@ -31,6 +31,7 @@ type View = "list" | "grid";
 const VIEW_KEY = "atrium.files.view";
 const NODE_DRAG = "application/x-atrium-nodes";
 const PAGE = 500;
+const READING_POLL = 2000;
 
 function storedView(): View {
   try {
@@ -55,7 +56,13 @@ export function FileBrowser() {
   const { user } = useSession();
   const params = useParams();
 
-  const libraries = useQuery({ queryKey: ["libraries"], queryFn: () => call(api.GET("/api/v1/libraries")) });
+  // While an existing folder just added is read for the first time, its
+  // files appear as they are found: the page keeps looking until it is done.
+  const libraries = useQuery({
+    queryKey: ["libraries"],
+    queryFn: () => call(api.GET("/api/v1/libraries")),
+    refetchInterval: (query) => (query.state.data?.some((l) => l.firstReading) ? READING_POLL : false),
+  });
   const home = libraries.data?.find((l) => l.kind === "personal") ?? libraries.data?.[0];
   const folderId = params["folderId"] ?? home?.rootNodeId;
   const pin = usePin("folder", folderId);
@@ -78,6 +85,7 @@ export function FileBrowser() {
     enabled: folderId !== undefined,
     queryFn: () => call(api.GET("/api/v1/nodes/{id}", { params: { path: { id: folderId! } } })),
   });
+  const reading = libraries.data?.find((l) => l.id === folder.data?.libraryId)?.firstReading ?? false;
   const path = useQuery({
     queryKey: ["path", folderId],
     enabled: folderId !== undefined,
@@ -97,6 +105,7 @@ export function FileBrowser() {
         }),
       ),
     getNextPageParam: (page) => page.nextCursor ?? null,
+    refetchInterval: () => (reading ? READING_POLL : false),
   });
 
   // The library the open folder belongs to: the personal one, or an
@@ -332,6 +341,7 @@ export function FileBrowser() {
       ) : null}
 
       <ErrorMessage error={pin.error} />
+      {reading ? <Notice kind="info">{t("files.firstReading")}</Notice> : null}
 
       {/* Saying why nothing can be changed, and who can change that. */}
       {!canWrite && library.mode === "external" ? (

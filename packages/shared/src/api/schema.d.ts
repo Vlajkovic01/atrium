@@ -1706,6 +1706,8 @@ export interface components {
             readOnly: boolean;
             state: components["schemas"]["LibraryState"];
             changesAllowed: boolean;
+            /** @default false */
+            firstReading: boolean;
         };
         /** @enum {unknown} */
         LibraryKind: "personal" | "shared" | "photos" | "movies" | "shows" | "folder";

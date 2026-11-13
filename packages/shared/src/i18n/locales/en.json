@@ -161,6 +161,7 @@
     "readOnlyFolderAdmin": "This folder is shown as it is on the server; nothing in it can be changed here yet. You can allow changes and choose who makes them under Libraries.",
     "readOnlyNotWriter": "Changes are allowed in this folder, but not for you. An administrator can let you change files under Libraries.",
     "manageLibraries": "Open Libraries",
+    "firstReading": "This folder is still being read for the first time; its files appear here as they are found.",
     "libraries": "Libraries",
     "noLibrary": "There is nowhere to store files yet. An admin has to add a storage location first.",
     "location": "Location",

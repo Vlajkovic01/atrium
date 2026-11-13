@@ -6159,6 +6159,10 @@
           },
           "changesAllowed": {
             "type": "boolean"
+          },
+          "firstReading": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

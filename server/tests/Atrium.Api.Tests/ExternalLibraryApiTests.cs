@@ -105,6 +105,8 @@ public sealed class ExternalLibraryApiTests : IDisposable
         var photos = Assert.Single(anaLibraries, l => l.Id == library.Id);
         Assert.True(photos.ReadOnly);
         Assert.Equal(LibraryMode.External, photos.Mode);
+        // Read once already, so clients stop waiting for its files.
+        Assert.False(photos.FirstReading);
 
         // The admin did not give themselves access, so they do not see it as a library.
         var adminLibraries = await (await _client.SendAsync(HttpMethod.Get, "/api/v1/libraries", admin)).ReadAsync<List<LibraryInfo>>();
