@@ -17,6 +17,8 @@ public static class FileContent
     /// allowed: an uploaded HTML or SVG file opened directly can neither run
     /// script nor load anything, and is never same-origin with the app.
     /// </summary>
+    public const string PdfPolicy = "default-src 'none'; frame-ancestors 'self'";
+
     public const string SandboxPolicy = "sandbox; default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'";
 
     /// <summary>Types that are shown in the browser when asked; everything else is always a download.</summary>
@@ -50,6 +52,15 @@ public static class FileContent
         response.Headers.AcceptRanges = "bytes";
         response.Headers.CacheControl = "private, no-cache";
         response.Headers.ContentSecurityPolicy = SandboxPolicy;
+        if (showInline && type.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            // The browser's PDF viewer refuses to run in a sandboxed
+            // document, and the web app shows the PDF in a frame of its own
+            // (D-044). Scripts inside a PDF run in the viewer's own isolated
+            // process, never in this origin; nothing else may load.
+            response.Headers.ContentSecurityPolicy = PdfPolicy;
+            response.Headers.XFrameOptions = "SAMEORIGIN";
+        }
         response.Headers.ContentDisposition = Disposition(fileName, showInline);
         response.ContentType = showInline ? type : "application/octet-stream";
 

@@ -21,6 +21,7 @@ import { usePin } from "../navigation.ts";
 import { useSession } from "../session.tsx";
 import { batch, downloadArchive, downloadFile, restore, type BatchItem, type NodeInfo } from "./actions.ts";
 import { Details } from "./Details.tsx";
+import { FilePreview } from "./FilePreview.tsx";
 import { FolderPicker } from "./FolderPicker.tsx";
 import { formatBytes, formatDateTime } from "./format.ts";
 import { filesFromDrop, filesFromInput, useUploads } from "./uploads.tsx";
@@ -73,6 +74,7 @@ export function FileBrowser() {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [anchor, setAnchor] = useState<number | null>(null);
   const [details, setDetails] = useState<NodeInfo | null>(null);
+  const [preview, setPreview] = useState<number | null>(null);
   const [dialog, setDialog] = useState<"new" | "rename" | "move" | "copy" | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [undo, setUndo] = useState<{ ids: string[]; message: string } | null>(null);
@@ -119,6 +121,7 @@ export function FileBrowser() {
     setSelected(new Set());
     setAnchor(null);
     setDetails(null);
+    setPreview(null);
   }, [folderId]);
 
   const refresh = async (...folders: (string | null | undefined)[]) => {
@@ -180,11 +183,13 @@ export function FileBrowser() {
       }
     });
 
+  // Opening a file shows it (D-044); its details stay one click away.
+  const files = items.filter((n) => n.kind === "file");
   const open = (node: NodeInfo) => {
     if (node.kind === "folder") {
       void navigate(`/files/${node.id}`);
     } else {
-      setDetails(node);
+      setPreview(files.findIndex((f) => f.id === node.id));
     }
   };
 
@@ -570,6 +575,18 @@ export function FileBrowser() {
           ) : null}
         </div>
         {details ? <Details node={details} onClose={() => setDetails(null)} /> : null}
+        {preview !== null && files[preview] ? (
+          <FilePreview
+            files={files}
+            index={preview}
+            onIndex={setPreview}
+            onClose={() => setPreview(null)}
+            onDetails={(node) => {
+              setPreview(null);
+              setDetails(node);
+            }}
+          />
+        ) : null}
       </div>
 
       {dropping ? (

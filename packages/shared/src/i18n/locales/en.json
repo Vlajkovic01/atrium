@@ -867,5 +867,11 @@
     "label": "Your menu",
     "account": "Account and settings",
     "open": "{name}: your menu"
+  },
+  "preview": {
+    "details": "Details",
+    "none": "This kind of file cannot be shown here. Download it to open it on your device.",
+    "office": "Word, Excel and PowerPoint files cannot be shown here yet. Download it to open it on your device.",
+    "showInFolder": "Show in folder"
   }
 }

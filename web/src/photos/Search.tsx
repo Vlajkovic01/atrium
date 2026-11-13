@@ -7,6 +7,7 @@ import { Link, useSearchParams } from "react-router";
 import { api, call } from "../api.ts";
 import { Icon } from "../components/Icon.tsx";
 import { ErrorMessage, PageHeader } from "../components/ui.tsx";
+import { FilePreview } from "../files/FilePreview.tsx";
 import { formatBytes, currentLocale } from "../i18n.ts";
 import { parseSearch } from "./layout.ts";
 import { LoadMore, PhotoTabs, SelectionBar } from "./Photos.tsx";
@@ -169,29 +170,55 @@ export function Search() {
 }
 
 /** Results that are not photos or videos: a list, each leading to its folder. */
+/** Files and folders that are not photos: a file opens where it is shown, a folder opens in Files. */
 export function OtherResults({ results }: { readonly results: readonly SearchResult[] }) {
   const { t } = useTranslation();
+  const [open, setOpen] = useState<number | null>(null);
+  const files = results.filter((r) => r.node.kind === "file").map((r) => r.node);
   if (results.length === 0) {
     return null;
   }
 
   return (
-    <ul className="rows search-others">
-      {results.map((r) => (
-        <li key={r.node.id} className="row">
-          <span className="row-icon">
-            <Icon name={r.node.kind === "folder" ? "folder" : "file"} size={20} />
-          </span>
-          <div className="row-main">
-            <p className="row-title">
-              <Link to={r.node.kind === "folder" ? `/files/${r.node.id}` : `/files/${r.node.parentId ?? ""}`}>
-                {r.node.name}
-              </Link>
-            </p>
-            <p className="row-meta">{r.node.kind === "file" ? formatBytes(Number(r.node.size)) : t("files.folder")}</p>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <>
+      {open !== null && files[open] ? (
+        <FilePreview files={files} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
+      ) : null}
+      <ul className="rows search-others">
+        {results.map((r) => (
+          <li key={r.node.id} className="row">
+            <span className="row-icon">
+              <Icon name={r.node.kind === "folder" ? "folder" : "file"} size={20} />
+            </span>
+            <div className="row-main">
+              <p className="row-title">
+                {r.node.kind === "folder" ? (
+                  <Link to={`/files/${r.node.id}`}>{r.node.name}</Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => setOpen(files.findIndex((f) => f.id === r.node.id))}
+                  >
+                    {r.node.name}
+                  </button>
+                )}
+              </p>
+              <p className="row-meta">
+                {r.node.kind === "file" ? (
+                  <>
+                    {formatBytes(Number(r.node.size))}
+                    <span className="dot" />
+                    <Link to={`/files/${r.node.parentId ?? ""}`}>{t("preview.showInFolder")}</Link>
+                  </>
+                ) : (
+                  t("files.folder")
+                )}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }

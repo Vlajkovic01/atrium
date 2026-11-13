@@ -704,3 +704,29 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   becomes the entry `admin`, placed by dragging, grouped, renamed and
   given an icon like any other, but never hidden, and it is not repeated
   under the name. The entry exists only for admins.
+
+## D-044 Any file opens where it is (Owner, 2026-11-13)
+
+- Owner's request: "I cannot look at a PDF, an Excel file and so on;
+  support viewing all files, not only pictures." Owner's choices: now, in
+  Phase 3; Office files (Word, Excel, PowerPoint) later.
+- Opening a file in Files, in a search or in a view shows it in a
+  full-window viewer, with the previous and next file of the list on the
+  arrow keys, Download, and Details (versions and the rest) one click
+  away. Folders still open in Files.
+- What the browser shows by itself, with no new dependency and nothing
+  converted on the server: pictures (JPEG, PNG, GIF, WebP, AVIF, BMP),
+  video and audio the browser plays, PDF in the browser's own viewer,
+  and text or code up to 2 MB (shown as text, never run). Anything else,
+  including Office files for now, says so and offers the download.
+- PDF needs one exception to the content headers: the browser's PDF
+  viewer refuses to run in a sandboxed document, so an inline PDF gets
+  `default-src 'none'; frame-ancestors 'self'` and `X-Frame-Options:
+  SAMEORIGIN` instead of the sandbox. Scripts inside a PDF run in the
+  viewer's own isolated process, not in Atrium's origin. Every other type
+  keeps the sandbox and `DENY`; HTML and SVG are still never shown.
+- Office files later: the candidate is LibreOffice on the server turning
+  them into PDF in a separate process, cached like thumbnails (MPL-2.0,
+  about 300 MB in the Docker image). Alternatives considered: SheetJS and
+  docx-preview in the browser (no PowerPoint, and each client would need
+  its own).
