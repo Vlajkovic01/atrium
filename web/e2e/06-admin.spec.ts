@@ -21,7 +21,13 @@ test("administration is one menu entry that opens an overview of the server", as
   await signIn(page, "/files");
   const menu = page.getByRole("navigation", { name: "Main" });
   await expect(menu.getByRole("link", { name: "People" })).toHaveCount(0);
-  await menu.getByRole("link", { name: /^Administration/ }).click();
+  // It is in the menu under the name, beside Customize menu; Escape closes that menu.
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await expect(page.getByRole("menuitem", { name: "Customize menu" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await page.getByRole("menuitem", { name: /^Administration/ }).click();
 
   await expect(page.getByRole("heading", { name: "Administration", exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: "People" })).toBeVisible();
@@ -83,4 +89,38 @@ test("a person is found, given a limit, and scheduled for deletion and spared", 
   await manage.getByRole("button", { name: "Cancel deletion" }).click();
   await expect(manage.getByText(/The deletion was cancelled/)).toBeVisible();
   await expect(rows.getByText("Turned off")).toBeVisible();
+});
+
+test("on a phone administration is in the person's menu too", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: "en-US" });
+  const page = await context.newPage();
+  await signIn(page, "/files");
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await page.getByRole("menuitem", { name: /^Administration/ }).click();
+  await expect(page.getByRole("heading", { name: "Administration", exact: true })).toBeVisible();
+  await context.close();
+});
+
+test("placed in the main menu, administration is an entry that moves like the others", async ({ page }) => {
+  await signIn(page, "/menu");
+  await page.getByRole("combobox", { name: /^Administration/ }).click();
+  await page.getByRole("option", { name: "In the main menu, where you drag it" }).click();
+
+  // It joins the list first, cannot be hidden, and moves down like any entry.
+  const entry = page.getByRole("listitem").filter({ has: page.getByLabel("Name in the menu for Administration") });
+  await expect(entry.getByText("Always shown")).toBeVisible();
+  await entry.getByRole("button", { name: "Move Administration down" }).click();
+  await entry.getByRole("button", { name: "Move Administration down" }).click();
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("Your menu was saved.")).toBeVisible();
+
+  const main = page.getByRole("navigation", { name: "Main" });
+  const links = main.getByRole("link");
+  await expect(links.nth(2)).toHaveText(/Administration/);
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await expect(page.getByRole("menuitem", { name: /^Administration/ })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("button", { name: "Back to the default" }).click();
+  await expect(main.getByRole("link", { name: /^Administration/ })).toHaveCount(0);
 });

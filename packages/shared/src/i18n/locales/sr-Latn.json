@@ -148,7 +148,8 @@
     "files": "Fajlovi",
     "trash": "Korpa",
     "photos": "Fotografije",
-    "customize": "Prilagodi meni"
+    "customize": "Prilagodi meni",
+    "admin": "Administracija"
   },
   "files": {
     "title": "Fajlovi",
@@ -698,8 +699,8 @@
     "densityComfortable": "Imena i ikonice",
     "densityCompact": "Samo ikonice",
     "adminPosition": "Administracija",
-    "adminBottom": "Na dnu",
-    "adminTop": "Na vrhu",
+    "adminBottom": "U meniju ispod vašeg imena",
+    "adminTop": "U glavnom meniju, gde je prevučete",
     "icon": "Ikonica",
     "iconFor": "Ikonica za {name}",
     "usualIcon": "Uobičajena",
@@ -719,7 +720,8 @@
     "saved": "Vaš meni je sačuvan.",
     "groupName": "Ime grupe",
     "removeGroup": "Ukloni grupu",
-    "addGroup": "Dodaj grupu"
+    "addGroup": "Dodaj grupu",
+    "alwaysShown": "Uvek prikazana"
   },
   "views": {
     "title": "Prikazi",
@@ -860,5 +862,10 @@
       "uploads_cleanup": "Brisanje nezavršenih otpremanja",
       "users_delete": "Brisanje naloga"
     }
+  },
+  "userMenu": {
+    "label": "Vaš meni",
+    "account": "Nalog i podešavanja",
+    "open": "{name}: vaš meni"
   }
 }

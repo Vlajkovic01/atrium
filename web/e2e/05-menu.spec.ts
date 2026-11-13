@@ -38,7 +38,13 @@ test("the menu is arranged: an entry hidden, another renamed, and back to the de
   const row = (name: string) =>
     page.getByRole("listitem").filter({ has: page.getByRole("button", { name: `Move ${name} up` }) });
   // Dragged by its handle: grabbing the name starts typing instead.
-  await row("Devices").locator(".menu-grip").dragTo(row("Trash"));
+  // Moved in steps, as a hand would, so the browser sees the drag pass over the target.
+  const grip = (await row("Devices").locator(".menu-grip").boundingBox())!;
+  const target = (await row("Trash").boundingBox())!;
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 });
+  await page.mouse.up();
   await expect(page.getByRole("region", { name: "Work" }).getByLabel("Name in the menu for Devices")).toBeVisible();
 
   await page.getByRole("button", { name: "Save" }).click();
@@ -86,7 +92,8 @@ test("a folder pinned to the menu, the menu made compact, and its settings reach
 
   // Customizing lives in the footer and on the Account page, not in the menu.
   await expect(menu(page).getByRole("link", { name: "Customize menu" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Customize menu" }).click();
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await page.getByRole("menuitem", { name: "Customize menu" }).click();
   await page.getByRole("combobox", { name: /^Menu size/ }).click();
   await page.getByRole("option", { name: "Icons only" }).click();
   await page.getByRole("button", { name: "Add separator line" }).click();

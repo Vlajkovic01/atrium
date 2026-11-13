@@ -3,13 +3,14 @@ using Atrium.Api.Auth;
 using Atrium.Api.Files;
 using Atrium.Api.Preferences;
 using Atrium.Core.Files;
+using Atrium.Core.Identity;
 using Atrium.Files;
 using Atrium.Media.Photos;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Atrium.Api.Endpoints;
 
-/// <param name="Kind"><c>files</c>, <c>photos</c>, <c>trash</c>, <c>devices</c>, <c>account</c>, <c>library</c>, <c>view</c>, <c>folder</c>, <c>album</c> or <c>separator</c>.</param>
+/// <param name="Kind"><c>files</c>, <c>photos</c>, <c>trash</c>, <c>devices</c>, <c>account</c>, <c>library</c>, <c>view</c>, <c>folder</c>, <c>album</c>, <c>separator</c> or <c>admin</c>.</param>
 /// <param name="Label">The person's own name for it; null shows the usual one.</param>
 /// <param name="Name">For a library or a view, its own name.</param>
 /// <param name="TargetId">For a library, its top folder; for a view, the view; for a pinned folder or album, that folder or album.</param>
@@ -229,6 +230,16 @@ public static partial class NavigationEndpoints
         var views = (await store.ViewsAsync(actor.UserId, ct))
             .Select(v => new NavItemView($"view:{v.Id:N}", "view", null, v.Name, false, null, v.Id, false))
             .ToList();
+        // Administration is an entry like the others, to be moved and
+        // grouped, only for an admin who put it in the main menu (D-043);
+        // otherwise it is in the menu under their name. It cannot be hidden:
+        // an admin must always be able to reach it.
+        var adminInMenu = layout.AdminPosition == "top" && http.User.IsInRole(nameof(UserRole.Admin));
+        if (adminInMenu)
+        {
+            available.Add(BuiltIn("admin"));
+        }
+
         available.Add(BuiltIn("files"));
         available.AddRange(libraries);
         available.Add(BuiltIn("photos"));
@@ -246,7 +257,7 @@ public static partial class NavigationEndpoints
             {
                 result.Add(item with
                 {
-                    Hidden = entry.Hidden,
+                    Hidden = entry.Hidden && item.Kind != "admin",
                     Label = entry.Label,
                     Group = entry.Group is { } g && groupIds.Contains(g) ? g : null,
                     Icon = entry.Icon,
@@ -350,7 +361,7 @@ public static partial class NavigationEndpoints
         return string.IsNullOrEmpty(trimmed) || trimmed.Length > max || trimmed.Any(char.IsControl) ? null : trimmed;
     }
 
-    [GeneratedRegex("^(files|photos|trash|devices|account|(library|view|folder|album|separator):[0-9a-f]{32})$")]
+    [GeneratedRegex("^(admin|files|photos|trash|devices|account|(library|view|folder|album|separator):[0-9a-f]{32})$")]
     private static partial Regex EntryKey();
 
     [GeneratedRegex("^[a-zA-Z]{1,32}$")]

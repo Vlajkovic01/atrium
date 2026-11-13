@@ -3130,3 +3130,115 @@ a {
     text-align: left;
   }
 }
+
+/* ---- The person's menu and the system area (D-043) ----------------------- */
+
+.user-menu {
+  position: relative;
+  padding: 0;
+}
+
+.user-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.6rem;
+  border: none;
+  border-radius: inherit;
+  background: none;
+  color: var(--ink-faint);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-menu-button:hover,
+.user-menu-button[aria-expanded="true"] {
+  background: var(--surface);
+}
+
+.user-menu-button .user-text {
+  color: var(--ink);
+}
+
+.user-menu-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: none;
+  border-radius: 999px;
+  background: var(--danger);
+}
+
+.user-menu-list {
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 20;
+  display: grid;
+  min-width: max(100%, 14rem);
+  padding: 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  border: none;
+  border-radius: var(--radius-s);
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.user-menu-item span:first-of-type {
+  flex: 1;
+}
+
+.user-menu-item:hover,
+.user-menu-item:focus-visible {
+  background: var(--surface-sunk);
+  color: var(--ink);
+  outline: none;
+}
+
+.user-menu-item.is-separated {
+  margin-top: 0.3rem;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--radius-s) var(--radius-s);
+  padding-top: 0.75rem;
+}
+
+.is-compact .user-menu-button {
+  justify-content: center;
+  padding: 0.4rem 0;
+}
+
+.is-compact .user-menu-button > .icon {
+  display: none;
+}
+
+@media (width <= 52rem) {
+  .user-menu-button {
+    padding: 0.2rem;
+  }
+
+  .user-menu-button > .icon {
+    display: none;
+  }
+
+  .user-menu-list {
+    top: calc(100% + 0.4rem);
+    right: 0;
+    bottom: auto;
+    left: auto;
+  }
+}

@@ -180,6 +180,37 @@ public sealed class NavigationApiTests : IDisposable
     }
 
     [Fact]
+    public async Task Administration_in_the_main_menu_is_placed_like_any_entry_but_never_hidden_and_only_for_admins()
+    {
+        var root = await PersonAsync("root", UserRole.Admin);
+        var ana = await PersonAsync("ana");
+
+        // Under the name by default: not an entry.
+        Assert.DoesNotContain((await NavigationAsync(root)).Items, i => i.Key == "admin");
+
+        var layout = new
+        {
+            entries = new object[]
+            {
+                new { key = "files", hidden = false, label = (string?)null, group = (string?)null },
+                new { key = "admin", hidden = true, label = "Server", group = "g" },
+            },
+            groups = new[] { new { id = "g", name = "System", collapsed = false } },
+            adminPosition = "top",
+        };
+        var menu = await (await _client.SendAsync(HttpMethod.Put, Nav, root, layout)).ReadAsync<NavigationView>();
+        // Files keeps its place, entries not in the layout (Photos and the rest) follow it, and Administration comes after Files as placed.
+        var admin = Assert.Single(menu.Items, i => i.Key == "admin");
+        Assert.True(menu.Items.ToList().FindIndex(i => i.Key == "admin") > menu.Items.ToList().FindIndex(i => i.Key == "files"));
+        Assert.Equal(("admin", "admin", "Server", "g"), (admin.Key, admin.Kind, admin.Label, admin.Group));
+        Assert.False(admin.Hidden);
+
+        // The same layout gives a person who is not an admin no such entry.
+        var hers = await (await _client.SendAsync(HttpMethod.Put, Nav, ana, layout)).ReadAsync<NavigationView>();
+        Assert.DoesNotContain(hers.Items, i => i.Key == "admin");
+    }
+
+    [Fact]
     public async Task A_view_shows_files_by_its_rules_and_only_to_its_owner()
     {
         var ana = await PersonAsync("ana");
