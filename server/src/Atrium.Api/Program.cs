@@ -66,6 +66,7 @@ builder.Services.AddAtriumMedia(new MediaOptions
     ImageWorkerProcesses = decoders,
 });
 builder.Services.AddSingleton<ThumbnailGate>();
+builder.Services.AddScoped<Atrium.Api.Preferences.PreferencesStore>();
 builder.Services.AddSingleton<SignedUrls>();
 builder.Services.AddSingleton<ArchiveRequests>();
 builder.Services.AddProblemDetails();
@@ -136,6 +137,7 @@ v1.MapBackgroundWorkEndpoints();
 v1.MapAdminLibraryEndpoints();
 v1.MapMediaEndpoints();
 v1.MapPhotoEndpoints();
+v1.MapNavigationEndpoints();
 
 await app.RunAsync();
 return 0;

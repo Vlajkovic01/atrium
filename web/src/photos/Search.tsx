@@ -19,7 +19,7 @@ type SearchType = "photo" | "video" | "document" | "folder";
 const TYPES: readonly SearchType[] = ["photo", "video", "document", "folder"];
 
 /** A search result that is a photo or video, in the shape the grid uses. */
-function asPhoto(result: SearchResult): PhotoItem {
+export function asPhoto(result: SearchResult): PhotoItem {
   return {
     id: result.node.id,
     libraryId: result.node.libraryId,
@@ -156,27 +156,7 @@ export function Search() {
       {photos.length > 0 ? (
         <PhotoGrid items={photos} selected={selected} onSelect={setSelected} onOpen={setOpen} />
       ) : null}
-      {others.length > 0 ? (
-        <ul className="rows search-others">
-          {others.map((r) => (
-            <li key={r.node.id} className="row">
-              <span className="row-icon">
-                <Icon name={r.node.kind === "folder" ? "folder" : "file"} size={20} />
-              </span>
-              <div className="row-main">
-                <p className="row-title">
-                  <Link to={r.node.kind === "folder" ? `/files/${r.node.id}` : `/files/${r.node.parentId ?? ""}`}>
-                    {r.node.name}
-                  </Link>
-                </p>
-                <p className="row-meta">
-                  {r.node.kind === "file" ? formatBytes(Number(r.node.size)) : t("files.folder")}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <OtherResults results={others} />
       {results.hasNextPage ? (
         <LoadMore onVisible={() => void results.fetchNextPage()} busy={results.isFetchingNextPage} />
       ) : null}
@@ -185,5 +165,33 @@ export function Search() {
         <Viewer items={photos} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />
       ) : null}
     </div>
+  );
+}
+
+/** Results that are not photos or videos: a list, each leading to its folder. */
+export function OtherResults({ results }: { readonly results: readonly SearchResult[] }) {
+  const { t } = useTranslation();
+  if (results.length === 0) {
+    return null;
+  }
+
+  return (
+    <ul className="rows search-others">
+      {results.map((r) => (
+        <li key={r.node.id} className="row">
+          <span className="row-icon">
+            <Icon name={r.node.kind === "folder" ? "folder" : "file"} size={20} />
+          </span>
+          <div className="row-main">
+            <p className="row-title">
+              <Link to={r.node.kind === "folder" ? `/files/${r.node.id}` : `/files/${r.node.parentId ?? ""}`}>
+                {r.node.name}
+              </Link>
+            </p>
+            <p className="row-meta">{r.node.kind === "file" ? formatBytes(Number(r.node.size)) : t("files.folder")}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }

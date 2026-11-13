@@ -2646,3 +2646,40 @@ a {
     display: none;
   }
 }
+
+/* ---- Customizable menu --------------------------------------------------- */
+
+.nav-group {
+  display: contents;
+}
+
+.nav-customize {
+  margin-top: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--ink-faint);
+}
+
+.menu-order {
+  display: flex;
+  flex-direction: column;
+}
+
+.view-preview {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-m);
+  background: var(--surface-sunk);
+}
+
+.view-preview h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 760px) {
+  .nav-extra,
+  .nav-group .nav-heading,
+  .nav-customize {
+    display: none;
+  }
+}

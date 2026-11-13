@@ -209,6 +209,7 @@ const shapes = {
     </>
   ),
   chevronLeft: <path d="m14.5 6-6 6 6 6" />,
+  chevronUp: <path d="m6 14.5 6-6 6 6" />,
   video: (
     <>
       <rect x="3" y="6" width="13" height="12" rx="2" />

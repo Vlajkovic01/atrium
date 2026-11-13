@@ -619,3 +619,31 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   change that; the Libraries page warns when nobody may change a library
   that allows changes. Copy is not offered where it cannot work.
 - Texts and examples in the app and the documentation are neutral.
+## D-041 Each person's own menu, with views made of rules (Owner, 2026-11-13)
+
+- Owner's decisions: the menu is customizable per person; entries can be
+  views chosen by rules; a view only shows files and never moves them;
+  Photos stays as a built-in entry that can be hidden; built now, in
+  Phase 3. The admin sets the default for people who have not arranged
+  their own.
+- What a person can do: reorder, hide and rename entries (Files, Photos,
+  Trash, Devices, Account, every folder shared with them, their views),
+  and gather them under their own group headings. Administration is not
+  part of the layout: an admin always sees it, so nobody can lock
+  themselves out. "Customize menu" is always at the end of the menu.
+- Views: a name and rules: words in the name, kinds (photo, video,
+  document, folder), file endings, libraries, a date range or the last N
+  days (capture time for photos and videos, change time for other
+  files), a size range, and an order. A view follows new files as they
+  arrive, shows only what the person can read, and is listed under their
+  menu. At most 50 per person.
+- Storage: the layout and the views are settings rows per person
+  (`prefs.nav:<user>`, `prefs.views:<user>`, `prefs.nav.default`),
+  readable and writable only by their owner through the API and removed
+  with the account. Alternative: tables of their own, which would change
+  the schema and, under D-026 and D-030, require a new demo database for
+  nothing a query needs; tables can still come before the release if
+  views ever need to be shared or queried across people.
+- New entries (a folder just shared, a view just made) appear after the
+  entry that precedes them by default, so a saved arrangement never hides
+  something new.

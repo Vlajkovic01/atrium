@@ -84,6 +84,11 @@
       "no_storage": "This server has no storage location yet. An admin has to add one before files can be stored.",
       "quota_exceeded": "There is not enough space left in your storage quota."
     },
+    "navigation": {
+      "invalid_layout": "This menu arrangement could not be saved. Reload and try again.",
+      "too_many_views": "You can keep at most {max} views. Remove one first.",
+      "invalid_view": "Give the view a name and check its rules."
+    },
     "album": {
       "invalid_name": "Give the album a name of at most 255 characters.",
       "not_in_album": "The cover has to be one of the album's photos."
@@ -146,7 +151,8 @@
     "trash": "Trash",
     "libraries": "Libraries",
     "backgroundWork": "Background work",
-    "photos": "Photos"
+    "photos": "Photos",
+    "customize": "Customize menu"
   },
   "files": {
     "title": "Files",
@@ -527,6 +533,70 @@
     },
     "hint": "Type part of a name, a year or a month and year. Choose a type to see all of that kind.",
     "nothing": "Nothing found."
+  },
+  "menu": {
+    "title": "Customize menu",
+    "lead": "Choose what your menu shows and in what order, give entries your own names, and group them. This changes only your menu, never a file.",
+    "entries": "Entries",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "show": "Show",
+    "ownName": "Your name for it",
+    "group": "Group",
+    "noGroup": "No group",
+    "kindLibrary": "Folder",
+    "kindView": "View",
+    "reset": "Back to the default",
+    "resetDone": "Your menu is back to the default.",
+    "makeDefault": "Make this the default for everyone",
+    "defaultDone": "This arrangement is now the default for everyone who has not arranged their own. Views stay personal.",
+    "saved": "Your menu was saved.",
+    "groups": "Groups",
+    "groupsLead": "Headings in the menu to gather entries under, such as Work or Family.",
+    "groupName": "Group name",
+    "removeGroup": "Remove group",
+    "newGroup": "New group",
+    "addGroup": "Add group",
+    "saveHint": "Choose a group for entries above, then save."
+  },
+  "views": {
+    "title": "Views",
+    "explain": "A view is an entry in your menu that shows every file matching your rules, wherever it is, including files added later. It never moves or changes a file.",
+    "new": "New view",
+    "newTitle": "New view",
+    "editTitle": "Change {name}",
+    "edit": "Change",
+    "delete": "Delete view",
+    "deleteTitle": "Delete the view {name}?",
+    "deleteBody": "Only the view is deleted. The files it showed stay where they are.",
+    "empty": "No files match this view yet.",
+    "name": "Name",
+    "words": "Name contains",
+    "wordsHelp": "Every word must appear in the file name; case and diacritics do not matter.",
+    "types": "Kinds of files",
+    "extensions": "File endings",
+    "extensionsHelp": "Separated by commas; any of them matches. Leave empty for all.",
+    "libraries": "Where",
+    "librariesHelp": "None chosen means everywhere you can see.",
+    "when": "When",
+    "whenAny": "Any time",
+    "whenLast": "In the last days",
+    "whenRange": "Between two dates",
+    "whenHelp": "Photos and videos by when they were taken, other files by when they were last changed.",
+    "lastDays": "Number of days",
+    "from": "From",
+    "to": "To",
+    "minSize": "At least (MB)",
+    "maxSize": "At most (MB)",
+    "sort": "Order",
+    "sorts": {
+      "newest": "Newest first",
+      "oldest": "Oldest first",
+      "name": "By name",
+      "largest": "Largest first"
+    },
+    "preview": "Matches now",
+    "matching": "{count, plural, =0 {No files} one {# file} other {# files}}"
   },
   "libraries": {
     "heading": "Libraries",

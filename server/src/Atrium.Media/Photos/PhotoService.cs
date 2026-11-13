@@ -21,6 +21,37 @@ public sealed record PhotoPage(IReadOnlyList<PhotoItem> Items, string? NextCurso
 public sealed record SearchRequest(
     string? Query, SearchType? Type, DateTimeOffset? From, DateTimeOffset? To, Guid? LibraryId, string? Cursor, int Limit);
 
+/// <summary>
+/// The rules of a saved view (D-041): which files it shows. Every rule left
+/// empty matches everything; the rules given must all hold. A view only
+/// shows files where they are; it never moves or changes anything.
+/// </summary>
+/// <param name="Words">Words in the name, ignoring case and diacritics.</param>
+/// <param name="Types">Any of these kinds; empty for all.</param>
+/// <param name="Extensions">Any of these endings, without the dot ("pdf"); empty for all.</param>
+/// <param name="LibraryIds">Only these libraries; empty for every library the person can read.</param>
+/// <param name="From">From this local date and time (D-034); ignored when <paramref name="LastDays"/> is set.</param>
+/// <param name="LastDays">Only the last so many days, counted from now.</param>
+public sealed record ViewRules(
+    string? Words,
+    IReadOnlyList<SearchType> Types,
+    IReadOnlyList<string> Extensions,
+    IReadOnlyList<Guid> LibraryIds,
+    DateTimeOffset? From,
+    DateTimeOffset? To,
+    int? LastDays,
+    long? MinSize,
+    long? MaxSize,
+    ViewSort Sort);
+
+public enum ViewSort
+{
+    Newest,
+    Oldest,
+    Name,
+    Largest,
+}
+
 public enum SearchType
 {
     Photo,
@@ -37,7 +68,7 @@ public enum SearchType
 /// read, across their personal library and the libraries shared with them,
 /// newest first, without the trash and without files that vanished.
 /// </summary>
-public sealed class PhotoService(AtriumDbContext db, NodeService nodes, TimeProvider time)
+public sealed class PhotoService(AtriumDbContext db, NodeService nodes, TimeProvider time, MediaOptions options)
 {
     public const int MaxLimit = 500;
 
@@ -123,6 +154,100 @@ public sealed class PhotoService(AtriumDbContext db, NodeService nodes, TimeProv
             .ToListAsync(ct);
         var items = await WithInfoAsync(page.Take(take).ToList(), ct);
         return new PhotoPage(items, page.Count > take ? (offset + take).ToString(CultureInfo.InvariantCulture) : null);
+    }
+
+    /// <summary>The files a saved view shows, and how many there are in all.</summary>
+    public async Task<(PhotoPage Page, int Total)> ViewAsync(FileActor actor, ViewRules rules, string? cursor, int limit, CancellationToken ct)
+    {
+        var readable = await LibraryIdsAsync(actor, null, ct);
+        var libraries = rules.LibraryIds.Count == 0 ? readable : readable.Where(rules.LibraryIds.Contains).ToList();
+        var query = db.Nodes.AsNoTracking()
+            .Where(n => libraries.Contains(n.LibraryId) && !n.InTrash && n.MissingSince == null && n.ParentId != null);
+
+        foreach (var word in Words(rules.Words))
+        {
+            var pattern = $"%{EscapeLike(word)}%";
+            query = query.Where(n => EF.Functions.Like(n.SearchKey, pattern, "\\"));
+        }
+
+        if (rules.Types.Count > 0)
+        {
+            var photos = rules.Types.Contains(SearchType.Photo);
+            var videos = rules.Types.Contains(SearchType.Video);
+            var documents = rules.Types.Contains(SearchType.Document);
+            var folders = rules.Types.Contains(SearchType.Folder);
+            query = query.Where(n =>
+                (photos && n.MediaKind == MediaKind.Photo)
+                || (videos && n.MediaKind == MediaKind.Video)
+                || (documents && n.Kind == NodeKind.File && n.MediaKind == null)
+                || (folders && n.Kind == NodeKind.Folder));
+        }
+
+        if (rules.Extensions.Count > 0)
+        {
+            var endings = rules.Extensions.Select(e => $"%.{EscapeLike(NodeName.SearchKeyOf(e.Trim().TrimStart('.')))}").ToList();
+            var any = PredicateAny(endings);
+            query = query.Where(any);
+        }
+
+        var from = rules.LastDays is { } days
+            ? new DateTimeOffset(TimeZoneInfo.ConvertTime(time.GetUtcNow(), options.TimeZone).Date.AddDays(1 - days), TimeSpan.Zero)
+            : rules.From;
+        if (from is { } f)
+        {
+            query = query.Where(n => (n.CapturedAt ?? n.ModifiedAt) >= f);
+        }
+
+        if (rules.LastDays is null && rules.To is { } t)
+        {
+            query = query.Where(n => (n.CapturedAt ?? n.ModifiedAt) < t);
+        }
+
+        if (rules.MinSize is { } min)
+        {
+            query = query.Where(n => n.Kind == NodeKind.File && n.Size >= min);
+        }
+
+        if (rules.MaxSize is { } max)
+        {
+            query = query.Where(n => n.Kind == NodeKind.File && n.Size <= max);
+        }
+
+        var total = await query.CountAsync(ct);
+        var ordered = rules.Sort switch
+        {
+            ViewSort.Oldest => query.OrderBy(n => n.CapturedAt ?? n.ModifiedAt).ThenBy(n => n.Id),
+            ViewSort.Name => query.OrderBy(n => n.SearchKey).ThenBy(n => n.Id),
+            ViewSort.Largest => query.OrderByDescending(n => n.Size).ThenBy(n => n.Id),
+            _ => query.OrderByDescending(n => n.CapturedAt ?? n.ModifiedAt).ThenByDescending(n => n.Id),
+        };
+        var take = Math.Clamp(limit, 1, MaxLimit);
+        var offset = cursor is { } c && int.TryParse(c, NumberStyles.None, CultureInfo.InvariantCulture, out var o) ? o : 0;
+        var page = await ordered.Skip(offset).Take(take + 1).ToListAsync(ct);
+        var items = await WithInfoAsync(page.Take(take).ToList(), ct);
+        return (new PhotoPage(items, page.Count > take ? (offset + take).ToString(CultureInfo.InvariantCulture) : null), total);
+    }
+
+    /// <summary>A name ending in any of the patterns, as one translatable condition.</summary>
+    private static System.Linq.Expressions.Expression<Func<Node, bool>> PredicateAny(List<string> patterns)
+    {
+        var node = System.Linq.Expressions.Expression.Parameter(typeof(Node), "n");
+        var key = System.Linq.Expressions.Expression.Property(node, nameof(Node.SearchKey));
+        var like = typeof(DbFunctionsExtensions).GetMethod(
+            nameof(DbFunctionsExtensions.Like), [typeof(DbFunctions), typeof(string), typeof(string), typeof(string)])!;
+        System.Linq.Expressions.Expression? body = null;
+        foreach (var pattern in patterns)
+        {
+            var call = System.Linq.Expressions.Expression.Call(
+                like,
+                System.Linq.Expressions.Expression.Constant(EF.Functions),
+                key,
+                System.Linq.Expressions.Expression.Constant(pattern),
+                System.Linq.Expressions.Expression.Constant("\\"));
+            body = body is null ? call : System.Linq.Expressions.Expression.OrElse(body, call);
+        }
+
+        return System.Linq.Expressions.Expression.Lambda<Func<Node, bool>>(body!, node);
     }
 
     public Task<List<Album>> AlbumsAsync(FileActor actor, CancellationToken ct) =>
