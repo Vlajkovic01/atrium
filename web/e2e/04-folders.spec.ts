@@ -49,7 +49,8 @@ async function signIn(page: Page, path: string): Promise<void> {
 
 test("an admin adds an existing folder and every file in it is there to browse", async ({ page }) => {
   await signIn(page, "/libraries");
-  const card = page.locator(".card").filter({ hasText: "Add an existing folder" });
+  await page.getByRole("button", { name: "Add an existing folder" }).click();
+  const card = page.getByRole("dialog", { name: "Add an existing folder" });
   await card.getByLabel("Name", { exact: true }).fill("Shared");
   await card.getByLabel("Folder on the server").fill(folder);
   await card.getByRole("button", { name: "Check folder" }).click();

@@ -7,7 +7,7 @@ import { Link } from "react-router";
 import { api, call } from "../api.ts";
 import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
-import { Badge, Button, Card, Check, ErrorMessage, Field, Notice, PageHeader } from "../components/ui.tsx";
+import { Badge, Button, Check, ErrorMessage, Field, Notice, PageHeader } from "../components/ui.tsx";
 import { formatDateTime } from "../i18n.ts";
 import { useSession } from "../session.tsx";
 
@@ -30,6 +30,8 @@ export function Libraries() {
   const [removing, setRemoving] = useState<Library | null>(null);
   const [editing, setEditing] = useState<Library | null>(null);
   const [enabling, setEnabling] = useState<Library | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
   const libraries = useQuery({
     queryKey,
     queryFn: () => call(api.GET("/api/v1/admin/libraries")),
@@ -46,6 +48,7 @@ export function Libraries() {
     await queryClient.invalidateQueries({ queryKey });
     await queryClient.invalidateQueries({ queryKey: ["libraries"] });
     await queryClient.invalidateQueries({ queryKey: ["navigation"] });
+    await queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
   };
 
   const scan = async (library: Library): Promise<void> => {
@@ -78,8 +81,17 @@ export function Libraries() {
 
   return (
     <>
-      <PageHeader title={t("libraries.heading")} lead={t("libraries.body")} />
+      <PageHeader
+        title={t("libraries.heading")}
+        lead={t("libraries.body")}
+        actions={
+          <Button variant="primary" icon="plus" onClick={() => setAdding(true)}>
+            {t("libraries.addHeading")}
+          </Button>
+        }
+      />
       <ErrorMessage error={error} />
+      {added ? <Notice kind="ok">{t("libraries.added")}</Notice> : null}
       {libraries.isPending ? <p className="muted">{t("common.loading")}</p> : null}
       {libraries.isError ? <ErrorMessage error={libraries.error} /> : null}
       {libraries.data?.length === 0 ? <p className="muted">{t("libraries.empty")}</p> : null}
@@ -175,9 +187,18 @@ export function Libraries() {
         </ul>
       ) : null}
 
-      <Card title={t("libraries.addHeading")} icon="plus">
-        <AddLibraryForm people={people.data?.items ?? []} onAdded={refresh} />
-      </Card>
+      {adding ? (
+        <Dialog wide title={t("libraries.addHeading")} onClose={() => setAdding(false)}>
+          <AddLibraryForm
+            people={people.data?.items ?? []}
+            onAdded={async () => {
+              setAdding(false);
+              setAdded(true);
+              await refresh();
+            }}
+          />
+        </Dialog>
+      ) : null}
 
       {editing ? (
         <AccessDialog
@@ -261,7 +282,6 @@ function AddLibraryForm({
   const [check, setCheck] = useState<PathCheck | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
-  const [added, setAdded] = useState(false);
 
   const tryPath = async (): Promise<void> => {
     setError(null);
@@ -277,18 +297,12 @@ function AddLibraryForm({
     event.preventDefault();
     setBusy(true);
     setError(null);
-    setAdded(false);
     try {
       await call(
         api.POST("/api/v1/admin/libraries", {
           body: { name, path, userIds: [...selected], showInTimeline: timeline },
         }),
       );
-      setName("");
-      setPath("");
-      setSelected(new Set());
-      setCheck(null);
-      setAdded(true);
       await onAdded();
     } catch (e) {
       setError(e);
@@ -300,7 +314,6 @@ function AddLibraryForm({
   return (
     <form onSubmit={(event) => void submit(event)}>
       <Notice kind="info">{t("libraries.addNote")}</Notice>
-      {added ? <Notice kind="ok">{t("libraries.added")}</Notice> : null}
       <ErrorMessage error={error} />
       <Field
         label={t("libraries.name")}

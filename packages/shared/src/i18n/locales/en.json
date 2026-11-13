@@ -841,6 +841,24 @@
     "default": "Default ({value})",
     "activity": "{running} running, {queued} waiting",
     "save": "Save limits",
-    "saved": "The limits were saved."
+    "saved": "The limits were saved.",
+    "failedHeading": "Failed jobs",
+    "noFailures": "No job has failed.",
+    "retry": "Run again",
+    "attempts": "{count, plural, one {# attempt} other {# attempts}}",
+    "jobTypes": {
+      "blobs_collect": "Freeing space",
+      "files_retention": "Emptying old trash",
+      "jobs_cleanup": "Clearing old job records",
+      "library_scan": "Reading an existing folder",
+      "library_scan-all": "Reading all existing folders",
+      "media_extract": "Reading photo and video details",
+      "media_preview": "Making a preview",
+      "media_sweep": "Finding files without details",
+      "metadata_backup": "Backup",
+      "storage_scrub": "Storage check",
+      "uploads_cleanup": "Clearing unfinished uploads",
+      "users_delete": "Deleting an account"
+    }
   }
 }

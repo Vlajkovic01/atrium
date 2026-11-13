@@ -3,11 +3,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useAdminOverview } from "../admin/AdminLayout.tsx";
 import { api, call } from "../api.ts";
+import { Dialog } from "../components/Dialog.tsx";
 import type { IconName } from "../components/Icon.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { StorageForm } from "../components/StorageForm.tsx";
-import { Badge, Button, Card, ErrorMessage, Notice, PageHeader } from "../components/ui.tsx";
+import { Badge, Button, ErrorMessage, Notice, PageHeader } from "../components/ui.tsx";
 import { formatBytes, formatDateTime } from "../i18n.ts";
 
 type StorageLocationView = components["schemas"]["StorageLocationView"];
@@ -31,6 +33,10 @@ export function StorageLocations() {
   const [results, setResults] = useState<Record<string, StorageTestResult>>({});
   const [error, setError] = useState<unknown>(null);
   const [added, setAdded] = useState(false);
+  const [adding, setAdding] = useState(false);
+  // What each location holds comes with the overview.
+  const overview = useAdminOverview();
+  const stored = new Map((overview.data?.storage ?? []).map((l) => [l.id, Number(l.storedBytes)]));
   const locations = useQuery({
     queryKey: ["storage-locations"],
     queryFn: () => call(api.GET("/api/v1/storage-locations")),
@@ -61,7 +67,15 @@ export function StorageLocations() {
 
   return (
     <>
-      <PageHeader title={t("storageAdmin.heading")} lead={t("storageAdmin.body")} />
+      <PageHeader
+        title={t("storageAdmin.heading")}
+        lead={t("storageAdmin.body")}
+        actions={
+          <Button variant="primary" icon="plus" onClick={() => setAdding(true)}>
+            {t("storageAdmin.addHeading")}
+          </Button>
+        }
+      />
       <ErrorMessage error={error} />
       {added ? <Notice kind="ok">{t("storageAdmin.added")}</Notice> : null}
 
@@ -84,6 +98,12 @@ export function StorageLocations() {
                     </p>
                     <p className="row-meta">
                       <span className="path">{location.target}</span>
+                      {stored.has(location.id) ? (
+                        <>
+                          <span className="dot" />
+                          {t("admin.storage.stored", { size: formatBytes(stored.get(location.id)!) })}
+                        </>
+                      ) : null}
                       {location.lastCheckedAt ? (
                         <>
                           <span className="dot" />
@@ -124,17 +144,20 @@ export function StorageLocations() {
         </ul>
       ) : null}
 
-      <Card title={t("storageAdmin.addHeading")} icon="plus">
-        <StorageForm
-          key={locations.data?.length ?? 0}
-          defaultName=""
-          submitLabel={t("common.add")}
-          onSaved={async () => {
-            setAdded(true);
-            await queryClient.invalidateQueries({ queryKey: ["storage-locations"] });
-          }}
-        />
-      </Card>
+      {adding ? (
+        <Dialog wide title={t("storageAdmin.addHeading")} onClose={() => setAdding(false)}>
+          <StorageForm
+            defaultName=""
+            submitLabel={t("common.add")}
+            onSaved={async () => {
+              setAdding(false);
+              setAdded(true);
+              await queryClient.invalidateQueries({ queryKey: ["storage-locations"] });
+              await queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
+            }}
+          />
+        </Dialog>
+      ) : null}
     </>
   );
 }

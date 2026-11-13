@@ -287,7 +287,12 @@ its own warning count.
   a pause (an hour, a day, or until resumed) with a note that work a
   person starts keeps running, and the number of jobs per kind of work
   that may run at once, each showing its default and how many are
-  running and waiting.
+  running and waiting. Below, failed jobs (newest first, 50 at most):
+  what kind of work, the error as a message rather than its detail (which
+  can name a file), when, how many attempts, and "Run again".
+- Storage and Libraries follow the People pattern: adding is a button in
+  the page header that opens a dialog, and each storage location shows
+  how much Atrium stores on it.
 - **Integrations.** Metadata, subtitle and translation providers, each off
   by default and stating what it sends.
 - **Backups** (built in Phase 3, restore in Phase 11). What a backup
