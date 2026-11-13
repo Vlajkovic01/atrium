@@ -631,6 +631,19 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   and gather them under their own group headings. Administration is not
   part of the layout: an admin always sees it, so nobody can lock
   themselves out. "Customize menu" is always at the end of the menu.
+- Extended the same day at the owner's request ("more customization, and
+  Customize menu does not need to sit in the menu"): any folder the
+  person can open and any album of theirs can be pinned from its page
+  (`folder:<id>`, `album:<id>`); every entry can take an icon from a
+  fixed set; separator lines (`separator:<id>`); groups fold, and the
+  folding is remembered; the menu can be compact (icons only, names on
+  hover and for screen readers); an admin chooses whether Administration
+  sits at the top or the bottom; entries are reordered by dragging as
+  well as with the arrows. "Customize menu" left the menu: it is a pencil
+  beside Sign out and a card on the Account page. A pin to something the
+  person can no longer open (deleted, in the trash, access withdrawn) is
+  left out of the menu rather than shown broken. Pins and views stay
+  personal: they are not part of an admin's default.
 - Views: a name and rules: words in the name, kinds (photo, video,
   document, folder), file endings, libraries, a date range or the last N
   days (capture time for photos and videos, change time for other

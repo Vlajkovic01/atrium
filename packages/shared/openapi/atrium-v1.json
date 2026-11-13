@@ -6423,6 +6423,12 @@
               "null",
               "string"
             ]
+          },
+          "icon": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6438,6 +6444,10 @@
           },
           "name": {
             "type": "string"
+          },
+          "collapsed": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -6459,6 +6469,18 @@
             "items": {
               "$ref": "#/components/schemas/NavGroup"
             }
+          },
+          "density": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "adminPosition": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6466,7 +6488,9 @@
         "required": [
           "items",
           "groups",
-          "custom"
+          "custom",
+          "density",
+          "adminPosition"
         ],
         "type": "object",
         "properties": {
@@ -6484,6 +6508,12 @@
           },
           "custom": {
             "type": "boolean"
+          },
+          "density": {
+            "type": "string"
+          },
+          "adminPosition": {
+            "type": "string"
           }
         }
       },
@@ -6536,6 +6566,12 @@
           },
           "readOnly": {
             "type": "boolean"
+          },
+          "icon": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

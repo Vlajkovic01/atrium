@@ -193,7 +193,7 @@ overwrites (DESIGN.md 4.2).
 
 | Method | Path | Notes |
 |---|---|---|
-| GET, PUT, DELETE | `/me/navigation` | The person's menu: entries with order, hidden, own name and group, and the groups. `DELETE` goes back to the default. Unknown entries are dropped, new ones added in their usual place |
+| GET, PUT, DELETE | `/me/navigation` | The person's menu: entries with order, hidden, own name, icon and group; pinned folders and albums (`folder:<id>`, `album:<id>`) and separators (`separator:<id>`); groups (folded or not); density (`comfortable`, `compact`) and where Administration sits (`bottom`, `top`). `DELETE` goes back to the default. Unknown entries and pins to what the person cannot open are dropped, new ones added in their usual place |
 | GET, PUT | `/admin/navigation-default` | The default arrangement for people who have none of their own |
 | GET, POST | `/me/views` | The person's saved views: a name and rules. At most 50 |
 | PUT, DELETE | `/me/views/{id}` | Change or delete a view; files are never touched |

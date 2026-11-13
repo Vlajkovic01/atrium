@@ -1766,19 +1766,26 @@ export interface components {
             hidden: boolean;
             label: null | string;
             group: null | string;
+            icon?: null | string;
         };
         NavGroup: {
             id: string;
             name: string;
+            /** @default false */
+            collapsed: boolean;
         };
         NavigationLayout: {
             entries: components["schemas"]["NavEntry"][];
             groups: components["schemas"]["NavGroup"][];
+            density?: null | string;
+            adminPosition?: null | string;
         };
         NavigationView: {
             items: components["schemas"]["NavItemView"][];
             groups: components["schemas"]["NavGroup"][];
             custom: boolean;
+            density: string;
+            adminPosition: string;
         };
         NavItemView: {
             key: string;
@@ -1790,6 +1797,7 @@ export interface components {
             /** Format: uuid */
             targetId: null | string;
             readOnly: boolean;
+            icon?: null | string;
         };
         NodeInfo: {
             /** Format: uuid */

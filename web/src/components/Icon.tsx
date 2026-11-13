@@ -216,9 +216,71 @@ const shapes = {
       <path d="m16 10.5 5-3v9l-5-3z" />
     </>
   ),
+  star: <path d="m12 3.8 2.5 5.1 5.6.8-4 4 .9 5.6-5-2.7-5 2.7.9-5.6-4-4 5.6-.8z" />,
+  heart: (
+    <path d="M12 19.5s-7.5-4.400-7.5-10a4.200 4.200 0 0 1 7.500-2.600A4.200 4.200 0 0 1 19.500 9.500c0 5.600-7.500 10-7.500 10z" />
+  ),
+  pin: (
+    <>
+      <path d="M12 21s6.5-5.600 6.500-11a6.500 6.500 0 0 0-13 0c0 5.400 6.500 11 6.500 11z" />
+      <circle cx="12" cy="10" r="2.400" />
+    </>
+  ),
+  home: <path d="M4 10.500 12 4l8 6.500V19a1.500 1.500 0 0 1-1.500 1.500H15v-6H9v6H5.500A1.500 1.500 0 0 1 4 19z" />,
+  briefcase: (
+    <>
+      <rect x="3.5" y="7.5" width="17" height="12" rx="2" />
+      <path d="M9 7.500V5.500a1.500 1.500 0 0 1 1.500-1.500h3A1.500 1.500 0 0 1 15 5.500v2M3.500 13h17" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M3.500 12.200V4.500a1 1 0 0 1 1-1h7.700l8.300 8.300a1.500 1.500 0 0 1 0 2.100l-6.600 6.600a1.500 1.500 0 0 1-2.100 0z" />
+      <circle cx="8" cy="8" r="1.300" />
+    </>
+  ),
+  book: (
+    <path d="M5 4.500A1.500 1.500 0 0 1 6.500 3H19v15H6.500A1.500 1.500 0 0 0 5 19.500zM5 19.500A1.500 1.500 0 0 0 6.500 21H19v-3" />
+  ),
+  music: (
+    <>
+      <path d="M9 17.500V5.500l11-2v12" />
+      <circle cx="6.500" cy="17.500" r="2.500" />
+      <circle cx="17.500" cy="15.500" r="2.500" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof shapes;
+
+/** Icons a person may choose for a menu entry (D-041). */
+export const MENU_ICONS: readonly IconName[] = [
+  "folder",
+  "image",
+  "video",
+  "album",
+  "file",
+  "search",
+  "star",
+  "heart",
+  "pin",
+  "home",
+  "briefcase",
+  "tag",
+  "book",
+  "music",
+  "cloud",
+  "share",
+  "users",
+  "lock",
+  "trash",
+  "devices",
+  "user",
+];
+
+export function isIconName(name: string | null | undefined): name is IconName {
+  return !!name && Object.hasOwn(shapes, name);
+}
 
 export function Icon({ name, size = 20 }: { readonly name: IconName; readonly size?: number }) {
   return (
