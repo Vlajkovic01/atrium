@@ -113,7 +113,7 @@ public sealed class MetadataAndThumbnailTests : IDisposable
     {
         // Stored 800 wide and 400 high, to be shown turned a quarter: upright it is 400 wide and 800 high.
         var path = Save("turned.jpg", Samples.JpegWithExif(800, 400, orientation: 6));
-        var thumbnails = new Thumbnailer(Options());
+        var thumbnails = new Thumbnailer(Options(), new InProcessImageEncoder());
 
         var made = await thumbnails.MakeAsync(path, MediaKind.Photo, new string('a', 64), ThumbnailVariant.Small, background: true, CancellationToken.None);
 
@@ -129,7 +129,7 @@ public sealed class MetadataAndThumbnailTests : IDisposable
     {
         var video = await Samples.Mp4Async(_dir);
         var options = Options();
-        var thumbnails = new Thumbnailer(options);
+        var thumbnails = new Thumbnailer(options, new InProcessImageEncoder());
         var key = new string('b', 64);
 
         var small = await thumbnails.MakeAsync(video, MediaKind.Video, key, ThumbnailVariant.Small, background: true, CancellationToken.None);
@@ -149,7 +149,7 @@ public sealed class MetadataAndThumbnailTests : IDisposable
     public async Task The_same_thumbnail_asked_for_at_once_is_made_once_and_never_replaced_while_it_is_read()
     {
         var path = Save("photo.jpg", Samples.JpegWithExif(300, 200));
-        var thumbnails = new Thumbnailer(Options());
+        var thumbnails = new Thumbnailer(Options(), new InProcessImageEncoder());
         var key = new string('d', 64);
 
         var made = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => Task.Run(() =>
@@ -164,11 +164,36 @@ public sealed class MetadataAndThumbnailTests : IDisposable
     }
 
     [Fact]
+    public async Task The_decoder_process_answers_each_request_on_its_own_line_and_survives_bad_files()
+    {
+        var good = Save("good.png", Samples.Png(40, 30));
+        var bad = Save("bad.jpg", "not a picture"u8.ToArray());
+        var input = new StringReader(string.Join('\n', [
+            $$"""{"path":{{System.Text.Json.JsonSerializer.Serialize(good)}},"size":20}""",
+            $$"""{"path":{{System.Text.Json.JsonSerializer.Serialize(bad)}},"size":20}""",
+            "not json",
+            $$"""{"path":{{System.Text.Json.JsonSerializer.Serialize(good)}},"size":10}""",
+        ]));
+        var output = new StringWriter();
+
+        Assert.Equal(0, await ImageWorker.RunAsync(input, output, concurrency: 1));
+
+        var answers = output.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => System.Text.Json.JsonDocument.Parse(line).RootElement).ToList();
+        Assert.Equal(4, answers.Count);
+        Assert.True(answers[0].GetProperty("ok").GetBoolean());
+        Assert.True(answers[1].GetProperty("unsupported").GetBoolean());
+        Assert.True(answers[2].GetProperty("unsupported").GetBoolean());
+        using var last = Image.NewFromBuffer(Convert.FromBase64String(answers[3].GetProperty("webp").GetString()!));
+        Assert.Equal(10, last.Width);
+    }
+
+    [Fact]
     public async Task A_file_that_is_not_a_picture_is_reported_as_unsupported()
     {
         var path = Save("broken.jpg", "this is not a picture"u8.ToArray());
 
         await Assert.ThrowsAsync<UnsupportedMediaException>(() =>
-            new Thumbnailer(Options()).MakeAsync(path, MediaKind.Photo, new string('c', 64), ThumbnailVariant.Small, true, CancellationToken.None));
+            new Thumbnailer(Options(), new InProcessImageEncoder()).MakeAsync(path, MediaKind.Photo, new string('c', 64), ThumbnailVariant.Small, true, CancellationToken.None));
     }
 }

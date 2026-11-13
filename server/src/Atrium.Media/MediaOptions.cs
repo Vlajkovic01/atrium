@@ -31,6 +31,15 @@ public sealed class MediaOptions
     /// <summary>A probe or a frame grab that takes longer than this is stopped.</summary>
     public TimeSpan ToolTimeout { get; init; } = TimeSpan.FromMinutes(2);
 
+    /// <summary>
+    /// How to start a decoder process; null runs libvips in this process,
+    /// which only tests and the command-line tools do (D-039).
+    /// </summary>
+    public System.Diagnostics.ProcessStartInfo? ImageWorker { get; init; }
+
+    /// <summary>How many decoder processes may run at once.</summary>
+    public int ImageWorkerProcesses { get; init; } = 2;
+
     public string ThumbnailDir => Path.Combine(CacheDir, "thumbs");
 
     public string TempDir => Path.Combine(CacheDir, "tmp");

@@ -150,6 +150,9 @@ public static class MediaSetup
     {
         services.TryAddSingleton(options);
         services.AddSingleton<MetadataReader>();
+        services.AddSingleton<IImageEncoder>(_ => options.ImageWorker is { } start
+            ? new WorkerImageEncoder(start, options.ImageWorkerProcesses, options.ToolTimeout)
+            : new InProcessImageEncoder());
         services.AddSingleton<Thumbnailer>();
         services.AddScoped<MediaFiles>();
         services.AddScoped<MediaService>();
@@ -160,25 +163,5 @@ public static class MediaSetup
         services.AddJobHandler<MediaSweepHandler>(MediaSweepHandler.Type);
         services.AddRecurringJob(MediaSweepHandler.Schedule);
         return services;
-    }
-
-    /// <summary>
-    /// libvips keeps decoded images in a cache and uses a thread per core;
-    /// on a small device both are kept low so a thumbnail does not crowd
-    /// out everything else.
-    /// </summary>
-    public static void ConfigureLibvips(HardwareInfo hardware)
-    {
-        try
-        {
-            NetVips.Cache.Max = 0;
-            NetVips.Cache.MaxFiles = 0;
-            NetVips.NetVips.Concurrency = hardware.Profile == HardwareProfile.Small ? 1 : Math.Max(1, hardware.ProcessorCount / 2);
-        }
-        catch (Exception e) when (e is DllNotFoundException or TypeInitializationException)
-        {
-            // libvips is not installed: photos get no thumbnails, which is
-            // logged when the first one is attempted. Nothing else is affected.
-        }
     }
 }
