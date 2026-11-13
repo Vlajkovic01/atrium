@@ -43,6 +43,13 @@ LABEL org.opencontainers.image.title="Atrium" \
       org.opencontainers.image.licenses="AGPL-3.0-only" \
       org.opencontainers.image.source="https://github.com/Vlajkovic01/atrium"
 
+# FFmpeg and ffprobe for videos, libvips for photos, with the HEIF plugin so
+# iPhone photos (HEIC) decode (D-032). The distribution's packages: their
+# source is offered by Ubuntu; see docs/LICENSES.md.
+RUN apt-get update \
+ && apt-get install --yes --no-install-recommends ffmpeg libvips42t64 libheif-plugin-libde265 \
+ && rm -rf /var/lib/apt/lists/*
+
 # The three places Atrium keeps data (docs/DESIGN.md 1.3). They are created
 # here and owned by the unprivileged user, so a named volume mounted over
 # them starts out writable by the server.

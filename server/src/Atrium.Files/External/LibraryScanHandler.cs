@@ -27,7 +27,7 @@ public sealed record LibraryScanPayload(Guid LibraryId);
 public sealed class LibraryScanHandler(
     AtriumDbContext db,
     MediaTypeResolver mediaTypes,
-    IEnumerable<IExternalScanObserver> observers,
+    IEnumerable<INodeContentObserver> observers,
     ExternalLocks locks,
     TimeProvider time,
     ILogger<LibraryScanHandler> logger) : IJobHandler
@@ -202,7 +202,7 @@ public sealed class LibraryScanHandler(
         var files = changed.Where(n => !n.IsFolder).ToList();
         foreach (var observer in observers)
         {
-            await observer.FilesChangedAsync(library, files, ct);
+            await observer.ContentChangedAsync(library, files, ct);
         }
 
         return subfolders;
@@ -259,11 +259,7 @@ public sealed class LibraryScanHandler(
     private sealed record ScanState(DateTimeOffset StartedAt, List<string> Pending, List<string> Unreadable, int Done);
 }
 
-/// <summary>Told about files a scan added or changed, for example to read their metadata.</summary>
-public interface IExternalScanObserver
-{
-    Task FilesChangedAsync(Library library, IReadOnlyList<Node> files, CancellationToken ct);
-}
+
 
 /// <summary>Scans every external library on a schedule, so changes made outside Atrium show up.</summary>
 public sealed class LibraryScanAllHandler(AtriumDbContext db, ExternalLibraryService libraries) : IJobHandler

@@ -517,3 +517,41 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - **Scan state** (online, last scan) is written without bumping the
   library's version, so a scan finishing never makes an admin's edit
   fail with a version conflict.
+
+## D-037 How photos and videos are processed (Proposed, Phase 3)
+
+- **Jobs.** `media.extract` reads one file's metadata and makes its grid
+  thumbnail, in the `cpu` class at background priority. It is queued when
+  an upload finishes and when a scan finds a new or changed file, and an
+  hourly `media.sweep` queues whatever was missed (a restored backup, a
+  deleted cache, a crash) in batches of 2,000. A video then gets
+  `media.preview`, a four-second silent clip, at idle priority.
+- **Facts belong to the content.** One blob shared by several files is
+  read once and every such file is dated by it. An external file is read
+  again when its size or time changes. A file that cannot be decoded is
+  marked unsupported and is not retried until it changes.
+- **Sizes.** The grid thumbnail (400 px) is made for every photo and
+  video; the viewer image (1,920 px) only when first asked for, so a
+  library of 100,000 photos does not fill the cache with images nobody
+  opens. Thumbnails are WebP.
+- **Nothing private reaches the cache.** Thumbnails are saved without
+  any metadata, so no location or camera details from the original are
+  kept (D-031); previews are written with `-map_metadata -1`.
+- **The user's files are read, never held.** libvips gets a stream that
+  Atrium opens with full sharing and closes at once: given a path, it
+  kept the file mapped on Windows after it was done, which stopped other
+  programs from writing the user's own file. Its cache is turned off for
+  the same reason, and to save memory.
+- **FFmpeg and ffprobe run as processes** with an argument list, never a
+  shell, under a two-minute limit and, for background work, at reduced
+  process priority. On S3, they read a temporary copy in the cache.
+- **Without the tools** (a development machine) photos still show and
+  are dated by their file time; their thumbnails come from FFmpeg if
+  libvips cannot read them, as with HEIC on Windows. The image always
+  has both, and CI checks it.
+- **Thumbnails are served** through signed URLs that stay the same for
+  a six-hour window, so the browser can cache them, and inline
+  generation is limited to a few at once.
+- Alternatives considered: one job doing every file of a library (no
+  per-file progress or retry); making every size eagerly (cache space);
+  reading by path (the lock described above).

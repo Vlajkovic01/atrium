@@ -93,14 +93,14 @@ TOTP is implemented in the server without a library.
 
 ## Approved for Phase 3
 
-Approved by the owner on 2026-11-12 (D-032). A version is confirmed once
-the package is actually in the repository.
+Approved by the owner on 2026-11-12 (D-032). The versions below are the
+ones in the repository.
 
 | Component | Version | License | Use |
 |---|---|---|---|
 | NetVips | 3.2.0 | MIT | .NET binding for libvips: image decoding and thumbnails |
 | libvips (Ubuntu package in the image) | distribution's | LGPL-2.1-or-later | Loaded dynamically by NetVips. Brings libheif (LGPL-3.0), libde265 (LGPL-3.0), libwebp (BSD-3-Clause), libjpeg-turbo (BSD-style, IJG), libpng (libpng license) and others under their own free licenses |
-| NetVips.Native | 8.18.7 | LGPL-3.0-or-later | Prebuilt libvips for running the tests on Windows only; not in the image. Has no HEIC decoder |
+| NetVips.Native, NetVips.Native.win-x64 | 8.18.7 | LGPL-3.0-or-later | Prebuilt libvips: in the test projects on every platform, and in Windows development builds of the server. Not in the image, which uses the distribution's libvips. Has no HEIC decoder |
 | MetadataExtractor | 2.9.3 | Apache-2.0 | EXIF, XMP and container metadata of photos and videos |
 | XmpCore | 6.1.10.1 | BSD-3-Clause (Adobe XMP toolkit license) | Brought by MetadataExtractor |
 | FFmpeg, ffprobe (Ubuntu package in the image) | distribution's | GPL-2.0-or-later as built by Ubuntu (with libx264, libx265); see flags 1 and 2 | Probing, video frames, short previews |

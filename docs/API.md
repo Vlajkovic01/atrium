@@ -180,9 +180,9 @@ overwrites (DESIGN.md 4.2).
 |---|---|---|
 | GET | `/timeline/buckets` | Counts per month, so the client can lay out a scrollbar for a huge library |
 | GET | `/timeline?bucket=` | Items in a bucket |
-| GET | `/nodes/{id}/thumbnail?size=` | Signed URL allowed |
-| GET | `/nodes/{id}/preview` | Larger image, or video preview clip |
-| GET | `/nodes/{id}/media-info` | EXIF or stream details |
+| GET | `/nodes/{id}/thumbnail?size=` | Built in Phase 3. `small` (grid, 400 px) or `large` (viewer, 1,920 px), WebP without metadata, made on first request if needed. Bearer token or signed URL |
+| GET | `/nodes/{id}/preview` | Built in Phase 3. A video's four-second silent MP4 clip. Bearer token or signed URL |
+| GET | `/nodes/{id}/media-info` | Built in Phase 3. Size, duration, format, codecs, capture time and offset, camera, thumbnail state. No location (D-031) |
 | GET, POST | `/albums` | |
 | GET, PATCH, DELETE | `/albums/{id}` | |
 | POST, DELETE | `/albums/{id}/items` | Add, remove |

@@ -84,6 +84,11 @@
       "no_storage": "This server has no storage location yet. An admin has to add one before files can be stored.",
       "quota_exceeded": "There is not enough space left in your storage quota."
     },
+    "media": {
+      "unsupported": "This file cannot be shown as a picture on this server.",
+      "tool_missing": "The server is missing a tool for photos and videos. The administrator can find out more in the log.",
+      "no_thumbnail": "There is no preview of this file."
+    },
     "library": {
       "invalid_name": "Give the library a name of at most 128 characters.",
       "path_not_absolute": "Enter the full path of the folder on the server, for example /photos/screenshots.",

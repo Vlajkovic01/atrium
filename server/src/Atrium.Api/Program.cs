@@ -10,6 +10,7 @@ using Atrium.Data;
 using Atrium.Files;
 using Atrium.Files.External;
 using Atrium.Jobs;
+using Atrium.Media;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,8 @@ builder.Services.AddJobWorker();
 builder.Services.AddSingleton(new ExternalLibraryOptions([bootstrap.ConfigDir, bootstrap.CacheDir]));
 builder.Services.AddSingleton(new MediaTypeResolver(MediaTypes.For));
 builder.Services.AddAtriumFiles();
+builder.Services.AddAtriumMedia(new MediaOptions { CacheDir = bootstrap.CacheDir });
+builder.Services.AddSingleton<ThumbnailGate>();
 builder.Services.AddSingleton<SignedUrls>();
 builder.Services.AddSingleton<ArchiveRequests>();
 builder.Services.AddProblemDetails();
@@ -56,6 +59,7 @@ if (RestoreCommand.TryGetPath(args, out var backupPath))
 }
 
 await app.MigrateDatabaseAsync();
+MediaSetup.ConfigureLibvips(app.Services.GetRequiredService<HardwareInfo>());
 await app.LoadRevokedSessionsAsync();
 
 // On a server with no admin yet, print the setup token to the log.
@@ -105,6 +109,7 @@ v1.MapBackupEndpoints();
 v1.MapIntegrityEndpoints();
 v1.MapBackgroundWorkEndpoints();
 v1.MapAdminLibraryEndpoints();
+v1.MapMediaEndpoints();
 
 await app.RunAsync();
 return 0;

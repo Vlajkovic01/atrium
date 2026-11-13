@@ -316,6 +316,12 @@ public sealed class LocalStorageProvider : IStorageProvider
     }
 
     /// <summary>
+    /// The file behind a key, for tools that read files by path (FFmpeg,
+    /// libvips). Read it only; writes go through this class.
+    /// </summary>
+    public string LocalPathOf(string key) => Resolve(key);
+
+    /// <summary>
     /// Turns a key into a path and proves the path is inside the root. The
     /// key is validated first; the containment check is a second, independent
     /// barrier in case a platform interprets some character unexpectedly.

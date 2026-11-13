@@ -151,6 +151,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/nodes/{id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description size: small (grid) or large (viewer). A WebP image without any metadata. Bearer token or signed URL. */
+        get: operations["GetThumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nodes/{id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A video's short silent preview clip (MP4). Bearer token or signed URL. */
+        get: operations["GetPreview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nodes/{id}/media-info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetMediaInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/setup/state": {
         parameters: {
             query?: never;
@@ -1439,6 +1489,27 @@ export interface components {
         };
         /** @enum {unknown} */
         LoginStatus: "signedIn" | "totpRequired";
+        MediaInfoView: {
+            kind: components["schemas"]["MediaKind"];
+            /** Format: int32 */
+            width: null | number | string;
+            /** Format: int32 */
+            height: null | number | string;
+            /** Format: int64 */
+            durationMs: null | number | string;
+            format: null | string;
+            videoCodec: null | string;
+            audioCodec: null | string;
+            /** Format: date-time */
+            capturedAt: null | string;
+            /** Format: int32 */
+            capturedOffsetMinutes: null | number | string;
+            cameraMake: null | string;
+            cameraModel: null | string;
+            thumbnailState: components["schemas"]["ThumbnailState"];
+        };
+        /** @enum {unknown} */
+        MediaKind: "photo" | "video";
         NodeInfo: {
             /** Format: uuid */
             id: string;
@@ -1614,6 +1685,8 @@ export interface components {
             minClientVersion: string;
             setupComplete: boolean;
         };
+        /** @enum {unknown} */
+        ThumbnailState: "pending" | "ready" | "failed" | "unsupported";
         TokenResponse: {
             accessToken: string;
             /** Format: int32 */
@@ -2024,6 +2097,79 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    GetThumbnail: {
+        parameters: {
+            query?: {
+                size?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetPreview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetMediaInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MediaInfoView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
             };
         };
     };

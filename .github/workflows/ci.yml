@@ -33,6 +33,10 @@ jobs:
         with:
           global-json-file: server/global.json
 
+      # The media tests run FFmpeg and ffprobe; libvips comes from NuGet.
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ffmpeg
+
       - name: Restore
         run: dotnet restore Atrium.slnx
 
@@ -143,6 +147,14 @@ jobs:
           curl --fail --silent --show-error http://localhost:8080/api/v1/system/info | grep --quiet '"name":"Atrium"'
           curl --fail --silent --show-error http://localhost:8080/ | grep --quiet '<div id="root">'
           curl --fail --silent --show-error --head http://localhost:8080/ | grep --ignore-case --quiet 'content-security-policy'
+
+      - name: The image has the media tools, with HEIC support
+        working-directory: deploy
+        run: |
+          set -euo pipefail
+          docker compose exec --no-TTY atrium ffprobe -version
+          docker compose exec --no-TTY atrium sh -c 'ls /usr/lib/*/libvips.so.42'
+          docker compose exec --no-TTY atrium sh -c 'ls /usr/lib/*/libheif/plugins/ | grep -i de265'
 
       - name: The server does not run as root
         working-directory: deploy

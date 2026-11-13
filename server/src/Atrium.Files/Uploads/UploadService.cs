@@ -49,6 +49,7 @@ public sealed class UploadService(
     BlobStore blobs,
     UploadRunningHashes hashes,
     External.ExternalWriter external,
+    IEnumerable<INodeContentObserver> observers,
     TimeProvider time,
     ILogger<UploadService> logger)
 {
@@ -380,6 +381,7 @@ public sealed class UploadService(
 
         upload.NodeId = added.Value!.Id;
         await MarkAsync(upload, UploadState.Completed, null, ct);
+        await NotifyAsync(upload.LibraryId, added.Value, ct);
         return FileResult<Upload>.Success(upload);
     }
 
@@ -457,7 +459,25 @@ public sealed class UploadService(
 
         upload.NodeId = placed.Value!.Id;
         await MarkAsync(upload, UploadState.Completed, null, ct);
+        await NotifyAsync(upload.LibraryId, placed.Value, ct);
         return FileResult<Upload>.Success(upload);
+    }
+
+    /// <summary>The file exists now; whatever follows (thumbnails) must not turn a finished upload into a failed one.</summary>
+    private async Task NotifyAsync(Guid libraryId, Node node, CancellationToken ct)
+    {
+        var library = await db.Libraries.AsNoTracking().SingleAsync(l => l.Id == libraryId, CancellationToken.None);
+        foreach (var observer in observers)
+        {
+            try
+            {
+                await observer.ContentChangedAsync(library, [node], ct);
+            }
+            catch (Exception e) when (e is not OperationCanceledException)
+            {
+                logger.LogWarning(e, "Could not queue processing of node {NodeId}; the next sweep does it.", node.Id);
+            }
+        }
     }
 
     private async Task<IStorageProvider> ProviderAsync(Upload upload, CancellationToken ct)
