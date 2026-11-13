@@ -219,8 +219,18 @@ the phases that need them.
 | Entity | Key fields | Notes |
 |---|---|---|
 | `MediaInfo` | content key, kind, width, height, duration, container, streams (JSON), taken at, camera, orientation; no location (D-031) | Technical facts from EXIF and ffprobe. Keyed by content, so duplicates share it. |
-| `Derivative` | content key, kind, variant, cache key, state | Index of thumbnails and previews in the cache |
-| `Album`, `AlbumItem` | owner, name, cover; node, position | |
+| `Album`, `AlbumItem` | owner, name, cover; node, added at | Items are ordered by capture time; removing a node row removes its items |
+
+Built in Phase 3 (D-033): `MediaInfo` belongs to a blob, shared by
+duplicates, or in an external library to a node, together with the size
+and time it was read from. There is no `Derivative` table: thumbnails are
+cache files named by content and variant, and only a failure is recorded,
+in `MediaInfo`. `Node` gains `InTrash` (set on a whole trashed subtree),
+`MediaKind`, `CapturedAt` (local clock time, D-034), a diacritic-free
+`SearchKey`, and for external libraries `ExternalPath` and `MissingSince`.
+`Library` gains `ExternalPath`, `State`, `LastScanAt` and who enabled
+writes; an external library has no storage location. `LibraryGrant`
+gives a user read or write access to a non-personal library.
 | `MediaItem` | library, kind (`movie`, `show`, `season`, `episode`), parent, title, sort title, year, numbers, overview, provider ids, locked fields | Field locks keep user edits from being overwritten by a refresh |
 | `MediaItemFile` | item, node, part, edition | A movie can have several files |
 | `Artwork` | item, kind, language, metadata file key | |

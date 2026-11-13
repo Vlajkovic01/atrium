@@ -33,7 +33,7 @@ public sealed class UserDeletionApiTests : IDisposable
 
         await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AtriumDbContext>();
-        var locationId = (await db.Libraries.SingleAsync(l => l.Id == library.Id)).StorageLocationId;
+        var locationId = (await db.Libraries.SingleAsync(l => l.Id == library.Id)).StorageLocationId!.Value;
         var blob = await scope.ServiceProvider.GetRequiredService<BlobStore>()
             .StoreAsync(locationId, new MemoryStream(Encoding.UTF8.GetBytes("ana's diary")), null, CancellationToken.None);
         await scope.ServiceProvider.GetRequiredService<NodeService>().AddFileAsync(

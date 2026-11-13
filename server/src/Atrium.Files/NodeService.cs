@@ -357,8 +357,10 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
 
         var now = time.GetUtcNow();
         node.TrashedAt = now;
+        node.InTrash = true;
         node.ActiveNameKey = null;
         node.UpdatedAt = now;
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
         try
         {
             await db.SaveChangesAsync(ct);
@@ -368,6 +370,12 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
             return FileResult<Node>.Fail(FileErrors.VersionConflict);
         }
 
+        if (node.IsFolder)
+        {
+            await NodeTree.MarkInTrashBelowAsync(db, node.Id, inTrash: true, ct);
+        }
+
+        await transaction.CommitAsync(ct);
         return FileResult<Node>.Success(node);
     }
 
@@ -565,25 +573,7 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
         });
 
     /// <summary>The live part of a subtree, parents before children; anything in or under a trashed node is left out.</summary>
-    public static List<Node> LiveSubtree(Guid rootId, List<Node> descendants)
-    {
-        var byParent = descendants.ToLookup(n => n.ParentId!.Value);
-        var result = new List<Node>();
-        var queue = new Queue<Guid>([rootId]);
-        while (queue.Count > 0)
-        {
-            foreach (var child in byParent[queue.Dequeue()].Where(c => c.TrashedAt is null))
-            {
-                result.Add(child);
-                if (child.IsFolder)
-                {
-                    queue.Enqueue(child.Id);
-                }
-            }
-        }
-
-        return result;
-    }
+    public static List<Node> LiveSubtree(Guid rootId, List<Node> descendants) => NodeTree.LiveSubtree(rootId, descendants);
 
     private async Task<FileResult<Node>> SaveNewAsync(Node node, Guid parentId, string key, CancellationToken ct)
     {
