@@ -555,3 +555,25 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - Alternatives considered: one job doing every file of a library (no
   per-file progress or retry); making every size eagerly (cache space);
   reading by path (the lock described above).
+## D-038 Timeline, search and albums (Proposed, Phase 3)
+
+- **One timeline across libraries**: the personal library and every
+  library shared with the person, without the trash and without missing
+  files. A library can be chosen to see only its photos.
+- **Months are counted in the server process** from one indexed column,
+  because the month of a stored millisecond count is spelled differently
+  on SQLite and PostgreSQL. 100,000 photos are 800 KB of numbers; the
+  release requirement 6 measurement decides whether a stored month column
+  is needed.
+- **Keyset paging** on capture time and ID for the timeline and albums,
+  so a page boundary does not move while photos are added; search pages
+  by offset, as the folder listing does (D-027).
+- **Search** matches every word as a substring of the name, folded to
+  lower case without diacritics (`suma` finds `Šuma`, `dj` finds `đ`), with
+  `%` and `_` taken literally. Dates are the capture time for photos and
+  videos and the modification time for other files. No full-text index
+  until a measurement asks for one.
+- **Albums hold references.** Adding needs read access to the photo; an
+  album shows only what its owner can still see, so a trashed photo
+  disappears from it and comes back on restore. Deleting an album never
+  touches a photo. Sharing albums is Phase 8.

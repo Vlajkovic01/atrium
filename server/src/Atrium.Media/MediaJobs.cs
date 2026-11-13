@@ -153,6 +153,7 @@ public static class MediaSetup
         services.AddSingleton<Thumbnailer>();
         services.AddScoped<MediaFiles>();
         services.AddScoped<MediaService>();
+        services.AddScoped<Photos.PhotoService>();
         services.AddScoped<INodeContentObserver, MediaContentObserver>();
         services.AddJobHandler<MediaExtractHandler>(MediaExtractHandler.Type);
         services.AddJobHandler<MediaPreviewHandler>(MediaPreviewHandler.Type);

@@ -110,6 +110,7 @@ v1.MapIntegrityEndpoints();
 v1.MapBackgroundWorkEndpoints();
 v1.MapAdminLibraryEndpoints();
 v1.MapMediaEndpoints();
+v1.MapPhotoEndpoints();
 
 await app.RunAsync();
 return 0;

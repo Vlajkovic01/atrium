@@ -38,6 +38,19 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
         return new AccessibleNode(node, library, CanWrite(actor, library, grant), inTrash);
     }
 
+    /// <summary>Every library the actor can read: their personal one, unless the device hides it, and those granted to them.</summary>
+    public async Task<List<Library>> ReadableLibrariesAsync(FileActor actor, CancellationToken ct)
+    {
+        var personal = await db.Libraries.AsNoTracking().Where(l => l.OwnerUserId == actor.UserId).ToListAsync(ct);
+        var granted = await db.LibraryGrants.AsNoTracking()
+            .Where(g => g.UserId == actor.UserId)
+            .Join(db.Libraries.AsNoTracking(), g => g.LibraryId, l => l.Id, (g, l) => new { Grant = g, Library = l })
+            .ToListAsync(ct);
+        return personal.Where(l => CanRead(actor, l))
+            .Concat(granted.Where(x => CanRead(actor, x.Library, x.Grant)).Select(x => x.Library))
+            .ToList();
+    }
+
     /// <summary>The actor's grant on a library that is not personal; null for personal libraries.</summary>
     public Task<LibraryGrant?> GrantAsync(FileActor actor, Library library, CancellationToken ct) =>
         library.Kind == LibraryKind.Personal
