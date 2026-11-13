@@ -860,5 +860,10 @@
       "uploads_cleanup": "Clearing unfinished uploads",
       "users_delete": "Deleting an account"
     }
+  },
+  "userMenu": {
+    "label": "Your menu",
+    "account": "Account and settings",
+    "open": "{name}: your menu"
   }
 }

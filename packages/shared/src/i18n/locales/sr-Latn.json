@@ -860,5 +860,10 @@
       "uploads_cleanup": "Brisanje nezavršenih otpremanja",
       "users_delete": "Brisanje naloga"
     }
+  },
+  "userMenu": {
+    "label": "Vaš meni",
+    "account": "Nalog i podešavanja",
+    "open": "{name}: vaš meni"
   }
 }

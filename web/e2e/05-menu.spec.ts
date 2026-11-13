@@ -86,7 +86,8 @@ test("a folder pinned to the menu, the menu made compact, and its settings reach
 
   // Customizing lives in the footer and on the Account page, not in the menu.
   await expect(menu(page).getByRole("link", { name: "Customize menu" })).toHaveCount(0);
-  await page.getByRole("link", { name: "Customize menu" }).click();
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await page.getByRole("menuitem", { name: "Customize menu" }).click();
   await page.getByRole("combobox", { name: /^Menu size/ }).click();
   await page.getByRole("option", { name: "Icons only" }).click();
   await page.getByRole("button", { name: "Add separator line" }).click();

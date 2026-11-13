@@ -21,7 +21,15 @@ test("administration is one menu entry that opens an overview of the server", as
   await signIn(page, "/files");
   const menu = page.getByRole("navigation", { name: "Main" });
   await expect(menu.getByRole("link", { name: "People" })).toHaveCount(0);
-  await menu.getByRole("link", { name: /^Administration/ }).click();
+  // It sits apart from the files, just above the name, and is also in the person's own menu.
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await expect(page.getByRole("menuitem", { name: /^Administration/ })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await page
+    .getByRole("navigation", { name: "Administration" })
+    .getByRole("link", { name: /^Administration/ })
+    .click();
 
   await expect(page.getByRole("heading", { name: "Administration", exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: "People" })).toBeVisible();

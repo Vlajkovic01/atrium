@@ -96,7 +96,7 @@ with progress, pause and cancel.
 ### Menu (Phase 3, D-041)
 
 Each person arranges their own menu under "Customize menu", reached from
-the pencil beside Sign out or from the Account page. The list looks like
+the menu their name opens (D-043) or from the Account page. The list looks like
 the menu: entries without a group, then each group with its entries. A
 name is changed by typing over it (empty brings back the usual one);
 entries move by dragging, into a group by dragging them there, and from
@@ -251,7 +251,9 @@ with the server name, and shows only the shared content.
 
 ### Administration (Phases 1, 3, 11)
 
-One menu entry, "Administration", with a badge counting warnings (D-042).
+One menu entry, "Administration", with a badge counting warnings (D-042),
+set apart above the person's name and also in the menu their name opens
+(D-043).
 It opens the overview; each section below is a tab on top of it, with
 its own warning count.
 

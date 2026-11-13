@@ -10,7 +10,8 @@ import { AuthLayout } from "./components/AuthLayout.tsx";
 import type { IconName } from "./components/Icon.tsx";
 import { Icon, isIconName } from "./components/Icon.tsx";
 import { Logo } from "./components/Logo.tsx";
-import { Avatar, Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
+import { Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
+import { UserMenu } from "./components/UserMenu.tsx";
 import { AdminLayout, useAdminOverview, warnings } from "./admin/AdminLayout.tsx";
 import { Backups } from "./admin/Backups.tsx";
 import { AdminOverviewPage } from "./admin/Overview.tsx";
@@ -76,7 +77,7 @@ type NavItemView = components["schemas"]["NavItemView"];
 
 function Shell() {
   const { t } = useTranslation();
-  const { user, signOut } = useSession();
+  const { user } = useSession();
   const location = useLocation();
   const isAdmin = user?.role === "admin";
 
@@ -201,26 +202,15 @@ function Shell() {
                 </div>
               ) : null;
             })}
-            {isAdmin && !adminOnTop ? administration : null}
           </nav>
-          <div className="sidebar-user">
-            <Avatar name={user?.displayName ?? ""} />
-            <div className="user-text">
-              <span className="user-name">{user?.displayName}</span>
-              <span className="user-role">{user ? t(`roles.${user.role}`) : ""}</span>
-            </div>
-            <NavLink to="/menu" className="icon-button" aria-label={t("nav.customize")} title={t("nav.customize")}>
-              <Icon name="pencil" size={16} />
-            </NavLink>
-            <button
-              type="button"
-              className="icon-button"
-              aria-label={t("common.signOut")}
-              onClick={() => void signOut()}
-            >
-              <Icon name="logout" size={18} />
-            </button>
-          </div>
+          {/* Administration is about the server, not the person's files:
+              it sits apart, just above their name (D-043). */}
+          {isAdmin && !adminOnTop ? (
+            <nav className="sidebar-system" aria-label={t("nav.administration")}>
+              {administration}
+            </nav>
+          ) : null}
+          <UserMenu adminWarnings={isAdmin ? adminWarnings : 0} />
         </aside>
 
         <div className="app-main">
