@@ -55,7 +55,7 @@ public sealed class NodeApiTests : IDisposable
         var user = await db.Users.SingleAsync(u => u.Name == userName);
         var library = await db.Libraries.SingleAsync(l => l.OwnerUserId == user.Id);
         var blob = await scope.ServiceProvider.GetRequiredService<BlobStore>()
-            .StoreAsync(library.StorageLocationId, new MemoryStream(Encoding.UTF8.GetBytes(content)), null, CancellationToken.None);
+            .StoreAsync(library.StorageLocationId!.Value, new MemoryStream(Encoding.UTF8.GetBytes(content)), null, CancellationToken.None);
         var result = await scope.ServiceProvider.GetRequiredService<NodeService>().AddFileAsync(
             new FileActor(user.Id, false, false, false), parentId, name, blob, "text/plain", null, policy, CancellationToken.None);
         return result.Value!;

@@ -33,6 +33,10 @@ jobs:
         with:
           global-json-file: server/global.json
 
+      # The media tests run FFmpeg and ffprobe; libvips comes from NuGet.
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ffmpeg
+
       - name: Restore
         run: dotnet restore Atrium.slnx
 
@@ -132,9 +136,19 @@ jobs:
       # The same command a person installing Atrium runs, building from
       # source. --wait returns only when the container reports healthy,
       # which exercises the image's own health check.
+      - name: Build the image
+        working-directory: deploy
+        run: docker compose build
+
+      # libvips, its HEIC decoder, FFmpeg and ffprobe, tried for real inside
+      # the image before the server starts.
+      - name: The media tools work in the image
+        working-directory: deploy
+        run: docker compose run --rm --no-deps atrium --check-media
+
       - name: Start with Compose
         working-directory: deploy
-        run: docker compose up --detach --build --wait --wait-timeout 180
+        run: docker compose up --detach --wait --wait-timeout 180
 
       # Output is captured into a variable before grep reads it. Piping a
       # command straight into `grep --quiet` under pipefail is a race:
@@ -243,7 +257,39 @@ jobs:
           cookie=$(grep --ignore-case 'set-cookie' <<<"$login")
           grep --ignore-case --quiet 'secure' <<<"$cookie"
 
+      # When the server crashed, run it once more with the runtime's crash
+      # report on, so the log shows where it died.
+      - name: Crash report if the server crashed
+        if: failure()
+        working-directory: deploy
+        run: |
+          docker compose stop atrium || true
+          mkdir -p /tmp/crash && chmod 777 /tmp/crash
+          timeout 120 docker compose run --rm --no-deps \
+            -v /tmp/crash:/crash \
+            -e DOTNET_DbgEnableMiniDump=1 -e DOTNET_DbgMiniDumpType=1 \
+            -e DOTNET_EnableCrashReport=1 -e DOTNET_DbgMiniDumpName=/crash/dump \
+            atrium > /tmp/crash/server.log 2>&1 || echo "server ended with $?"
+          grep -v '^\s\s\s\s\s\s' /tmp/crash/server.log | grep -v 'Microsoft.EntityFrameworkCore' | tail -n 40 || true
+          sudo chmod -R a+rX /tmp/crash
+          for report in /tmp/crash/*.crashreport.json; do
+            [ -f "$report" ] && python3 -c "
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          p=r.get('payload',r)
+          print('signal', p.get('signal') or r.get('signal'))
+          for t in p.get('threads',[]):
+            if t.get('crashed'):
+              print('crashed thread', t.get('native_thread_id'), t.get('managed_exception_type'))
+              for f in t.get('stack_frames',[])[:40]:
+                print('  ', f.get('module_name'), f.get('method_name') or f.get('native_address'), f.get('unmanaged_name',''))
+          " "$report" || head -c 20000 "$report"
+          done
+
       - name: Show logs if something failed
         if: failure()
         working-directory: deploy
-        run: docker compose logs
+        run: |
+          docker compose ps --all
+          docker inspect --format 'exit code {{.State.ExitCode}}, restarts {{.RestartCount}}, error "{{.State.Error}}"' atrium-atrium-1 || true
+          docker compose logs

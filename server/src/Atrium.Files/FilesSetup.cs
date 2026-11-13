@@ -1,5 +1,6 @@
 using Atrium.Files.Backups;
 using Atrium.Files.Blobs;
+using Atrium.Files.External;
 using Atrium.Files.Storage;
 using Atrium.Files.Uploads;
 using Atrium.Files.Users;
@@ -36,6 +37,18 @@ public static class FilesSetup
         services.AddRecurringJob(MetadataBackupHandler.Schedule);
         services.AddJobHandler<BlobCollectorHandler>(BlobCollectorHandler.Type);
         services.AddRecurringJob(BlobCollectorHandler.Schedule);
+
+        // External libraries. The host supplies the real media type table
+        // and the paths a library must stay clear of.
+        services.TryAddSingleton(new MediaTypeResolver(_ => "application/octet-stream"));
+        services.TryAddSingleton(new ExternalLibraryOptions([]));
+        services.AddScoped<ExternalLibraryService>();
+        services.AddSingleton<ExternalLocks>();
+        services.AddScoped<ExternalWriter>();
+        services.AddScoped<NodeContent>();
+        services.AddJobHandler<LibraryScanHandler>(LibraryScanHandler.Type);
+        services.AddJobHandler<LibraryScanAllHandler>(LibraryScanAllHandler.Type);
+        services.AddRecurringJob(LibraryScanAllHandler.Schedule);
         return services;
     }
 }

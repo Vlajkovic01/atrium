@@ -109,9 +109,11 @@ approve pairings or create link codes.
 | GET, PATCH, DELETE | `/storage-locations/{id}` | Not built yet. Delete only when no library uses it |
 | POST | `/storage-locations/{id}/check` | Verify the identity, then the probe; records online or offline |
 | GET, POST | `/libraries` | `GET` built in Phase 2: the caller's libraries, with the personal one created on first use and its root folder ID. A session approved with "hide my personal files" does not see it; a read-only session sees every library as read-only |
-| GET, PATCH, DELETE | `/libraries/{id}` | Deleting an external library removes only the index |
-| GET, PUT | `/libraries/{id}/grants` | Who can read or write |
-| POST | `/libraries/{id}/scan` | Enqueue a scan job |
+| GET, POST | `/admin/libraries` | Built in Phase 3. Non-personal libraries only (D-004), with path, state, file count, who has access and a running scan. `POST` adds an external folder: `name`, `path`, `userIds`; it is checked first (D-035) and scanned at once |
+| POST | `/admin/libraries/check-path` | Try a folder before adding it. Reads only; always 200 with `ok`, `errorCode` and the number of entries |
+| PATCH, DELETE | `/admin/libraries/{id}` | Rename or replace `userIds` (`If-Match`). Delete needs `confirmName` and removes only Atrium's index, never a file |
+| POST | `/admin/libraries/{id}/scan` | Enqueue a scan job; returns 202 with the job |
+| PUT | `/admin/libraries/{id}/writes` | `enabled`, and `confirmName` (the library's name) to enable. Lets Atrium change the folder's files (D-036). Disabling takes effect at once. `PATCH` takes `writerIds`, those of `userIds` who may change files |
 
 ## Files and folders (Phase 2)
 
@@ -178,14 +180,13 @@ overwrites (DESIGN.md 4.2).
 |---|---|---|
 | GET | `/timeline/buckets` | Counts per month, so the client can lay out a scrollbar for a huge library |
 | GET | `/timeline?bucket=` | Items in a bucket |
-| GET | `/nodes/{id}/thumbnail?size=` | Signed URL allowed |
-| GET | `/nodes/{id}/preview` | Larger image, or video preview clip |
-| GET | `/nodes/{id}/media-info` | EXIF or stream details |
+| GET | `/nodes/{id}/thumbnail?size=` | Built in Phase 3. `small` (grid, 400 px) or `large` (viewer, 1,920 px), WebP without metadata, made on first request if needed. Bearer token or signed URL |
+| GET | `/nodes/{id}/preview` | Built in Phase 3. A video's four-second silent MP4 clip. Bearer token or signed URL |
+| GET | `/nodes/{id}/media-info` | Built in Phase 3. Size, duration, format, codecs, capture time and offset, camera, thumbnail state. No location (D-031) |
 | GET, POST | `/albums` | |
 | GET, PATCH, DELETE | `/albums/{id}` | |
 | POST, DELETE | `/albums/{id}/items` | Add, remove |
-| GET | `/search` | `q`, `type`, date range, `near` or bounding box, library |
-| GET | `/map/clusters` | Photo clusters for a bounding box and zoom |
+| GET | `/search` | `q`, `type`, date range, library. No location (D-031) |
 
 ## Playback (Phase 5)
 
@@ -254,7 +255,10 @@ returned.
 | Method | Path | Notes |
 |---|---|---|
 | GET, PATCH | `/admin/settings` | Limits, retention, providers; secrets write-only |
-| GET | `/admin/hardware` | Profile, encoders, last detection result |
+| GET | `/admin/hardware` | Encoders and last detection result, Phase 5 |
+| GET | `/admin/background-work` | Built in Phase 3. Hardware profile, cores and memory, per resource class the default, override and effective limit with running and waiting counts, and the pause |
+| PUT | `/admin/background-work/limits` | Replace the overrides: a list of `resourceClass` and `limit` (1 to 32, null for the default) |
+| POST | `/admin/background-work/pause`, `/admin/background-work/resume` | Pause background and idle jobs for `minutes` (1 to 10080) or, with null, until resumed |
 | POST | `/admin/hardware/detect` | Rerun detection |
 | GET | `/admin/storage/usage` | Per location and per user totals |
 | GET | `/admin/sessions` | All sessions; revoke |
