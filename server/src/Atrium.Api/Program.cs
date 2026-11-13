@@ -21,6 +21,12 @@ if (args.Contains(HealthCheckCommand.Argument))
 }
 
 var bootstrap = BootstrapOptions.From(builder.Configuration);
+
+// Checks the media tools without starting the server or opening any data.
+if (args.Contains(MediaSelfCheck.Argument))
+{
+    return await MediaSelfCheck.RunAsync(new MediaOptions { CacheDir = bootstrap.CacheDir }, Console.Out);
+}
 Directory.CreateDirectory(bootstrap.ConfigDir);
 
 // Held until the process ends. A second server on the same directory stops here.
