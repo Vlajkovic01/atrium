@@ -19,6 +19,7 @@ public sealed record AdminLibraryView(
     string Name,
     LibraryKind Kind,
     LibraryMode Mode,
+    Guid RootNodeId,
     string? Path,
     bool ReadOnly,
     LibraryState State,
@@ -27,6 +28,7 @@ public sealed record AdminLibraryView(
     int FileCount,
     IReadOnlyList<Guid> UserIds,
     IReadOnlyList<Guid> WriterIds,
+    bool ShowInTimeline,
     DateTimeOffset? WritesEnabledAt,
     JobInfoBrief? Scan,
     int Version);
@@ -40,13 +42,15 @@ public sealed record CheckPathRequest(string? Path);
 /// <param name="EntryCount">Files and folders directly inside it.</param>
 public sealed record CheckPathResponse(bool Ok, string? ErrorCode, int? EntryCount);
 
-public sealed record CreateExternalLibraryRequest(string Name, string Path, IReadOnlyList<Guid>? UserIds);
+/// <param name="ShowInTimeline">Its photos and videos also appear on the timeline (default). Every file shows in Files either way.</param>
+public sealed record CreateExternalLibraryRequest(string Name, string Path, IReadOnlyList<Guid>? UserIds, bool? ShowInTimeline);
 
 /// <param name="WriterIds">Of <paramref name="UserIds">, who may change files once writes are enabled. Sent together with UserIds.</param>
-public sealed record UpdateLibraryRequest(string? Name, IReadOnlyList<Guid>? UserIds, IReadOnlyList<Guid>? WriterIds);
+public sealed record UpdateLibraryRequest(string? Name, IReadOnlyList<Guid>? UserIds, IReadOnlyList<Guid>? WriterIds, bool? ShowInTimeline);
 
 /// <param name="ConfirmName">The library's name, required to enable writes.</param>
-public sealed record SetLibraryWritesRequest(bool Enabled, string? ConfirmName);
+/// <param name="WriterIds">When enabling: who of those who see the library may change its files. Left out, the earlier choice stays.</param>
+public sealed record SetLibraryWritesRequest(bool Enabled, string? ConfirmName, IReadOnlyList<Guid>? WriterIds);
 
 /// <summary>
 /// External libraries for admins (DESIGN.md 4.4). Personal libraries are
@@ -116,7 +120,7 @@ public static class AdminLibraryEndpoints
     {
         var created = await service.CreateAsync(
             http.User.UserId()!.Value,
-            new NewExternalLibrary(request.Name ?? string.Empty, request.Path ?? string.Empty, request.UserIds ?? []),
+            new NewExternalLibrary(request.Name ?? string.Empty, request.Path ?? string.Empty, request.UserIds ?? [], request.ShowInTimeline ?? true),
             ct);
         if (!created.Ok)
         {
@@ -134,14 +138,14 @@ public static class AdminLibraryEndpoints
             return ApiProblem.Create(StatusCodes.Status428PreconditionRequired, ApiProblem.PreconditionRequired);
         }
 
-        var updated = await service.UpdateAsync(id, version, request.Name, request.UserIds, request.WriterIds, ct);
+        var updated = await service.UpdateAsync(id, version, request.Name, request.UserIds, request.WriterIds, request.ShowInTimeline, ct);
         return updated.Ok ? TypedResults.Ok(await ViewAsync(db, updated.Value!, ct)) : Problem(updated.Error!);
     }
 
     private static async Task<Results<Ok<AdminLibraryView>, ProblemHttpResult>> SetWritesAsync(
         Guid id, SetLibraryWritesRequest request, HttpContext http, ExternalLibraryService service, AtriumDbContext db, CancellationToken ct)
     {
-        var changed = await service.SetWritesAsync(http.User.UserId()!.Value, id, request.Enabled, request.ConfirmName, ct);
+        var changed = await service.SetWritesAsync(http.User.UserId()!.Value, id, request.Enabled, request.ConfirmName, request.WriterIds, ct);
         return changed.Ok ? TypedResults.Ok(await ViewAsync(db, changed.Value!, ct)) : Problem(changed.Error!);
     }
 
@@ -188,6 +192,7 @@ public static class AdminLibraryEndpoints
             library.Name,
             library.Kind,
             library.Mode,
+            library.RootNodeId,
             library.ExternalPath,
             library.ReadOnly,
             library.State,
@@ -196,6 +201,7 @@ public static class AdminLibraryEndpoints
             fileCount,
             grants.Select(g => g.UserId).ToList(),
             grants.Where(g => g.Access == LibraryAccess.Write).Select(g => g.UserId).ToList(),
+            Library.IsOnTimeline(library.Kind),
             library.WritesEnabledAt,
             scan,
             library.Version);

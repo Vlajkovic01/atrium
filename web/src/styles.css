@@ -2634,3 +2634,15 @@ a {
     display: none;
   }
 }
+
+/* A shared folder, listed under Files. */
+.nav-sublink {
+  padding-left: 2.4rem;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 760px) {
+  .nav-sublink {
+    display: none;
+  }
+}

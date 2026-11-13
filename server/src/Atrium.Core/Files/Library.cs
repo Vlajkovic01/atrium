@@ -5,9 +5,14 @@ public enum LibraryKind
     /// <summary>One per user, private: "My files".</summary>
     Personal,
     Shared,
+
+    /// <summary>An existing folder whose photos and videos also appear on the timeline.</summary>
     Photos,
     Movies,
     Shows,
+
+    /// <summary>An existing folder of any kind of files, kept out of the timeline (D-040).</summary>
+    Folder,
 }
 
 public enum LibraryMode
@@ -34,7 +39,10 @@ public sealed class Library : IVersioned
 
     public required string Name { get; set; }
 
-    public LibraryKind Kind { get; init; }
+    public LibraryKind Kind { get; set; }
+
+    /// <summary>Whether the photos and videos of this library appear on the timeline.</summary>
+    public static bool IsOnTimeline(LibraryKind kind) => kind is LibraryKind.Personal or LibraryKind.Photos;
 
     public LibraryMode Mode { get; init; }
 

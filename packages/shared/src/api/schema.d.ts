@@ -1296,6 +1296,8 @@ export interface components {
             name: string;
             kind: components["schemas"]["LibraryKind"];
             mode: components["schemas"]["LibraryMode"];
+            /** Format: uuid */
+            rootNodeId: string;
             path: null | string;
             readOnly: boolean;
             state: components["schemas"]["LibraryState"];
@@ -1306,6 +1308,7 @@ export interface components {
             fileCount: number | string;
             userIds: string[];
             writerIds: string[];
+            showInTimeline: boolean;
             /** Format: date-time */
             writesEnabledAt: null | string;
             scan: null | components["schemas"]["JobInfoBrief"];
@@ -1438,6 +1441,7 @@ export interface components {
             name: string;
             path: string;
             userIds: null | string[];
+            showInTimeline: null | boolean;
         };
         CreateFirstAdminRequest: {
             name: string;
@@ -1601,9 +1605,10 @@ export interface components {
             rootNodeId: string;
             readOnly: boolean;
             state: components["schemas"]["LibraryState"];
+            changesAllowed: boolean;
         };
         /** @enum {unknown} */
-        LibraryKind: "personal" | "shared" | "photos" | "movies" | "shows";
+        LibraryKind: "personal" | "shared" | "photos" | "movies" | "shows" | "folder";
         /** @enum {unknown} */
         LibraryMode: "managed" | "external";
         /** @enum {unknown} */
@@ -1812,6 +1817,7 @@ export interface components {
         SetLibraryWritesRequest: {
             enabled: boolean;
             confirmName: null | string;
+            writerIds: null | string[];
         };
         SetupState: {
             adminExists: boolean;
@@ -1925,6 +1931,7 @@ export interface components {
             name: null | string;
             userIds: null | string[];
             writerIds: null | string[];
+            showInTimeline: null | boolean;
         };
         UpdateNodeRequest: {
             name: null | string;

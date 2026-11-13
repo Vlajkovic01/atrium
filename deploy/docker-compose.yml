@@ -43,7 +43,7 @@ services:
       # Existing folders to show in Atrium without copying them. Mount each
       # one read-only (:ro), then add it under Administration, Libraries
       # with the path on the right, for example:
-      #   - /home/me/Pictures/Screenshots:/media/screenshots:ro
+      #   - /mnt/storage/archive:/media/archive:ro
     depends_on:
       postgres:
         condition: service_healthy

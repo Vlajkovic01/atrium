@@ -601,3 +601,21 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   command-line tools run libvips in their own process.
 - `Atrium.Api --check-media` makes a thumbnail both ways and checks
   FFmpeg and ffprobe; CI runs it in the image before starting it.
+
+## D-040 An external library is a folder of any files (Owner correction, 2026-11-13)
+
+- Owner's correction: an existing folder is not a photo library. Every
+  file and subfolder in it must be visible and, once allowed, changeable;
+  the owner's mention of one folder was an example, not the scope.
+- Decision: an external library shows everything in Files, with its own
+  entry in the menu under Files and an Open button on the Libraries page.
+  Whether its photos and videos also appear on the timeline is an option
+  per library, on by default; kind `photos` means on, `folder` off, so no
+  schema change was needed. Search and albums reach every library.
+- Allowing changes now also chooses who makes them, in the same dialog,
+  with the admin doing it suggested: before, changes could be on for a
+  library nobody was allowed to change, and Files did not say why it was
+  read-only. Files now says why (changes off, or not for you) and where to
+  change that; the Libraries page warns when nobody may change a library
+  that allows changes. Copy is not offered where it cannot work.
+- Texts and examples in the app and the documentation are neutral.

@@ -75,6 +75,10 @@ function Shell() {
   const location = useLocation();
   const isAdmin = user?.role === "admin";
 
+  // Folders shared through libraries get their own entries under Files.
+  const libraries = useQuery({ queryKey: ["libraries"], queryFn: () => call(api.GET("/api/v1/libraries")) });
+  const folders = (libraries.data ?? []).filter((l) => l.kind !== "personal");
+
   const personal: readonly NavItem[] = [
     { to: "/files", label: t("nav.files"), icon: "folder" },
     { to: "/photos", label: t("nav.photos"), icon: "image" },
@@ -104,7 +108,14 @@ function Shell() {
             <Logo size={30} />
           </div>
           <nav className="nav" aria-label={t("nav.main")}>
-            {personal.map(link)}
+            {personal.slice(0, 1).map(link)}
+            {folders.map((folder) => (
+              <NavLink key={folder.id} to={`/files/${folder.rootNodeId}`} className="nav-link nav-sublink">
+                <Icon name={folder.readOnly ? "lock" : "folder"} size={16} />
+                <span>{folder.name}</span>
+              </NavLink>
+            ))}
+            {personal.slice(1).map(link)}
             {isAdmin ? (
               <>
                 <p className="nav-heading">{t("nav.administration")}</p>
