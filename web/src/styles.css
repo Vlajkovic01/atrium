@@ -2741,7 +2741,9 @@ a {
 }
 
 .menu-grip {
+  padding: 0.25rem 0.15rem;
   color: var(--ink-faint);
+  cursor: grab;
   letter-spacing: -0.2em;
   user-select: none;
 }

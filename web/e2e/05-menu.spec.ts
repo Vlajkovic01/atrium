@@ -37,7 +37,8 @@ test("the menu is arranged: an entry hidden, another renamed, and back to the de
   await page.getByRole("option", { name: "Work" }).click();
   const row = (name: string) =>
     page.getByRole("listitem").filter({ has: page.getByRole("button", { name: `Move ${name} up` }) });
-  await row("Devices").dragTo(row("Trash"));
+  // Dragged by its handle: grabbing the name starts typing instead.
+  await row("Devices").locator(".menu-grip").dragTo(row("Trash"));
   await expect(page.getByRole("region", { name: "Work" }).getByLabel("Name in the menu for Devices")).toBeVisible();
 
   await page.getByRole("button", { name: "Save" }).click();

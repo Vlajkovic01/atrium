@@ -1,6 +1,6 @@
 import type { components } from "@atrium/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 
@@ -74,6 +74,9 @@ export function MenuSettings() {
   const [adminPosition, setAdminPosition] = useState<AdminPosition>("bottom");
   const [choosingIcon, setChoosingIcon] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
+  // The entry being dragged, known at once: the first dragover can come
+  // before React has applied the state above.
+  const dragged = useRef<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
   const [focusGroup, setFocusGroup] = useState<string | null>(null);
   // While a name is being typed, its row does not drag, so text can be selected.
@@ -168,7 +171,7 @@ export function MenuSettings() {
 
   const dragProps = (target: string, before: string | null, group: string) => ({
     onDragOver: (event: DragEvent) => {
-      if (dragging !== null) {
+      if (dragged.current !== null) {
         event.preventDefault();
         event.stopPropagation();
         setDropTarget(target);
@@ -177,9 +180,10 @@ export function MenuSettings() {
     onDrop: (event: DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
-      if (dragging !== null) {
-        place(dragging, before, group);
+      if (dragged.current !== null) {
+        place(dragged.current, before, group);
       }
+      dragged.current = null;
       setDragging(null);
       setDropTarget(null);
     },
@@ -218,9 +222,12 @@ export function MenuSettings() {
         draggable={typing !== entry.key}
         onDragStart={(event) => {
           event.dataTransfer.effectAllowed = "move";
+          event.dataTransfer.setData("text/plain", entry.key);
+          dragged.current = entry.key;
           setDragging(entry.key);
         }}
         onDragEnd={() => {
+          dragged.current = null;
           setDragging(null);
           setDropTarget(null);
         }}
