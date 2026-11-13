@@ -127,7 +127,7 @@ added. Any of them can still be overruled.
   `docker compose logs`. Security outranks ease of installation in the
   priority order.
 
-## D-013 First public release after Phase 7, with a release gate (Owner, gate Proposed)
+## D-013 First public release after Phase 7, with a release gate (Owner, gate Proposed; superseded by D-030)
 
 - Owner decision: 1.0 after Phase 7 so the media library promise is met
   at launch.
@@ -272,7 +272,7 @@ added. Any of them can still be overruled.
   Handing files to another user would let an admin read them, against
   D-004.
 
-## D-026 Portable metadata backup in Phase 2; first tag at Alpha (Proposed, Phase 2)
+## D-026 Portable metadata backup in Phase 2; first tag at Alpha (Proposed, Phase 2; tag timing revised by D-030)
 
 - Decision: the portable backup (D-008), its schedule, the copy into each
   storage location and the command-line restore are built in Phase 2.
@@ -351,3 +351,253 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   works, but loses everything sent so far when that request breaks off.
   An S3 upload holds one chunk in memory while it is sent (16 MB by
   default).
+
+## D-030 No Alpha, Beta or tagged builds; one release after Phase 12 (Owner, 2026-11-12)
+
+- Decision: there are no Alpha or Beta milestones and no version tags
+  while Atrium is developed. The first release, and with it the first
+  tag, comes when every phase up to and including Phase 12 is done.
+- Supersedes the release plan of D-013 (1.0 after Phase 7, then 1.1 to
+  2.0) and the "first tag at Alpha" part of D-026.
+- Consequences:
+  - D-026 applies until the release: whenever the schema changes, the
+    initial migration of each database is generated again instead of a
+    new migration being added. A database made by an earlier development
+    build cannot be upgraded; it has to be created again. The owner is
+    warned before a change that needs a new demo database.
+  - The release gate of D-013 becomes the list of release requirements
+    in ROADMAP.md. Most of it now falls into Phases 11 and 12 naturally;
+    items already built (backup and restore, integrity report) stay.
+  - The release workflow still publishes an image only for a version
+    tag, so nothing is published before the release.
+- Reasons: the owner is the only user until the release, so a
+  checkpoint release would only add upgrade paths to maintain.
+
+## D-031 Photo and video location is left out (Owner, 2026-11-12)
+
+- Decision: Phase 3 reads no GPS coordinates from photos or videos. There
+  are no place names, no search by location and no map.
+- Alternatives: coordinates plus offline place names from GeoNames
+  (CC BY 4.0), as first planned; coordinates only.
+- Reasons: the owner does not need to know where a photo was taken. Not
+  storing coordinates also means they cannot leak through Atrium.
+- Consequences: the original files are untouched, so their EXIF still
+  holds whatever location the camera wrote, and a download gives the
+  file as it is. Adding location later is an additive column and one
+  re-extraction job. Removing location data from files given out through
+  share links is a question for Phase 8.
+
+## D-032 Media libraries for Phase 3 (Owner, 2026-11-12)
+
+- Image decoding and thumbnails: libvips through NetVips. Alternatives:
+  SkiaSharp, FFmpeg only, ImageSharp. libvips decodes at reduced size
+  while reading (shrink-on-load) and streams, so a thumbnail of a large
+  photo needs little memory on a 2 GB device. In the image it is the
+  distribution's libvips, built with libheif, so iPhone HEIC photos
+  decode; the NetVips.Native binaries, which lack HEIC, are used only to
+  run the tests on Windows. ImageSharp's license restricts commercial use.
+- EXIF and container metadata: MetadataExtractor. Alternatives: ExifTool
+  as a process (needs Perl in the image), an own parser.
+- FFmpeg and ffprobe: the distribution's package in the image (the .NET
+  10 base image is Ubuntu 24.04). Alternatives: jellyfin-ffmpeg, static
+  builds. Phase 3 only probes, grabs frames and makes short previews;
+  the choice is revisited for hardware transcoding in Phase 5.
+- Licenses and flags are in LICENSES.md.
+
+## D-033 Media data model (Proposed, Phase 3)
+
+- **External library is a folder path, not a storage location.** A
+  storage location gets an identity file written into it (DESIGN.md
+  6.8), and Atrium must not write anything into a read-only external
+  folder. So an external library carries its own absolute path and no
+  storage location; an unmounted share is caught by the missing-folder
+  guard instead (4.4). S3 prefixes as external libraries can come later.
+- **`InTrash` on every node of a trashed subtree.** Only the node a user
+  deletes carries `TrashedAt`. The timeline and search list nodes across
+  a whole library and must leave out everything inside a trashed folder;
+  walking up the tree for each row would not scale. The flag is set on
+  the subtree in the same transaction as the trash and cleared on
+  restore, except below items that were trashed on their own.
+  Alternative: a recursive query per listing.
+- **Timeline fields on the node.** `MediaKind`, `CapturedAt` and a
+  diacritic-free `SearchKey` live on `Node` and are set by the database
+  context whenever a node is saved, so no code path can forget them.
+  `MediaInfo` holds the technical details, keyed by blob (shared by
+  duplicates) or, in an external library, by node. Alternative: join
+  `MediaInfo` for every timeline page, which needs an OR across two keys.
+- **No `Derivative` table.** Thumbnails are files in the cache named by
+  the content (the blob hash, or a hash of the external file's path, size
+  and time) and the variant. A file that exists is ready; deleting the
+  cache is always safe and just causes regeneration. Only a failure is
+  remembered, in `MediaInfo`, so a broken file is not retried forever.
+  Alternative: an index table, as DESIGN.md first said, which can drift
+  from the cache directory.
+
+## D-034 Capture time is local clock time (Proposed, Phase 3)
+
+- Decision: the timeline is ordered and grouped by the local clock time
+  at which a photo was taken, stored with a zero offset. EXIF gives that
+  time directly (`DateTimeOriginal`), with the offset when the camera
+  recorded one. Without EXIF (screenshots, many videos), the file's
+  modification time is converted to the server's time zone, which is the
+  `TZ` setting of the container.
+- Alternative: store true instants and convert to the viewer's zone.
+  Most EXIF has no offset, so the instant is unknown; and a holiday photo
+  should stay on the day it was taken wherever it is viewed.
+- Until metadata is read, the modification time in UTC is used, so a new
+  photo appears on the timeline at once and moves to its exact place
+  when its metadata job has run.
+
+## D-035 How an external folder is read (Proposed, Phase 3)
+
+- **Admins add it, grants decide who sees it.** Adding a library checks
+  the folder first: an absolute path that exists and can be listed, not
+  overlapping Atrium's config or cache directory, a local storage
+  location or another external library. A library inside a storage
+  location would show Atrium's own blobs, and once writes are possible
+  could delete them; two overlapping libraries would show files twice.
+  An admin sees a library's photos only by granting access to
+  themselves, like anyone else.
+- **Symbolic links are neither listed nor followed**, at any step of a
+  path, so nothing outside the folder can be reached through one.
+  Alternative: follow links that stay inside the folder, which needs the
+  same check at every request and gains little.
+- **Hidden entries and system folders are skipped**: names starting with
+  a dot, `@eaDir`, `#recycle`, `$RECYCLE.BIN`, `Thumbs.db` and similar,
+  and Atrium's own `.atrium-trash`.
+- **Names are kept exactly as on disk.** Siblings are kept apart by
+  their exact name, not the case-folded one, because a case-sensitive
+  disk can hold `a.jpg` and `A.jpg` side by side; neither is hidden.
+- **Changes are found by scanning**, every six hours and on demand, not
+  by watching the folder: change notifications are unreliable on
+  network shares and in containers. A scan keeps the folders still to
+  visit as its checkpoint and continues after a restart.
+- **Vanished files are kept as missing** for the trash retention, with
+  their albums, and come back as the same entry if the file returns.
+  Before marking anything missing, a scan refuses to trust a folder that
+  is gone, suddenly empty, or has lost more than half of its files (and
+  at least 50): the library is marked offline instead and nothing
+  changes.
+- **Content is read from disk on every request**, with its current size,
+  and the ETag is a hash of path, size and time, so a file changed after
+  the last scan is never served with a stale length.
+
+## D-036 Changing the files of an external library (Owner request, details Proposed, Phase 3)
+
+- **Owner's requirement:** an admin may allow Atrium to rename, move,
+  delete and upload in an external library, only after a clear warning
+  and typing the library's name; deleting moves into a trash folder
+  inside the library with the normal trash retention; changes can be
+  switched off at any time.
+- **Who may change files** is a second, per-person grant ("can change")
+  on top of "can see". Allowing changes for a library does not by itself
+  let everyone who sees it delete from it.
+- **Enabling proves the folder is writable** by creating Atrium's own
+  `.atrium-trash/.uploads` folder in it; a folder mounted read-only is
+  refused with an explanation.
+- **Disk first, index second, under one lock per library**, shared with
+  the scan. A failed index update undoes the disk change. A crash between
+  the two leaves the file where the disk change put it, and the next scan
+  finds it there: the index can lose track of an album entry, never of a
+  file.
+- **Trash:** `.atrium-trash/<item id>/<name>` on the same disk, so a
+  delete is a rename. The scan neither indexes the trash nor calls trashed
+  items missing. A file is removed from disk only when its retention ends
+  or someone empties the trash, disk first and row second, and only while
+  changes are still allowed: switching changes off stops this too.
+- **Uploads** are assembled in `.atrium-trash/.uploads` with the same
+  resumable chunks as everywhere, verified, and moved into place.
+  "Replace" moves the existing file to the trash; external libraries
+  have no versions.
+- **Copying** inside an external folder is refused: it would duplicate
+  the user's files on their own disk, and it was not asked for.
+- **Names** chosen in Atrium follow the usual rules (D-011) and may not
+  match a sibling ignoring case; names found on disk are kept as they
+  are when an item only moves.
+- **Scan state** (online, last scan) is written without bumping the
+  library's version, so a scan finishing never makes an admin's edit
+  fail with a version conflict.
+
+## D-037 How photos and videos are processed (Proposed, Phase 3)
+
+- **Jobs.** `media.extract` reads one file's metadata and makes its grid
+  thumbnail, in the `cpu` class at background priority. It is queued when
+  an upload finishes and when a scan finds a new or changed file, and an
+  hourly `media.sweep` queues whatever was missed (a restored backup, a
+  deleted cache, a crash) in batches of 2,000. A video then gets
+  `media.preview`, a four-second silent clip, at idle priority.
+- **Facts belong to the content.** One blob shared by several files is
+  read once and every such file is dated by it. An external file is read
+  again when its size or time changes. A file that cannot be decoded is
+  marked unsupported and is not retried until it changes.
+- **Sizes.** The grid thumbnail (400 px) is made for every photo and
+  video; the viewer image (1,920 px) only when first asked for, so a
+  library of 100,000 photos does not fill the cache with images nobody
+  opens. Thumbnails are WebP.
+- **Nothing private reaches the cache.** Thumbnails are saved without
+  any metadata, so no location or camera details from the original are
+  kept (D-031); previews are written with `-map_metadata -1`.
+- **The user's files are read, never held.** libvips gets a stream that
+  Atrium opens with full sharing and closes at once: given a path, it
+  kept the file mapped on Windows after it was done, which stopped other
+  programs from writing the user's own file. Its cache is turned off for
+  the same reason, and to save memory.
+- **FFmpeg and ffprobe run as processes** with an argument list, never a
+  shell, under a two-minute limit and, for background work, at reduced
+  process priority. On S3, they read a temporary copy in the cache.
+- **Without the tools** (a development machine) photos still show and
+  are dated by their file time; their thumbnails come from FFmpeg if
+  libvips cannot read them, as with HEIC on Windows. The image always
+  has both, and CI checks it.
+- **Thumbnails are served** through signed URLs that stay the same for
+  a six-hour window, so the browser can cache them, and inline
+  generation is limited to a few at once.
+- Alternatives considered: one job doing every file of a library (no
+  per-file progress or retry); making every size eagerly (cache space);
+  reading by path (the lock described above).
+## D-038 Timeline, search and albums (Proposed, Phase 3)
+
+- **One timeline across libraries**: the personal library and every
+  library shared with the person, without the trash and without missing
+  files. A library can be chosen to see only its photos.
+- **Months are counted in the server process** from one indexed column,
+  because the month of a stored millisecond count is spelled differently
+  on SQLite and PostgreSQL. 100,000 photos are 800 KB of numbers; the
+  release requirement 6 measurement decides whether a stored month column
+  is needed.
+- **Keyset paging** on capture time and ID for the timeline and albums,
+  so a page boundary does not move while photos are added; search pages
+  by offset, as the folder listing does (D-027).
+- **Search** matches every word as a substring of the name, folded to
+  lower case without diacritics (`suma` finds `Šuma`, `dj` finds `đ`), with
+  `%` and `_` taken literally. Dates are the capture time for photos and
+  videos and the modification time for other files. No full-text index
+  until a measurement asks for one.
+- **Albums hold references.** Adding needs read access to the photo; an
+  album shows only what its owner can still see, so a trashed photo
+  disappears from it and comes back on restore. Deleting an album never
+  touches a photo. Sharing albums is Phase 8.
+
+## D-039 libvips runs in decoder processes, never in the server (Proposed, Phase 3)
+
+- Finding: with Ubuntu's libvips loaded into the server, the server in
+  the image died with a segmentation fault seconds after starting, in
+  ordinary .NET code, the mark of memory damaged by native code. Not
+  loading libvips in the server made the crash go away; the cause inside
+  libvips or its many libraries was not pinned down further.
+- Decision: thumbnails are made by decoder processes: the same program
+  started with `--image-worker`, a few at a time, each answering one
+  request per line on standard input and output. One that crashes,
+  hangs past two minutes or answers nonsense is killed and replaced; the
+  thumbnail request gets 503 and the job is retried later. A process
+  ends by itself when the server goes away, because its input closes.
+- Reasons: beyond this crash, decoding pictures people upload is the
+  most exposed native code in Atrium. A broken or hostile file must not
+  be able to take the server, its database connection or its memory
+  with it. FFmpeg already runs as separate processes for the same
+  reason.
+- Cost: each decoder process is a .NET process of a few tens of
+  megabytes; their number follows the `cpu` limit plus one. Tests and the
+  command-line tools run libvips in their own process.
+- `Atrium.Api --check-media` makes a thumbnail both ways and checks
+  FFmpeg and ffprobe; CI runs it in the image before starting it.

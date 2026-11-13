@@ -24,7 +24,8 @@ public sealed class Upload : IVersioned
     /// <summary>The folder the file goes into.</summary>
     public Guid ParentId { get; init; }
 
-    public Guid StorageLocationId { get; init; }
+    /// <summary>Where the parts are staged; null for an external library, which stages inside its own folder.</summary>
+    public Guid? StorageLocationId { get; init; }
 
     /// <summary>The file name, already validated.</summary>
     public required string Name { get; init; }

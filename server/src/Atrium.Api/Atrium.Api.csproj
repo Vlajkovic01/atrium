@@ -9,6 +9,13 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
   </ItemGroup>
 
+  <!-- On a Windows development machine libvips comes from NuGet. The image
+       and Linux installs use the distribution's libvips, which can decode
+       HEIC (D-032). -->
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <PackageReference Include="NetVips.Native.win-x64" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Atrium.Core\Atrium.Core.csproj" />
     <ProjectReference Include="..\Atrium.Data\Atrium.Data.csproj" />
@@ -17,6 +24,7 @@
     <ProjectReference Include="..\Atrium.Files\Atrium.Files.csproj" />
     <ProjectReference Include="..\Atrium.Identity\Atrium.Identity.csproj" />
     <ProjectReference Include="..\Atrium.Jobs\Atrium.Jobs.csproj" />
+    <ProjectReference Include="..\Atrium.Media\Atrium.Media.csproj" />
     <ProjectReference Include="..\Atrium.Storage\Atrium.Storage.csproj" />
   </ItemGroup>
 

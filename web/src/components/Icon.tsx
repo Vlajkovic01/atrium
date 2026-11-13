@@ -188,6 +188,33 @@ const shapes = {
     </>
   ),
   list: <path d="M8.5 6.5H20M8.5 12H20M8.5 17.5H20M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" />,
+  image: (
+    <>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="2.2" />
+      <circle cx="9" cy="10" r="1.7" />
+      <path d="m4.5 18 5-5 3.5 3.5 2.5-2.5 4 4" />
+    </>
+  ),
+  album: (
+    <>
+      <rect x="6.5" y="6.5" width="14" height="13" rx="2" />
+      <path d="M3.5 16.5V5.5a2 2 0 0 1 2-2h11" />
+      <path d="m8 17.5 3.5-3.5 2.5 2.5 2-2 3 3" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="10.5" cy="10.5" r="6" />
+      <path d="m15 15 5.5 5.5" />
+    </>
+  ),
+  chevronLeft: <path d="m14.5 6-6 6 6 6" />,
+  video: (
+    <>
+      <rect x="3" y="6" width="13" height="12" rx="2" />
+      <path d="m16 10.5 5-3v9l-5-3z" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof shapes;
