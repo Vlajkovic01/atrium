@@ -873,5 +873,22 @@
     "none": "This kind of file cannot be shown here. Download it to open it on your device.",
     "office": "Word, Excel and PowerPoint files cannot be shown here yet. Download it to open it on your device.",
     "showInFolder": "Show in folder"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "open": "Notifications",
+    "openUnread": "Notifications, {count} unread",
+    "markAllRead": "Mark all read",
+    "clear": "Clear all",
+    "remove": "Remove",
+    "empty": "Nothing new.",
+    "kinds": {
+      "uploads_finished": "{count, plural, one {# file uploaded} other {# files uploaded}}",
+      "uploads_failed": "{count, plural, one {# upload failed} other {# uploads failed}}",
+      "job_failed": "{work} failed. Background work shows why.",
+      "library_offline": "The folder {name} is offline: missing, empty or unreadable. Nothing in it was removed.",
+      "integrity_problems": "The storage check found {count, plural, one {# file} other {# files}} missing or damaged.",
+      "other": "Something happened on the server."
+    }
   }
 }

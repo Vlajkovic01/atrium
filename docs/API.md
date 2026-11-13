@@ -200,6 +200,15 @@ overwrites (DESIGN.md 4.2).
 | GET | `/me/views/{id}/items` | The files the view shows, with the total, paged |
 | POST | `/me/views/preview` | What rules would show, without saving them |
 
+## Notifications (Phase 3, D-045)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/me/notifications` | The person's notifications, newest first (at most 200, 90 days), and how many are unread. Each has a `kind`, `params` for the wording, a time, when it was read and an optional link inside the app |
+| POST | `/me/notifications` | A client reports what it saw itself: only `uploads.finished` or `uploads.failed`, at most 5 params, a link only to a path inside the app |
+| POST | `/me/notifications/read` | Mark `ids` read, or all with null |
+| DELETE | `/me/notifications/{id}`, `/me/notifications` | Remove one, or all |
+
 ## Playback (Phase 5)
 
 | Method | Path | Notes |

@@ -15,6 +15,7 @@ public static class JobsSetup
         services.TryAddSingleton<JobLimits>();
         services.TryAddScoped<JobSettingsStore>();
         services.TryAddScoped<JobQueue>();
+        services.TryAddScoped<Atrium.Data.Notifications.NotificationStore>();
         services.TryAddSingleton<JobRunner>();
         services.TryAddSingleton<RecurringJobScheduler>();
         services.AddJobHandler<JobCleanupHandler>(JobCleanupHandler.Type);
