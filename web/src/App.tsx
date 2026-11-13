@@ -9,10 +9,12 @@ import { Icon } from "./components/Icon.tsx";
 import { Logo } from "./components/Logo.tsx";
 import { Avatar, Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
 import { Account } from "./pages/Account.tsx";
+import { BackgroundWork } from "./pages/BackgroundWork.tsx";
 import { FileBrowser } from "./files/FileBrowser.tsx";
 import { Trash } from "./files/Trash.tsx";
 import { UploadsProvider } from "./files/uploads.tsx";
 import { Devices } from "./pages/Devices.tsx";
+import { Libraries } from "./pages/Libraries.tsx";
 import { People } from "./pages/People.tsx";
 import { Setup } from "./pages/Setup.tsx";
 import { SignIn } from "./pages/SignIn.tsx";
@@ -79,6 +81,8 @@ function Shell() {
   const admin: readonly NavItem[] = [
     { to: "/people", label: t("nav.people"), icon: "users" },
     { to: "/storage", label: t("nav.storage"), icon: "drive" },
+    { to: "/libraries", label: t("nav.libraries"), icon: "folder" },
+    { to: "/background-work", label: t("nav.backgroundWork"), icon: "history" },
   ];
 
   const link = (item: NavItem) => (
@@ -136,6 +140,8 @@ function Shell() {
                 <>
                   <Route path="/people" element={<People />} />
                   <Route path="/storage" element={<StorageLocations />} />
+                  <Route path="/libraries" element={<Libraries />} />
+                  <Route path="/background-work" element={<BackgroundWork />} />
                 </>
               ) : null}
               <Route path="*" element={<Navigate to="/files" replace />} />

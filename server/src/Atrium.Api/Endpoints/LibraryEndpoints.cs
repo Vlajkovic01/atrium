@@ -1,4 +1,5 @@
 using Atrium.Api.Auth;
+using Atrium.Api.Files;
 using Atrium.Core.Files;
 using Atrium.Data;
 using Atrium.Files;
@@ -14,7 +15,8 @@ public sealed record LibraryInfo(
     LibraryKind Kind,
     LibraryMode Mode,
     Guid RootNodeId,
-    bool ReadOnly);
+    bool ReadOnly,
+    LibraryState State);
 
 public static class LibraryEndpoints
 {
@@ -47,7 +49,21 @@ public static class LibraryEndpoints
         if (!hidePersonal && await libraries.EnsurePersonalAsync(user, ct) is { } personal)
         {
             result.Add(new LibraryInfo(
-                personal.Id, personal.Name, personal.Kind, personal.Mode, personal.RootNodeId, personal.ReadOnly || readOnlySession));
+                personal.Id, personal.Name, personal.Kind, personal.Mode, personal.RootNodeId, personal.ReadOnly || readOnlySession, personal.State));
+        }
+
+        // Libraries shared with the user through a grant, such as external photo folders.
+        var actor = http.User.Actor();
+        var granted = await db.LibraryGrants.AsNoTracking()
+            .Where(g => g.UserId == user.Id)
+            .Join(db.Libraries.AsNoTracking(), g => g.LibraryId, l => l.Id, (g, l) => new { Grant = g, Library = l })
+            .OrderBy(x => x.Library.Name)
+            .ToListAsync(ct);
+        foreach (var item in granted)
+        {
+            var library = item.Library;
+            var writable = NodeService.CanWrite(actor, library, item.Grant);
+            result.Add(new LibraryInfo(library.Id, library.Name, library.Kind, library.Mode, library.RootNodeId, !writable, library.State));
         }
 
         return TypedResults.Ok(result);

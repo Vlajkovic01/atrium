@@ -10,7 +10,7 @@ namespace Atrium.Files;
 /// library first; someone else's node answers "not found", the same as one
 /// that does not exist.
 /// </summary>
-public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOptions options)
+public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOptions options, External.ExternalWriter external)
 {
     /// <summary>A folder copy larger than this is refused rather than run inside one request.</summary>
     public const int MaxCopyItems = 10_000;
@@ -19,32 +19,52 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
     public async Task<AccessibleNode?> FindAsync(FileActor actor, Guid id, CancellationToken ct)
     {
         var node = await db.Nodes.AsNoTracking().SingleOrDefaultAsync(n => n.Id == id, ct);
-        if (node is null)
+
+        // A file a scan no longer finds is kept for a while, but is not there for anyone.
+        if (node is null || node.MissingSince is not null)
         {
             return null;
         }
 
         var library = await db.Libraries.AsNoTracking().SingleAsync(l => l.Id == node.LibraryId, ct);
-        if (!CanRead(actor, library))
+        var grant = await GrantAsync(actor, library, ct);
+        if (!CanRead(actor, library, grant))
         {
             return null;
         }
 
         var inTrash = node.TrashedAt is not null
             || (await NodeTree.AncestorsAsync(db, node, ct)).Any(a => a.TrashedAt is not null);
-        return new AccessibleNode(node, library, CanWrite(actor, library), inTrash);
+        return new AccessibleNode(node, library, CanWrite(actor, library, grant), inTrash);
     }
 
-    public static bool CanRead(FileActor actor, Library library) => library.Kind switch
+    /// <summary>The actor's grant on a library that is not personal; null for personal libraries.</summary>
+    public Task<LibraryGrant?> GrantAsync(FileActor actor, Library library, CancellationToken ct) =>
+        library.Kind == LibraryKind.Personal
+            ? Task.FromResult<LibraryGrant?>(null)
+            : db.LibraryGrants.AsNoTracking().SingleOrDefaultAsync(g => g.LibraryId == library.Id && g.UserId == actor.UserId, ct);
+
+    /// <summary>
+    /// Personal libraries: the owner only, and not from a device approved
+    /// without access to them. Admins have no way in (D-004). Every other
+    /// library: whoever has a grant, admins included only through one.
+    /// </summary>
+    public static bool CanRead(FileActor actor, Library library, LibraryGrant? grant = null) => library.Kind switch
     {
-        // Personal libraries: the owner only, and not from a device approved
-        // without access to them. Admins have no way in (D-004).
         LibraryKind.Personal => library.OwnerUserId == actor.UserId && !actor.HidePersonal,
-        _ => false,
+        _ => grant is not null && grant.UserId == actor.UserId && grant.LibraryId == library.Id,
     };
 
-    public static bool CanWrite(FileActor actor, Library library) =>
-        CanRead(actor, library) && actor.CanWriteAnything && !library.ReadOnly && library.Mode == LibraryMode.Managed;
+    /// <summary>
+    /// Writing also needs a session that may write, a library that is not
+    /// read-only and, outside a personal library, a write grant. An external
+    /// library is read-only until an admin enables writes (D-036).
+    /// </summary>
+    public static bool CanWrite(FileActor actor, Library library, LibraryGrant? grant = null) =>
+        CanRead(actor, library, grant)
+        && actor.CanWriteAnything
+        && !library.ReadOnly
+        && (library.Kind == LibraryKind.Personal || grant?.Access == LibraryAccess.Write);
 
     /// <summary>The ancestors from the library root down to the node, the node excluded.</summary>
     public async Task<FileResult<List<Node>>> PathAsync(FileActor actor, Guid id, CancellationToken ct)
@@ -75,7 +95,7 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
 
         // Inside a trashed folder everything is in the trash too, so the
         // trashed flag of the children themselves only matters at the top.
-        var query = db.Nodes.AsNoTracking().Where(n => n.ParentId == folderId);
+        var query = db.Nodes.AsNoTracking().Where(n => n.ParentId == folderId && n.MissingSince == null);
         if (!found.InTrash)
         {
             query = query.Where(n => n.TrashedAt == null);
@@ -113,6 +133,11 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
         if (!parent.Ok)
         {
             return FileResult<Node>.Fail(parent.Error!, parent.Params);
+        }
+
+        if (parent.Value!.Library.Mode == LibraryMode.External)
+        {
+            return await external.CreateFolderAsync(parent.Value.Library, parent.Value.Node, name ?? string.Empty, actor.UserId, ct);
         }
 
         if (!NodeName.TryNormalize(name, out var normalized, out var key))
@@ -201,6 +226,13 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
             }
         }
 
+        if (found.Library.Mode == LibraryMode.External)
+        {
+            var targetFolder = await db.Nodes.AsNoTracking().SingleAsync(n => n.Id == parentId, ct);
+            db.ChangeTracker.Clear();
+            return await external.MoveAsync(found.Library, node.Id, targetFolder, newName ?? node.Name, ct);
+        }
+
         if (await SiblingAsync(parentId, key, except: node.Id, ct) is { } existing)
         {
             return Conflict<Node>(existing);
@@ -245,6 +277,12 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
         if (target.Value!.Library.Id != found.Library.Id)
         {
             return FileResult<Node>.Fail(FileErrors.CrossLibrary);
+        }
+
+        // Copying inside an external folder would duplicate the user's files on their disk.
+        if (found.Library.Mode == LibraryMode.External)
+        {
+            return FileResult<Node>.Fail(FileErrors.NotSupported);
         }
 
         var source = found.Node;
@@ -355,10 +393,18 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
             return FileResult<Node>.Fail(FileErrors.VersionConflict);
         }
 
+        if (found.Library.Mode == LibraryMode.External)
+        {
+            db.ChangeTracker.Clear();
+            return await external.TrashAsync(found.Library, id, ct);
+        }
+
         var now = time.GetUtcNow();
         node.TrashedAt = now;
+        node.InTrash = true;
         node.ActiveNameKey = null;
         node.UpdatedAt = now;
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
         try
         {
             await db.SaveChangesAsync(ct);
@@ -368,6 +414,12 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
             return FileResult<Node>.Fail(FileErrors.VersionConflict);
         }
 
+        if (node.IsFolder)
+        {
+            await NodeTree.MarkInTrashBelowAsync(db, node.Id, inTrash: true, ct);
+        }
+
+        await transaction.CommitAsync(ct);
         return FileResult<Node>.Success(node);
     }
 
@@ -565,25 +617,7 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
         });
 
     /// <summary>The live part of a subtree, parents before children; anything in or under a trashed node is left out.</summary>
-    public static List<Node> LiveSubtree(Guid rootId, List<Node> descendants)
-    {
-        var byParent = descendants.ToLookup(n => n.ParentId!.Value);
-        var result = new List<Node>();
-        var queue = new Queue<Guid>([rootId]);
-        while (queue.Count > 0)
-        {
-            foreach (var child in byParent[queue.Dequeue()].Where(c => c.TrashedAt is null))
-            {
-                result.Add(child);
-                if (child.IsFolder)
-                {
-                    queue.Enqueue(child.Id);
-                }
-            }
-        }
-
-        return result;
-    }
+    public static List<Node> LiveSubtree(Guid rootId, List<Node> descendants) => NodeTree.LiveSubtree(rootId, descendants);
 
     private async Task<FileResult<Node>> SaveNewAsync(Node node, Guid parentId, string key, CancellationToken ct)
     {

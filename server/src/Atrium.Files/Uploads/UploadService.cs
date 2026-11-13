@@ -48,6 +48,7 @@ public sealed class UploadService(
     StorageProviders providers,
     BlobStore blobs,
     UploadRunningHashes hashes,
+    External.ExternalWriter external,
     TimeProvider time,
     ILogger<UploadService> logger)
 {
@@ -97,10 +98,13 @@ public sealed class UploadService(
             return FileResult<Upload>.Fail(FileErrors.QuotaExceeded, refusal);
         }
 
+        // A managed library stages on its storage location; an external one
+        // inside its own folder, so finishing is a rename on the same disk.
+        var locationId = library.StorageLocationId;
         IStorageProvider provider;
         try
         {
-            provider = await providers.OpenAsync(db, library.StorageLocationId, ct);
+            provider = await ProviderAsync(library, locationId, ct);
         }
         catch (LocationUnavailableException e)
         {
@@ -115,7 +119,7 @@ public sealed class UploadService(
             UserId = actor.UserId,
             LibraryId = library.Id,
             ParentId = request.ParentId,
-            StorageLocationId = library.StorageLocationId,
+            StorageLocationId = locationId,
             Name = name,
             MediaType = request.MediaType,
             Length = request.Length,
@@ -262,7 +266,7 @@ public sealed class UploadService(
         IStorageProvider provider;
         try
         {
-            provider = await providers.OpenAsync(db, upload.StorageLocationId, ct);
+            provider = await ProviderAsync(upload, ct);
         }
         catch (LocationUnavailableException e)
         {
@@ -348,10 +352,15 @@ public sealed class UploadService(
         // it; then the assembled object is read back.
         var sha256 = hashes.Take(upload.Id, upload.Length) ?? await HashStagedAsync(provider, upload.StagingKey, ct);
 
+        if (upload.StorageLocationId is null)
+        {
+            return await FinishExternalAsync(actor, upload, provider, sha256, ct);
+        }
+
         Blob blob;
         try
         {
-            blob = await blobs.PromoteAsync(upload.StorageLocationId, upload.StagingKey, sha256, upload.Length, upload.ExpectedSha256, ct);
+            blob = await blobs.PromoteAsync(upload.StorageLocationId.Value, upload.StagingKey, sha256, upload.Length, upload.ExpectedSha256, ct);
         }
         catch (BlobHashMismatchException)
         {
@@ -397,7 +406,7 @@ public sealed class UploadService(
     {
         try
         {
-            var provider = await providers.OpenAsync(db, upload.StorageLocationId, ct);
+            var provider = await ProviderAsync(upload, ct);
             await provider.AbortMultipartAsync(new MultipartUpload(upload.StagingKey, upload.MultipartUploadId), ct);
         }
         catch (Exception e) when (e is LocationUnavailableException or StorageException)
@@ -408,6 +417,80 @@ public sealed class UploadService(
         }
 
         await MarkAsync(upload, state, error, ct);
+    }
+
+    /// <summary>
+    /// Finishes an upload into an external library: the assembled file was
+    /// hashed and is checked against what the client declared, then moved
+    /// into its folder. A mismatch never reaches the folder.
+    /// </summary>
+    private async Task<FileResult<Upload>> FinishExternalAsync(
+        FileActor actor, Upload upload, IStorageProvider provider, byte[] sha256, CancellationToken ct)
+    {
+        if (upload.ExpectedSha256 is { } expected && !CryptographicOperations.FixedTimeEquals(expected, sha256))
+        {
+            await provider.DeleteAsync(upload.StagingKey, ct);
+            await MarkAsync(upload, UploadState.Failed, UploadErrors.ContentMismatch, ct);
+            return FileResult<Upload>.Fail(UploadErrors.ContentMismatch);
+        }
+
+        var parent = await nodes.WritableFolderAsync(actor, upload.ParentId, ct);
+        if (!parent.Ok || parent.Value!.Library.Mode != LibraryMode.External)
+        {
+            await provider.DeleteAsync(upload.StagingKey, ct);
+            var error = parent.Error ?? FileErrors.ReadOnly;
+            await MarkAsync(upload, UploadState.Failed, error, ct);
+            return FileResult<Upload>.Fail(error, parent.Params);
+        }
+
+        var library = parent.Value.Library;
+        var staged = Path.Combine(External.ExternalWriter.StagingRoot(library), upload.StagingKey.Replace('/', Path.DirectorySeparatorChar));
+        var policy = Enum.Parse<ConflictPolicy>(upload.ConflictPolicy);
+        var placed = await external.PlaceUploadAsync(
+            library, parent.Value.Node, upload.Name, staged, upload.Length, upload.MediaType, upload.ModifiedAt, policy, actor.UserId, ct);
+        if (!placed.Ok)
+        {
+            await provider.DeleteAsync(upload.StagingKey, ct);
+            await MarkAsync(upload, UploadState.Failed, placed.Error, ct);
+            return FileResult<Upload>.Fail(placed.Error!, placed.Params);
+        }
+
+        upload.NodeId = placed.Value!.Id;
+        await MarkAsync(upload, UploadState.Completed, null, ct);
+        return FileResult<Upload>.Success(upload);
+    }
+
+    private async Task<IStorageProvider> ProviderAsync(Upload upload, CancellationToken ct)
+    {
+        if (upload.StorageLocationId is { } locationId)
+        {
+            return await providers.OpenAsync(db, locationId, ct);
+        }
+
+        var library = await db.Libraries.AsNoTracking().SingleAsync(l => l.Id == upload.LibraryId, ct);
+        return await ProviderAsync(library, null, ct);
+    }
+
+    private async Task<IStorageProvider> ProviderAsync(Library library, Guid? locationId, CancellationToken ct)
+    {
+        if (locationId is { } id)
+        {
+            return await providers.OpenAsync(db, id, ct);
+        }
+
+        if (library.Mode != LibraryMode.External || library.ExternalPath is null)
+        {
+            throw new LocationUnavailableException(Guid.Empty, StorageProviders.Unavailable, "The library has nowhere to stage uploads.");
+        }
+
+        try
+        {
+            return External.ExternalWriter.StagingProvider(library);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            throw new LocationUnavailableException(Guid.Empty, StorageProviders.Unavailable, e.Message);
+        }
     }
 
     private static async Task<byte[]> HashStagedAsync(IStorageProvider provider, string key, CancellationToken ct)

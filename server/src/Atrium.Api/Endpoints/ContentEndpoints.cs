@@ -69,7 +69,7 @@ public static class ContentEndpoints
     }
 
     private static async Task<IResult> ContentAsync(
-        Guid id, HttpContext http, AtriumDbContext db, NodeService nodes, StorageProviders providers, SignedUrls signer, CancellationToken ct)
+        Guid id, HttpContext http, AtriumDbContext db, NodeService nodes, NodeContent content, SignedUrls signer, CancellationToken ct)
     {
         if (await ActorAsync(http, signer, db, ContentOptions, ct) is not { } actor)
         {
@@ -81,18 +81,18 @@ public static class ContentEndpoints
             return Results.NotFound();
         }
 
-        if (found.Node.BlobId is not { } blobId)
+        if (found.Node.IsFolder)
         {
             return FileHttp.Problem(FileErrors.NotAFile);
         }
 
         var inline = http.Request.Query[InlineOption] == "1";
-        return await ServeBlobAsync(http, db, providers, blobId, found.Node.Name, found.Node.MediaType, found.Node.ModifiedAt, inline, ct);
+        return await ServeAsync(http, () => content.SourceAsync(found.Node, found.Library, ct), found.Node.Name, found.Node.MediaType, inline, ct);
     }
 
     private static async Task<IResult> VersionContentAsync(
         Guid id, Guid versionId, HttpContext http, AtriumDbContext db, VersionService versions, NodeService nodes,
-        StorageProviders providers, SignedUrls signer, CancellationToken ct)
+        NodeContent content, SignedUrls signer, CancellationToken ct)
     {
         if (await ActorAsync(http, signer, db, [], ct) is not { } actor)
         {
@@ -106,7 +106,8 @@ public static class ContentEndpoints
         }
 
         var v = version.Value!;
-        return await ServeBlobAsync(http, db, providers, v.BlobId, found.Node.Name, found.Node.MediaType, v.ModifiedAt, inline: false, ct);
+        var blob = await db.Blobs.AsNoTracking().SingleAsync(b => b.Id == v.BlobId, ct);
+        return await ServeAsync(http, () => content.BlobSourceAsync(blob, v.ModifiedAt, ct), found.Node.Name, found.Node.MediaType, inline: false, ct);
     }
 
     private static async Task<Results<Ok<SignedUrlResponse>, ProblemHttpResult>> ContentUrlAsync(
@@ -168,7 +169,7 @@ public static class ContentEndpoints
     /// that is not in the trash.
     /// </summary>
     private static async Task<IResult> ArchiveAsync(
-        string token, HttpContext http, AtriumDbContext db, NodeService nodes, StorageProviders providers,
+        string token, HttpContext http, AtriumDbContext db, NodeService nodes, NodeContent content,
         ArchiveRequests archives, SignedUrls signer, CancellationToken ct)
     {
         if (await signer.VerifyAsync(http.Request, [], db, ct) is not { } actor
@@ -178,6 +179,7 @@ public static class ContentEndpoints
         }
 
         var entries = new List<(string Path, Node Node)>();
+        var libraries = new Dictionary<Guid, Library>();
         foreach (var id in ids)
         {
             if (await nodes.FindAsync(actor, id, ct) is not { InTrash: false } found)
@@ -185,6 +187,7 @@ public static class ContentEndpoints
                 return Results.NotFound();
             }
 
+            libraries[found.Library.Id] = found.Library;
             entries.Add((found.Node.Name, found.Node));
             if (found.Node.IsFolder)
             {
@@ -194,23 +197,14 @@ public static class ContentEndpoints
                     return FileHttp.Problem(FileErrors.TooManyItems, new Dictionary<string, object?> { ["max"] = MaxArchiveItems });
                 }
 
-                AddPaths(entries, found.Node, NodeService.LiveSubtree(found.Node.Id, below));
+                // Files a scan no longer finds are not offered.
+                var live = NodeService.LiveSubtree(found.Node.Id, below.Where(n => n.MissingSince is null).ToList());
+                AddPaths(entries, found.Node, live);
             }
 
             if (entries.Count > MaxArchiveItems)
             {
                 return FileHttp.Problem(FileErrors.TooManyItems, new Dictionary<string, object?> { ["max"] = MaxArchiveItems });
-            }
-        }
-
-        var blobIds = entries.Where(e => e.Node.BlobId is not null).Select(e => e.Node.BlobId!.Value).Distinct().ToList();
-        var blobs = new Dictionary<Guid, Blob>();
-        foreach (var chunk in blobIds.Chunk(500))
-        {
-            var list = chunk.ToList();
-            foreach (var blob in await db.Blobs.AsNoTracking().Where(b => list.Contains(b.Id)).ToListAsync(ct))
-            {
-                blobs[blob.Id] = blob;
             }
         }
 
@@ -229,14 +223,25 @@ public static class ContentEndpoints
                 continue;
             }
 
+            ContentSource source;
+            try
+            {
+                source = await content.SourceAsync(node, libraries[node.LibraryId], ct);
+            }
+            catch (ContentUnavailableException)
+            {
+                // An external file removed since the last scan is left out
+                // rather than breaking the whole archive.
+                continue;
+            }
+
             var entry = zip.CreateEntry(path, CompressionFor(node.MediaType));
             entry.LastWriteTime = Clamp(node.ModifiedAt);
             await using var target = await entry.OpenAsync(ct);
-            if (node.BlobId is { } blobId && blobs.TryGetValue(blobId, out var blob) && blob.Size > 0)
+            if (source.Size > 0)
             {
-                var provider = await providers.OpenAsync(db, blob.StorageLocationId, ct);
-                await using var source = await provider.OpenReadAsync(blob.Key, null, ct);
-                await source.CopyToAsync(target, 81920, ct);
+                await using var stream = await source.OpenAsync(null, ct);
+                await FileContent.CopyAsync(stream, target, source.Size, ct);
             }
         }
 
@@ -270,20 +275,21 @@ public static class ContentEndpoints
         : value.Year > 2107 ? new DateTimeOffset(2107, 12, 31, 0, 0, 0, TimeSpan.Zero)
         : value;
 
-    private static async Task<IResult> ServeBlobAsync(
-        HttpContext http, AtriumDbContext db, StorageProviders providers, Guid blobId, string name, string? mediaType,
-        DateTimeOffset modifiedAt, bool inline, CancellationToken ct)
+    private static async Task<IResult> ServeAsync(
+        HttpContext http, Func<Task<ContentSource>> source, string name, string? mediaType, bool inline, CancellationToken ct)
     {
-        var blob = await db.Blobs.AsNoTracking().SingleAsync(b => b.Id == blobId, ct);
         try
         {
-            var provider = await providers.OpenAsync(db, blob.StorageLocationId, ct);
-            await FileContent.ServeAsync(http, provider, blob, name, mediaType, modifiedAt, inline, ct);
+            await FileContent.ServeAsync(http, await source(), name, mediaType, inline, ct);
             return Results.Empty;
         }
         catch (LocationUnavailableException e)
         {
             return ApiProblem.Create(StatusCodes.Status503ServiceUnavailable, e.Code);
+        }
+        catch (ContentUnavailableException) when (!http.Response.HasStarted)
+        {
+            return Results.NotFound();
         }
     }
 
