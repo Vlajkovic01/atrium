@@ -841,6 +841,24 @@
     "default": "Podrazumevano ({value})",
     "activity": "{running} radi, {queued} čeka",
     "save": "Sačuvaj ograničenja",
-    "saved": "Ograničenja su sačuvana."
+    "saved": "Ograničenja su sačuvana.",
+    "failedHeading": "Neuspeli poslovi",
+    "noFailures": "Nijedan posao nije propao.",
+    "retry": "Pokreni ponovo",
+    "attempts": "{count, plural, one {# pokušaj} few {# pokušaja} other {# pokušaja}}",
+    "jobTypes": {
+      "blobs_collect": "Oslobađanje prostora",
+      "files_retention": "Pražnjenje stare korpe",
+      "jobs_cleanup": "Brisanje starih zapisa o poslovima",
+      "library_scan": "Čitanje postojećeg foldera",
+      "library_scan-all": "Čitanje svih postojećih foldera",
+      "media_extract": "Čitanje podataka o fotografijama i videima",
+      "media_preview": "Pravljenje pregleda",
+      "media_sweep": "Traženje fajlova bez podataka",
+      "metadata_backup": "Rezervna kopija",
+      "storage_scrub": "Provera skladišta",
+      "uploads_cleanup": "Brisanje nezavršenih otpremanja",
+      "users_delete": "Brisanje naloga"
+    }
   }
 }
