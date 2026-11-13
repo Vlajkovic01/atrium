@@ -145,7 +145,8 @@
     "files": "Files",
     "trash": "Trash",
     "libraries": "Libraries",
-    "backgroundWork": "Background work"
+    "backgroundWork": "Background work",
+    "photos": "Photos"
   },
   "files": {
     "title": "Files",
@@ -469,6 +470,59 @@
     "healthyNoFree": "Working.",
     "addHeading": "Add a location",
     "added": "The location was added."
+  },
+  "photos": {
+    "title": "Photos",
+    "timeline": "Timeline",
+    "empty": "No photos or videos yet. Upload some in Files, or ask an administrator to add an existing photo folder.",
+    "select": "Select {name}",
+    "deselect": "Deselect {name}",
+    "clearSelection": "Clear selection",
+    "trashed": "{count, plural, one {# item moved} other {# items moved}} to the trash.",
+    "backToNewest": "Back to the newest",
+    "jumpTo": "Jump to a month",
+    "monthCount": "{count, plural, one {# photo or video} other {# photos and videos}}",
+    "info": "Information",
+    "previous": "Previous",
+    "next": "Next",
+    "taken": "Taken",
+    "camera": "Camera",
+    "dimensions": "Size in pixels",
+    "duration": "Length",
+    "fileSize": "File size",
+    "format": "Format"
+  },
+  "albums": {
+    "title": "Albums",
+    "new": "New album",
+    "newName": "Album name",
+    "create": "Create album",
+    "empty": "No albums yet. Select photos in the timeline and add them to a new album.",
+    "emptyAlbum": "This album is empty. Add photos from the timeline.",
+    "count": "{count, plural, one {# item} other {# items}}",
+    "addTo": "Add to album",
+    "addTitle": "Add {count, plural, one {# item} other {# items}} to an album",
+    "orExisting": "Or add to an existing album:",
+    "added": "{count, plural, one {# item added} other {# items added}} to {name}.",
+    "removeFrom": "Remove from album",
+    "makeCover": "Make cover",
+    "delete": "Delete album",
+    "deleteTitle": "Delete the album {name}?",
+    "deleteBody": "Only the album is deleted. Its photos and videos stay where they are."
+  },
+  "search": {
+    "title": "Search",
+    "label": "Search names, types and dates",
+    "placeholder": "Search, for example: beach, May 2024, 2023",
+    "type": "Type",
+    "types": {
+      "photo": "Photos",
+      "video": "Videos",
+      "document": "Documents",
+      "folder": "Folders"
+    },
+    "hint": "Type part of a name, a year or a month and year. Choose a type to see all of that kind.",
+    "nothing": "Nothing found."
   },
   "libraries": {
     "heading": "Libraries",

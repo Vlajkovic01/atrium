@@ -145,7 +145,8 @@
     "files": "Fajlovi",
     "trash": "Korpa",
     "libraries": "Biblioteke",
-    "backgroundWork": "Pozadinski rad"
+    "backgroundWork": "Pozadinski rad",
+    "photos": "Fotografije"
   },
   "files": {
     "title": "Fajlovi",
@@ -469,6 +470,59 @@
     "healthyNoFree": "Radi.",
     "addHeading": "Dodajte lokaciju",
     "added": "Lokacija je dodata."
+  },
+  "photos": {
+    "title": "Fotografije",
+    "timeline": "Vremenska linija",
+    "empty": "Još nema fotografija ni video snimaka. Otpremite ih u Fajlovima, ili zamolite administratora da doda postojeći folder sa fotografijama.",
+    "select": "Izaberi {name}",
+    "deselect": "Poništi izbor {name}",
+    "clearSelection": "Poništi izbor",
+    "trashed": "{count, plural, one {# stavka je premeštena} few {# stavke su premeštene} other {# stavki je premešteno}} u korpu.",
+    "backToNewest": "Nazad na najnovije",
+    "jumpTo": "Skok na mesec",
+    "monthCount": "{count, plural, one {# fotografija ili snimak} few {# fotografije i snimka} other {# fotografija i snimaka}}",
+    "info": "Informacije",
+    "previous": "Prethodna",
+    "next": "Sledeća",
+    "taken": "Snimljeno",
+    "camera": "Kamera",
+    "dimensions": "Veličina u pikselima",
+    "duration": "Trajanje",
+    "fileSize": "Veličina fajla",
+    "format": "Format"
+  },
+  "albums": {
+    "title": "Albumi",
+    "new": "Novi album",
+    "newName": "Ime albuma",
+    "create": "Napravi album",
+    "empty": "Još nema albuma. Izaberite fotografije u vremenskoj liniji i dodajte ih u novi album.",
+    "emptyAlbum": "Ovaj album je prazan. Dodajte fotografije iz vremenske linije.",
+    "count": "{count, plural, one {# stavka} few {# stavke} other {# stavki}}",
+    "addTo": "Dodaj u album",
+    "addTitle": "Dodaj {count, plural, one {# stavku} few {# stavke} other {# stavki}} u album",
+    "orExisting": "Ili dodajte u postojeći album:",
+    "added": "{count, plural, one {Dodata je # stavka} few {Dodate su # stavke} other {Dodato je # stavki}} u {name}.",
+    "removeFrom": "Ukloni iz albuma",
+    "makeCover": "Postavi za naslovnu",
+    "delete": "Obriši album",
+    "deleteTitle": "Obrisati album {name}?",
+    "deleteBody": "Briše se samo album. Njegove fotografije i snimci ostaju gde jesu."
+  },
+  "search": {
+    "title": "Pretraga",
+    "label": "Pretraga po imenu, vrsti i datumu",
+    "placeholder": "Pretražite, na primer: more, maj 2024, 2023",
+    "type": "Vrsta",
+    "types": {
+      "photo": "Fotografije",
+      "video": "Video snimci",
+      "document": "Dokumenti",
+      "folder": "Folderi"
+    },
+    "hint": "Upišite deo imena, godinu ili mesec i godinu. Izaberite vrstu da vidite sve te vrste.",
+    "nothing": "Ništa nije pronađeno."
   },
   "libraries": {
     "heading": "Biblioteke",

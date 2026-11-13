@@ -112,6 +112,11 @@ jobs:
       - name: Build the server
         run: dotnet build server/src/Atrium.Api --configuration Release
 
+      # Thumbnails in the browser tests come from the distribution's libvips,
+      # as in the image.
+      - name: Install the media tools
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ffmpeg libvips42t64
+
       - name: Install the browser
         run: pnpm --filter @atrium/web exec playwright install --with-deps chromium
 
@@ -157,7 +162,6 @@ jobs:
           curl --fail --silent --show-error http://localhost:8080/api/v1/system/info | grep --quiet '"name":"Atrium"'
           curl --fail --silent --show-error http://localhost:8080/ | grep --quiet '<div id="root">'
           curl --fail --silent --show-error --head http://localhost:8080/ | grep --ignore-case --quiet 'content-security-policy'
-
 
       - name: The server does not run as root
         working-directory: deploy
