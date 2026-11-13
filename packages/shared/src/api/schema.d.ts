@@ -1467,6 +1467,13 @@ export interface components {
             deletionScheduledAt: null | string;
             /** Format: date-time */
             deleteAfter: null | string;
+            /**
+             * Format: int64
+             * @default 0
+             */
+            usedBytes: number | string;
+            /** Format: date-time */
+            lastActiveAt?: null | string;
         };
         AlbumItemsRequest: {
             nodeIds: string[];

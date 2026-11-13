@@ -185,19 +185,20 @@ test("an admin adds a person, who then sees no administration", async ({ page, b
   await signIn(page);
   await expect(page.getByRole("heading", { name: "People", exact: true })).toBeVisible();
 
-  await page.getByLabel("Name", { exact: true }).fill("ana");
-  await page
-    .getByRole("combobox", { name: /^Role / })
-    .last()
-    .click();
-  await page.getByRole("option", { name: "Member", exact: true }).click();
-  await page.getByLabel("Password", { exact: true }).fill("ana's own passphrase");
   await page.getByRole("button", { name: "Add person" }).click();
+  const add = page.getByRole("dialog", { name: "Add a person" });
+  await add.getByLabel("Name", { exact: true }).fill("ana");
+  await add.getByRole("combobox", { name: /^Role/ }).click();
+  await page.getByRole("option", { name: "Member", exact: true }).click();
+  await add.getByLabel("Password", { exact: true }).fill("ana's own passphrase");
+  await add.getByRole("button", { name: "Add person" }).click();
   await expect(page.getByText("ana can now sign in.")).toBeVisible();
-  await expect(page.getByRole("listitem").filter({ hasText: "ana" })).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ has: page.getByText("ana", { exact: true }) })).toBeVisible();
 
   // The admin's own role cannot be changed here: nobody could administer the server.
+  await page.getByRole("listitem").filter({ hasText: "owner" }).getByRole("button", { name: "Manage" }).click();
   await expect(page.getByRole("combobox", { name: /^Role of owner/ })).toBeDisabled();
+  await page.getByRole("button", { name: "Close" }).first().click();
 
   // Ana signs in on her own browser and has no admin navigation.
   const context = await browser.newContext();
@@ -214,8 +215,9 @@ test("an admin resets a person's password, and that person is told", async ({ pa
   page.on("dialog", (dialog) => void dialog.accept());
   await page.goto("/people");
   await signIn(page);
-  const ana = page.getByRole("listitem").filter({ hasText: "ana" });
-  await ana.getByRole("button", { name: "Reset password" }).click();
+  const ana = page.getByRole("listitem").filter({ has: page.getByText("ana", { exact: true }) });
+  await ana.getByRole("button", { name: "Manage" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Reset password" }).click();
   await page.getByLabel("New password for ana").fill("temporary passphrase");
   await page.getByRole("button", { name: "Set password", exact: true }).click();
   await expect(page.getByText("Password reset. Give ana the new password.")).toBeVisible();

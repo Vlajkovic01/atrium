@@ -5100,6 +5100,22 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "usedBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64",
+            "default": 0
+          },
+          "lastActiveAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
