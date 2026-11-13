@@ -105,6 +105,24 @@ describe("translations", () => {
 
     expect(cyrillic).toEqual([]);
   });
+
+  // UTF-8 read as a Windows code page and written back turns "š" into
+  // "Ĺˇ" and "…" into "â€¦"; it once happened to these files unnoticed.
+  it("has no text garbled by a wrong encoding", () => {
+    const garbled: string[] = [];
+    for (const [language, table] of [
+      ["en", english],
+      ["sr-Latn", serbian],
+    ] as const) {
+      for (const [key, value] of table) {
+        if (/Ã.|Ä[\u0080-ſ]|Å[\u0080-ſ]|â€|Ĺ[\u0080-ſ]|�/u.test(value)) {
+          garbled.push(`${language}: ${key}`);
+        }
+      }
+    }
+
+    expect(garbled).toEqual([]);
+  });
 });
 
 describe("choosing a language", () => {
