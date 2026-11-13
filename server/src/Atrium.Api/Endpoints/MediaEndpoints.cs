@@ -133,6 +133,12 @@ public static class MediaEndpoints
         {
             return ApiProblem.Create(StatusCodes.Status503ServiceUnavailable, e.Code);
         }
+        catch (MediaToolException e)
+        {
+            // The decoder process failed or is missing; the next request starts a new one.
+            return ApiProblem.Create(
+                StatusCodes.Status503ServiceUnavailable, e.Missing ? MediaErrors.ToolMissing : MediaErrors.NoThumbnail);
+        }
 
         if (path is null)
         {
