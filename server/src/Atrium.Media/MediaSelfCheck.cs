@@ -33,6 +33,20 @@ public static class MediaSelfCheck
             output.WriteLine($"libvips: FAILED: {e.GetType().Name}: {e.Message}");
         }
 
+        // libvips and the libraries it loads must leave the runtime's own
+        // signal handling alone: .NET turns a null dereference into an
+        // exception through it. Configured as the server does, then tried.
+        try
+        {
+            MediaSetup.ConfigureLibvips(new Atrium.Jobs.HardwareInfo(Environment.ProcessorCount, 2L * 1024 * 1024 * 1024));
+            output.WriteLine($"managed exceptions after libvips: {(NullDereferenceIsCaught() ? "ok" : "FAILED")}");
+        }
+        catch (Exception e)
+        {
+            ok = false;
+            output.WriteLine($"libvips settings: FAILED: {e.GetType().Name}: {e.Message}");
+        }
+
         foreach (var tool in new[] { options.Ffmpeg, options.Ffprobe })
         {
             try
@@ -49,5 +63,19 @@ public static class MediaSelfCheck
 
         output.WriteLine(ok ? "Media tools work." : "Some media tools do not work; see above.");
         return ok ? 0 : 1;
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static bool NullDereferenceIsCaught()
+    {
+        try
+        {
+            string? nothing = Environment.GetEnvironmentVariable("ATRIUM_UNSET_" + Guid.NewGuid().ToString("N"));
+            return nothing!.Length < 0;
+        }
+        catch (NullReferenceException)
+        {
+            return true;
+        }
     }
 }

@@ -158,7 +158,6 @@ jobs:
           curl --fail --silent --show-error http://localhost:8080/ | grep --quiet '<div id="root">'
           curl --fail --silent --show-error --head http://localhost:8080/ | grep --ignore-case --quiet 'content-security-policy'
 
-
       - name: The server does not run as root
         working-directory: deploy
         run: |
