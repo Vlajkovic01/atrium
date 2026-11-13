@@ -249,10 +249,16 @@ and expiry, allow download. A "Shared" section lists what the user shares
 and what is shared with them. The public share page is minimal, branded
 with the server name, and shows only the shared content.
 
-### Administration (Phases 1, 11)
+### Administration (Phases 1, 3, 11)
 
-- **Dashboard.** Storage use per location, active streams, running jobs,
-  health warnings.
+One menu entry, "Administration", with a badge counting warnings (D-042).
+It opens the overview; each section below is a tab on top of it, with
+its own warning count.
+
+- **Overview** (built in Phase 3). What needs attention first, each item
+  linking to its section; then a tile per section: people, storage per
+  location, existing folders, background work, backups and the storage
+  check. Active streams join it in Phase 5.
 - **Users.** Create, role, quota, disable, reset password (with the notice
   that the user will be told).
 - **Storage.** Locations with status and test; libraries with their
@@ -276,8 +282,10 @@ with the server name, and shows only the shared content.
   running and waiting.
 - **Integrations.** Metadata, subtitle and translation providers, each off
   by default and stating what it sends.
-- **Backups.** List, create now, schedule, restore.
-- **Integrity.** Results of the storage scrub.
+- **Backups** (built in Phase 3, restore in Phase 11). What a backup
+  holds, the list with date, kind and size, "Back up now" following its
+  job; the storage check on the same page: last result, problems found,
+  "Check now".
 - **Logs.**
 
 Admins see sizes and counts for other users, never file names or content.

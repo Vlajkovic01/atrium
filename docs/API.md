@@ -266,6 +266,7 @@ returned.
 
 | Method | Path | Notes |
 |---|---|---|
+| GET | `/admin/overview` | Built in Phase 3 (D-042). What needs attention (code, severity, section, name or count), people counts, per storage location its state and stored bytes, existing folders (total, offline, writable), jobs (running, waiting, failed in the last day, pause), the last backup and the last storage check. Counts and sizes only |
 | GET, PATCH | `/admin/settings` | Limits, retention, providers; secrets write-only |
 | GET | `/admin/hardware` | Encoders and last detection result, Phase 5 |
 | GET | `/admin/background-work` | Built in Phase 3. Hardware profile, cores and memory, per resource class the default, override and effective limit with running and waiting counts, and the pause |
