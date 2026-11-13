@@ -148,7 +148,8 @@
     "files": "Fajlovi",
     "trash": "Korpa",
     "photos": "Fotografije",
-    "customize": "Prilagodi meni"
+    "customize": "Prilagodi meni",
+    "admin": "Administracija"
   },
   "files": {
     "title": "Fajlovi",
@@ -699,7 +700,7 @@
     "densityCompact": "Samo ikonice",
     "adminPosition": "Administracija",
     "adminBottom": "U meniju ispod vašeg imena",
-    "adminTop": "Na vrhu ovog menija",
+    "adminTop": "U glavnom meniju, gde je prevučete",
     "icon": "Ikonica",
     "iconFor": "Ikonica za {name}",
     "usualIcon": "Uobičajena",
@@ -719,7 +720,8 @@
     "saved": "Vaš meni je sačuvan.",
     "groupName": "Ime grupe",
     "removeGroup": "Ukloni grupu",
-    "addGroup": "Dodaj grupu"
+    "addGroup": "Dodaj grupu",
+    "alwaysShown": "Uvek prikazana"
   },
   "views": {
     "title": "Prikazi",

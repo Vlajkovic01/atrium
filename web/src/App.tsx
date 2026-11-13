@@ -126,6 +126,10 @@ function Shell() {
       return <hr key={item.key} className="nav-separator" />;
     }
 
+    if (item.kind === "admin") {
+      return administration(item);
+    }
+
     const target =
       item.kind === "library" || item.kind === "folder"
         ? { to: `/files/${item.targetId ?? ""}`, icon: (item.readOnly ? "lock" : "folder") as IconName }
@@ -153,8 +157,10 @@ function Shell() {
     );
   };
 
-  const administration = (
+  // Only when the admin placed Administration in the main menu (D-043).
+  const administration = (item: NavItemView) => (
     <NavLink
+      key={item.key}
       to="/admin"
       className="nav-link nav-admin"
       title={compact ? t("nav.administration") : undefined}
@@ -164,8 +170,8 @@ function Shell() {
           : undefined
       }
     >
-      <Icon name="shield" size={20} />
-      <span>{t("nav.administration")}</span>
+      <Icon name={isIconName(item.icon) ? item.icon : "shield"} size={20} />
+      <span>{item.label ?? t("nav.administration")}</span>
       {adminWarnings > 0 ? (
         <span className="count-badge" aria-hidden="true">
           {adminWarnings}
@@ -182,7 +188,6 @@ function Shell() {
             <Logo size={30} />
           </div>
           <nav className="nav" aria-label={t("nav.main")}>
-            {isAdmin && adminOnTop ? administration : null}
             {items.filter((item) => !item.group).map((item) => navEntry(item))}
             {groups.map((group) => {
               const members = items.filter((item) => item.group === group.id);

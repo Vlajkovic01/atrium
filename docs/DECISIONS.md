@@ -699,6 +699,8 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   pattern (arrows, Enter, Escape back to the name). The separate pencil
   and sign-out buttons are gone; a red dot on the name shows warnings.
 - Only admins see Administration at all; the server refuses its pages to
-  everyone else. An admin who prefers it in the main menu chooses "At the
-  top of this menu" under Customize menu; it is then not repeated under
-  the name.
+  everyone else. An admin who prefers it in the
+  main menu chooses "In the main menu" under Customize menu: it then
+  becomes the entry `admin`, placed by dragging, grouped, renamed and
+  given an icon like any other, but never hidden, and it is not repeated
+  under the name. The entry exists only for admins.

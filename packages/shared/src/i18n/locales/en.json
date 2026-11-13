@@ -148,7 +148,8 @@
     "files": "Files",
     "trash": "Trash",
     "photos": "Photos",
-    "customize": "Customize menu"
+    "customize": "Customize menu",
+    "admin": "Administration"
   },
   "files": {
     "title": "Files",
@@ -699,7 +700,7 @@
     "densityCompact": "Icons only",
     "adminPosition": "Administration",
     "adminBottom": "In the menu under your name",
-    "adminTop": "At the top of this menu",
+    "adminTop": "In the main menu, where you drag it",
     "icon": "Icon",
     "iconFor": "Icon for {name}",
     "usualIcon": "Usual",
@@ -719,7 +720,8 @@
     "saved": "Your menu was saved.",
     "groupName": "Group name",
     "removeGroup": "Remove group",
-    "addGroup": "Add group"
+    "addGroup": "Add group",
+    "alwaysShown": "Always shown"
   },
   "views": {
     "title": "Views",
