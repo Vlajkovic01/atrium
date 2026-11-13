@@ -173,7 +173,10 @@ jobs:
         working-directory: deploy
         run: |
           set -euo pipefail
-          docker compose logs atrium | grep --quiet 'setup token'
+          # Read the whole log first: grep --quiet stops at the first match,
+          # and under pipefail the writer it leaves behind fails the step.
+          logs=$(docker compose logs atrium)
+          grep --quiet 'setup token' <<< "$logs"
           status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
             --header 'Content-Type: application/json' \
             --data '{"name":"owner","password":"correct horse battery"}' \
