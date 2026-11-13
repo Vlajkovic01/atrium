@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, NavLink, Route, Routes, useLocation } from "react-router";
 
@@ -7,7 +8,7 @@ import type { components } from "@atrium/shared";
 import { api, call } from "./api.ts";
 import { AuthLayout } from "./components/AuthLayout.tsx";
 import type { IconName } from "./components/Icon.tsx";
-import { Icon } from "./components/Icon.tsx";
+import { Icon, isIconName } from "./components/Icon.tsx";
 import { Logo } from "./components/Logo.tsx";
 import { Avatar, Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
 import { Account } from "./pages/Account.tsx";
@@ -26,6 +27,7 @@ import { People } from "./pages/People.tsx";
 import { Setup } from "./pages/Setup.tsx";
 import { SignIn } from "./pages/SignIn.tsx";
 import { StorageLocations } from "./pages/StorageLocations.tsx";
+import { toLayout, useNavigation, useSaveNavigation } from "./navigation.ts";
 import { useSession } from "./session.tsx";
 
 /**
@@ -83,9 +85,33 @@ function Shell() {
 
   // The menu as this person arranged it (D-041): order, hidden entries,
   // own names, groups, folders shared with them and their saved views.
-  const navigation = useQuery({ queryKey: ["navigation"], queryFn: () => call(api.GET("/api/v1/me/navigation")) });
+  const navigation = useNavigation();
+  const saveNavigation = useSaveNavigation();
+  const [folding, setFolding] = useState(false);
   const items = (navigation.data?.items ?? []).filter((item) => !item.hidden);
   const groups = navigation.data?.groups ?? [];
+  const compact = navigation.data?.density === "compact";
+  const adminOnTop = navigation.data?.adminPosition === "top";
+
+  // Folding a group is remembered, like any other change to the menu.
+  const fold = async (groupId: string): Promise<void> => {
+    if (!navigation.data || folding) {
+      return;
+    }
+
+    setFolding(true);
+    try {
+      const layout = toLayout(navigation.data);
+      await saveNavigation({
+        ...layout,
+        groups: layout.groups.map((g) => (g.id === groupId ? { ...g, collapsed: !g.collapsed } : g)),
+      });
+    } catch {
+      // The menu stays as it was; nothing is lost.
+    } finally {
+      setFolding(false);
+    }
+  };
   const admin: readonly NavItem[] = [
     { to: "/people", label: t("nav.people"), icon: "users" },
     { to: "/storage", label: t("nav.storage"), icon: "drive" },
@@ -101,61 +127,82 @@ function Shell() {
       devices: { to: "/devices", icon: "devices" },
       account: { to: "/account", icon: "user" },
     };
+    if (item.kind === "separator") {
+      return <hr key={item.key} className="nav-separator" />;
+    }
+
     const target =
-      item.kind === "library"
+      item.kind === "library" || item.kind === "folder"
         ? { to: `/files/${item.targetId ?? ""}`, icon: (item.readOnly ? "lock" : "folder") as IconName }
         : item.kind === "view"
           ? { to: `/views/${item.targetId ?? ""}`, icon: "search" as IconName }
-          : builtIn[item.kind];
+          : item.kind === "album"
+            ? { to: `/photos/albums/${item.targetId ?? ""}`, icon: "album" as IconName }
+            : builtIn[item.kind];
     if (!target) {
       return null;
     }
 
     const label = item.label ?? item.name ?? t(`nav.${item.kind}`);
-    const extra = item.kind === "library" || item.kind === "view";
+    const extra = !builtIn[item.kind];
     return (
-      <NavLink key={item.key} to={target.to} className={extra ? "nav-link nav-extra" : "nav-link"}>
-        <Icon name={target.icon} size={20} />
+      <NavLink
+        key={item.key}
+        to={target.to}
+        className={extra ? "nav-link nav-extra" : "nav-link"}
+        title={compact ? label : undefined}
+      >
+        <Icon name={isIconName(item.icon) ? item.icon : target.icon} size={20} />
         <span>{label}</span>
       </NavLink>
     );
   };
 
-  const link = (item: NavItem) => (
-    <NavLink key={item.to} to={item.to} className="nav-link">
-      <Icon name={item.icon} size={20} />
-      <span>{item.label}</span>
-    </NavLink>
+  const administration = (
+    <div className="nav-group" role="group" aria-label={t("nav.administration")}>
+      <p className="nav-heading">{t("nav.administration")}</p>
+      {admin.map((item) => link(item))}
+    </div>
   );
+
+  function link(item: NavItem) {
+    return (
+      <NavLink key={item.to} to={item.to} className="nav-link" title={compact ? item.label : undefined}>
+        <Icon name={item.icon} size={20} />
+        <span>{item.label}</span>
+      </NavLink>
+    );
+  }
 
   return (
     <UploadsProvider>
-      <div className="app">
+      <div className={compact ? "app is-compact" : "app"}>
         <aside className="sidebar">
           <div className="sidebar-brand">
             <Logo size={30} />
           </div>
           <nav className="nav" aria-label={t("nav.main")}>
+            {isAdmin && adminOnTop ? administration : null}
             {items.filter((item) => !item.group).map((item) => navEntry(item))}
             {groups.map((group) => {
               const members = items.filter((item) => item.group === group.id);
               return members.length > 0 ? (
                 <div key={group.id} className="nav-group" role="group" aria-label={group.name}>
-                  <p className="nav-heading">{group.name}</p>
-                  {members.map((item) => navEntry(item))}
+                  <button
+                    type="button"
+                    className="nav-heading nav-fold"
+                    aria-expanded={!group.collapsed}
+                    title={compact ? group.name : undefined}
+                    onClick={() => void fold(group.id)}
+                  >
+                    <Icon name={group.collapsed ? "chevronRight" : "chevronDown"} size={14} />
+                    <span>{group.name}</span>
+                  </button>
+                  {group.collapsed ? null : members.map((item) => navEntry(item))}
                 </div>
               ) : null;
             })}
-            <NavLink to="/menu" className="nav-link nav-customize">
-              <Icon name="pencil" size={16} />
-              <span>{t("nav.customize")}</span>
-            </NavLink>
-            {isAdmin ? (
-              <>
-                <p className="nav-heading">{t("nav.administration")}</p>
-                {admin.map(link)}
-              </>
-            ) : null}
+            {isAdmin && !adminOnTop ? administration : null}
           </nav>
           <div className="sidebar-user">
             <Avatar name={user?.displayName ?? ""} />
@@ -163,6 +210,9 @@ function Shell() {
               <span className="user-name">{user?.displayName}</span>
               <span className="user-role">{user ? t(`roles.${user.role}`) : ""}</span>
             </div>
+            <NavLink to="/menu" className="icon-button" aria-label={t("nav.customize")} title={t("nav.customize")}>
+              <Icon name="pencil" size={16} />
+            </NavLink>
             <button
               type="button"
               className="icon-button"

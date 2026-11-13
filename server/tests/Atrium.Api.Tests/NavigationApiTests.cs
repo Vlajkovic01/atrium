@@ -122,6 +122,64 @@ public sealed class NavigationApiTests : IDisposable
     }
 
     [Fact]
+    public async Task Folders_and_albums_are_pinned_with_icons_separators_and_menu_look_and_only_while_reachable()
+    {
+        var ana = await PersonAsync("ana");
+        var bob = await PersonAsync("bob");
+        var anaRoot = await _factory.WithDbResultAsync(db => db.Libraries.Where(l => db.Users.Any(u => u.Id == l.OwnerUserId && u.Name == "ana")).Select(l => l.RootNodeId).SingleAsync());
+        var album = await (await _client.SendAsync(HttpMethod.Post, "/api/v1/albums", ana, new { name = "Summer" })).ReadAsync<AlbumView>();
+        var separator = $"separator:{Guid.NewGuid():N}";
+
+        var saved = await _client.SendAsync(HttpMethod.Put, Nav, ana, new
+        {
+            entries = new object[]
+            {
+                new { key = $"folder:{anaRoot:N}", hidden = false, label = (string?)null, group = "g", icon = "star" },
+                new { key = separator, hidden = false, label = (string?)null, group = (string?)null, icon = (string?)null },
+                new { key = $"album:{album.Id:N}", hidden = false, label = "Holidays", group = (string?)null, icon = (string?)null },
+            },
+            groups = new[] { new { id = "g", name = "Pinned", collapsed = true } },
+            density = "compact",
+            adminPosition = "top",
+        });
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        var menu = await saved.ReadAsync<NavigationView>();
+
+        Assert.Equal("compact", menu.Density);
+        Assert.Equal("top", menu.AdminPosition);
+        Assert.True(Assert.Single(menu.Groups).Collapsed);
+        var folder = menu.Items[0];
+        Assert.Equal(("folder", anaRoot, "star", "g"), (folder.Kind, folder.TargetId!.Value, folder.Icon, folder.Group));
+        Assert.Equal("separator", menu.Items[1].Kind);
+        Assert.Equal(("album", album.Id, "Holidays"), (menu.Items[2].Kind, menu.Items[2].TargetId!.Value, menu.Items[2].Label));
+
+        // Pins to what someone cannot open are left out, never shown broken.
+        var foreign = await (await _client.SendAsync(HttpMethod.Put, Nav, bob, new
+        {
+            entries = new object[]
+            {
+                new { key = $"folder:{anaRoot:N}", hidden = false, label = (string?)null, group = (string?)null },
+                new { key = $"album:{album.Id:N}", hidden = false, label = (string?)null, group = (string?)null },
+            },
+            groups = Array.Empty<object>(),
+        })).ReadAsync<NavigationView>();
+        Assert.DoesNotContain(foreign.Items, i => i.Kind is "folder" or "album");
+
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.SendAsync(HttpMethod.Delete, $"/api/v1/albums/{album.Id}", ana)).StatusCode);
+        Assert.DoesNotContain((await NavigationAsync(ana)).Items, i => i.Kind == "album");
+
+        foreach (var invalid in new object[]
+        {
+            new { entries = new[] { new { key = "files", hidden = false, label = (string?)null, group = (string?)null, icon = "<svg>" } }, groups = Array.Empty<object>() },
+            new { entries = Array.Empty<object>(), groups = Array.Empty<object>(), density = "huge" },
+            new { entries = Array.Empty<object>(), groups = Array.Empty<object>(), adminPosition = "left" },
+        })
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, (await _client.SendAsync(HttpMethod.Put, Nav, ana, invalid)).StatusCode);
+        }
+    }
+
+    [Fact]
     public async Task A_view_shows_files_by_its_rules_and_only_to_its_owner()
     {
         var ana = await PersonAsync("ana");

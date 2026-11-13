@@ -95,9 +95,17 @@ with progress, pause and cancel.
 
 ### Menu (Phase 3, D-041)
 
-Each person arranges their own menu under "Customize menu", the last
-entry of the menu: entries move up and down, can be hidden and given
-their own names, and can be gathered under group headings. Folders
+Each person arranges their own menu under "Customize menu", reached from
+the pencil beside Sign out or from the Account page. The list looks like
+the menu: entries without a group, then each group with its entries. A
+name is changed by typing over it (empty brings back the usual one);
+entries move by dragging, into a group by dragging them there, and from
+the keyboard with the arrows and a small group list. Entries can be
+hidden, given icons and separated by lines; group headings fold.
+Any folder or album can be added with "Pin to menu" on its page, and
+taken off again there or in the settings. The menu can show names and
+icons or icons only; an admin places Administration at the top or the
+bottom. Folders
 shared with the person and their views are entries like any other. A
 view is made in a dialog with its rules and shows at once how many files
 match; its page shows photos and videos as a grid and other files as a
