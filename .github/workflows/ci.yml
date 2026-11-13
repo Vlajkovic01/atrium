@@ -259,7 +259,8 @@ jobs:
             -e DOTNET_DbgEnableMiniDump=1 -e DOTNET_DbgMiniDumpType=1 \
             -e DOTNET_EnableCrashReport=1 -e DOTNET_DbgMiniDumpName=/crash/dump \
             atrium > /tmp/crash/server.log 2>&1 || echo "server ended with $?"
-          tail -n 60 /tmp/crash/server.log | grep -v 'Microsoft.EntityFrameworkCore' || true
+          grep -v '^\s\s\s\s\s\s' /tmp/crash/server.log | grep -v 'Microsoft.EntityFrameworkCore' | tail -n 40 || true
+          sudo chmod -R a+rX /tmp/crash
           for report in /tmp/crash/*.crashreport.json; do
             [ -f "$report" ] && python3 -c "
           import json,sys
