@@ -37,14 +37,13 @@ test("the menu is arranged: an entry hidden, another renamed, and back to the de
   await page.getByRole("option", { name: "Work" }).click();
   const row = (name: string) =>
     page.getByRole("listitem").filter({ has: page.getByRole("button", { name: `Move ${name} up` }) });
-  // Dragged by its handle: grabbing the name starts typing instead.
-  // Moved in steps, as a hand would, so the browser sees the drag pass over the target.
-  const grip = (await row("Devices").locator(".menu-grip").boundingBox())!;
-  const target = (await row("Trash").boundingBox())!;
-  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 });
-  await page.mouse.up();
+  // The drag events themselves, in the order a browser sends them: a
+  // simulated mouse drag in a headless browser starts only now and then.
+  const transfer = await page.evaluateHandle(() => new DataTransfer());
+  await row("Devices").dispatchEvent("dragstart", { dataTransfer: transfer });
+  await row("Trash").dispatchEvent("dragover", { dataTransfer: transfer });
+  await row("Trash").dispatchEvent("drop", { dataTransfer: transfer });
+  await row("Devices").dispatchEvent("dragend", { dataTransfer: transfer });
   await expect(page.getByRole("region", { name: "Work" }).getByLabel("Name in the menu for Devices")).toBeVisible();
 
   await page.getByRole("button", { name: "Save" }).click();
@@ -73,7 +72,11 @@ test("a view made of rules shows matching files from every library", async ({ pa
 
   await menu(page).getByRole("link", { name: "PDFs" }).click();
   await expect(page.getByRole("heading", { name: "PDFs" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "lease.pdf" })).toBeVisible();
+  // A file in a view opens where it is shown; its folder is a link away.
+  await page.getByRole("button", { name: "lease.pdf" }).click();
+  await expect(page.getByRole("dialog", { name: "lease.pdf" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("link", { name: "Show in folder" })).toBeVisible();
 });
 
 test("a folder pinned to the menu, the menu made compact, and its settings reached from the footer", async ({

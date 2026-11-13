@@ -89,7 +89,11 @@ test("files are uploaded, and a taken name asks what to do", async ({ page }) =>
     .getByRole("button", { name: "Replace" })
     .click();
   await expect(page.getByRole("region", { name: "Uploads" }).getByText("Uploads finished")).toBeVisible();
+  // Opening a file shows it; its details are one click away.
   await page.getByRole("button", { name: "plan.txt", exact: true }).click();
+  const preview = page.getByRole("dialog", { name: "plan.txt" });
+  await expect(preview.getByText("the better plan")).toBeVisible();
+  await preview.getByRole("button", { name: "Details" }).click();
   const details = page.getByRole("complementary", { name: "Details" });
   await expect(details.getByRole("heading", { name: "Earlier versions" })).toBeVisible();
   await expect(details.getByRole("button", { name: "Make current" })).toHaveCount(1);
