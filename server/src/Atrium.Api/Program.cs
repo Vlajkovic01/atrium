@@ -65,7 +65,6 @@ if (RestoreCommand.TryGetPath(args, out var backupPath))
 }
 
 await app.MigrateDatabaseAsync();
-MediaSetup.ConfigureLibvips(app.Services.GetRequiredService<HardwareInfo>());
 await app.LoadRevokedSessionsAsync();
 
 // On a server with no admin yet, print the setup token to the log.
