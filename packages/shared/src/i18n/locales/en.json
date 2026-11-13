@@ -541,8 +541,6 @@
     "moveUp": "Move {name} up",
     "moveDown": "Move {name} down",
     "show": "Show",
-    "ownName": "Your name for it",
-    "group": "Group",
     "noGroup": "No group",
     "kinds": {
       "library": "Shared folder",
@@ -550,8 +548,15 @@
       "folder": "Pinned folder",
       "album": "Pinned album"
     },
-    "entriesLead": "Drag an entry to move it, or use the arrows.",
-    "look": "Look",
+    "entriesLead": "Click a name to change it. Drag an entry to move it, or into a group to put it there; the arrows and the group list do the same from the keyboard.",
+    "nameFor": "Name in the menu for {name}",
+    "renameHint": "Type to change the name; leave it empty for the usual one",
+    "usuallyCalled": "Usually called {name}",
+    "groupOf": "Group of {name}",
+    "newGroupName": "New group",
+    "dropHere": "Drag entries here",
+    "removeEntry": "Remove {name} from the menu",
+    "removeGroupNamed": "Remove the group {name}",
     "density": "Menu size",
     "densityComfortable": "Names and icons",
     "densityCompact": "Icons only",
@@ -575,13 +580,9 @@
     "makeDefault": "Make this the default for everyone",
     "defaultDone": "This arrangement is now the default for everyone who has not arranged their own. Views stay personal.",
     "saved": "Your menu was saved.",
-    "groups": "Groups",
-    "groupsLead": "Headings in the menu to gather entries under, such as Work or Family.",
     "groupName": "Group name",
     "removeGroup": "Remove group",
-    "newGroup": "New group",
-    "addGroup": "Add group",
-    "saveHint": "Changes here show in the menu once you save."
+    "addGroup": "Add group"
   },
   "views": {
     "title": "Views",

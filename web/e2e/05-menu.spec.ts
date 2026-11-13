@@ -27,13 +27,27 @@ test("the menu is arranged: an entry hidden, another renamed, and back to the de
 
   const photos = page.getByRole("listitem").filter({ has: page.getByRole("button", { name: "Move Photos up" }) });
   await photos.getByLabel("Show").uncheck();
-  const files = page.getByRole("listitem").filter({ has: page.getByRole("button", { name: "Move Files down" }) });
-  await files.getByLabel("Your name for it").fill("Documents");
+  // A name is changed by typing over it.
+  await page.getByLabel("Name in the menu for Files").fill("Documents");
+
+  // A new group; Trash joins it from the list, Devices by being dragged onto Trash.
+  await page.getByRole("button", { name: "Add group" }).click();
+  await page.getByLabel("Group name").fill("Work");
+  await page.getByRole("combobox", { name: /^Group of Trash/ }).click();
+  await page.getByRole("option", { name: "Work" }).click();
+  const row = (name: string) =>
+    page.getByRole("listitem").filter({ has: page.getByRole("button", { name: `Move ${name} up` }) });
+  await row("Devices").dragTo(row("Trash"));
+  await expect(page.getByRole("region", { name: "Work" }).getByLabel("Name in the menu for Devices")).toBeVisible();
+
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Your menu was saved.")).toBeVisible();
 
   await expect(menu(page).getByRole("link", { name: "Documents" })).toBeVisible();
   await expect(menu(page).getByRole("link", { name: "Photos" })).toHaveCount(0);
+  const work = menu(page).getByRole("group", { name: "Work" });
+  await expect(work.getByRole("link", { name: "Trash" })).toBeVisible();
+  await expect(work.getByRole("link", { name: "Devices" })).toBeVisible();
 
   await page.getByRole("button", { name: "Back to the default" }).click();
   await expect(menu(page).getByRole("link", { name: "Photos" })).toBeVisible();

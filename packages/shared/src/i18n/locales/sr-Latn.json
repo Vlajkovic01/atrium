@@ -541,8 +541,6 @@
     "moveUp": "Pomeri {name} nagore",
     "moveDown": "Pomeri {name} nadole",
     "show": "Prikaži",
-    "ownName": "Vaše ime za stavku",
-    "group": "Grupa",
     "noGroup": "Bez grupe",
     "kinds": {
       "library": "Deljeni folder",
@@ -550,8 +548,15 @@
       "folder": "Zakačen folder",
       "album": "Zakačen album"
     },
-    "entriesLead": "Prevucite stavku da je pomerite, ili koristite strelice.",
-    "look": "Izgled",
+    "entriesLead": "Kliknite na ime da ga promenite. Prevucite stavku da je pomerite, ili u grupu da je tamo stavite; strelice i spisak grupa rade isto sa tastature.",
+    "nameFor": "Ime u meniju za {name}",
+    "renameHint": "Kucajte da promenite ime; ostavite prazno za uobičajeno",
+    "usuallyCalled": "Uobičajeno ime: {name}",
+    "groupOf": "Grupa za {name}",
+    "newGroupName": "Nova grupa",
+    "dropHere": "Prevucite stavke ovde",
+    "removeEntry": "Ukloni {name} iz menija",
+    "removeGroupNamed": "Ukloni grupu {name}",
     "density": "Veličina menija",
     "densityComfortable": "Imena i ikonice",
     "densityCompact": "Samo ikonice",
@@ -575,13 +580,9 @@
     "makeDefault": "Postavi kao podrazumevani za sve",
     "defaultDone": "Ovaj raspored je sada podrazumevani za sve koji nisu napravili svoj. Prikazi ostaju lični.",
     "saved": "Vaš meni je sačuvan.",
-    "groups": "Grupe",
-    "groupsLead": "Naslovi u meniju pod koje skupljate stavke, na primer Posao ili Porodica.",
     "groupName": "Ime grupe",
     "removeGroup": "Ukloni grupu",
-    "newGroup": "Nova grupa",
-    "addGroup": "Dodaj grupu",
-    "saveHint": "Promene se vide u meniju kad sačuvate."
+    "addGroup": "Dodaj grupu"
   },
   "views": {
     "title": "Prikazi",
