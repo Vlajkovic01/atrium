@@ -259,8 +259,16 @@ its own warning count.
   linking to its section; then a tile per section: people, storage per
   location, existing folders, background work, backups and the storage
   check. Active streams join it in Phase 5.
-- **Users.** Create, role, quota, disable, reset password (with the notice
-  that the user will be told).
+- **People** (rebuilt in Phase 3, D-042). Find by name, role or state
+  (active, turned off, to be deleted); each row shows the role, when the
+  person was last active and the space they use against their limit.
+  "Add person" opens a dialog (name, name shown to others, password,
+  role, limit). "Manage" opens one dialog for everything else: role with
+  what it allows, limit, turn off or on (confirmed in place), reset
+  password (with the notice that the person will be told), and deleting
+  the account: what it removes in counts and size, the waiting period,
+  the account's name typed to confirm, and "Cancel deletion" while it
+  waits.
 - **Storage.** Locations with status and test; libraries with their
   location, mode and scan state. Enabling writes on an external library
   shows a warning that Atrium will then be able to delete from that

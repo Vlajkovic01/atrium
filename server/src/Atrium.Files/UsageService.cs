@@ -23,6 +23,35 @@ public sealed class UsageService(AtriumDbContext db)
         return await ForLibraryAsync(db, libraryId.Value, ct) with { QuotaBytes = quota };
     }
 
+    /// <summary>
+    /// What each of these people uses, as <see cref="UsageSummary.UsedBytes"/>
+    /// would say, in three queries whatever their number: for the list of
+    /// people an admin sees.
+    /// </summary>
+    public static async Task<Dictionary<Guid, long>> UsedByOwnersAsync(AtriumDbContext db, IReadOnlyCollection<Guid> userIds, CancellationToken ct)
+    {
+        var owned = await db.Libraries.AsNoTracking()
+            .Where(l => l.OwnerUserId != null && userIds.Contains(l.OwnerUserId.Value))
+            .Select(l => new { l.Id, Owner = l.OwnerUserId!.Value })
+            .ToListAsync(ct);
+        var libraryIds = owned.Select(o => o.Id).ToList();
+        var files = await db.Nodes.AsNoTracking()
+            .Where(n => libraryIds.Contains(n.LibraryId) && n.Kind == NodeKind.File)
+            .GroupBy(n => n.LibraryId)
+            .Select(g => new { Library = g.Key, Bytes = g.Sum(n => n.Size) })
+            .ToDictionaryAsync(x => x.Library, x => x.Bytes, ct);
+        var versions = await db.NodeVersions.AsNoTracking()
+            .Join(db.Nodes, v => v.NodeId, n => n.Id, (v, n) => new { n.LibraryId, v.Size })
+            .Where(x => libraryIds.Contains(x.LibraryId))
+            .GroupBy(x => x.LibraryId)
+            .Select(g => new { Library = g.Key, Bytes = g.Sum(x => x.Size) })
+            .ToDictionaryAsync(x => x.Library, x => x.Bytes, ct);
+
+        return owned.ToDictionary(
+            o => o.Owner,
+            o => files.GetValueOrDefault(o.Id) + versions.GetValueOrDefault(o.Id));
+    }
+
     public static async Task<UsageSummary> ForLibraryAsync(AtriumDbContext db, Guid libraryId, CancellationToken ct)
     {
         var all = await db.Nodes
