@@ -42,7 +42,11 @@ public sealed class Thumbnailer(MediaOptions options)
         return Path.Combine(options.ThumbnailDir, contentKey[..2], $"{contentKey}-{suffix}");
     }
 
-    /// <summary>Makes the thumbnail of a local file and stores it under the content key. Returns its path.</summary>
+    /// <summary>
+    /// Makes the thumbnail of a local file and stores it under the content
+    /// key. Returns its path. A job and a person's request often want the
+    /// same thumbnail at once: one makes it, the other waits and uses it.
+    /// </summary>
     public async Task<string> MakeAsync(
         string sourcePath, MediaKind kind, string contentKey, ThumbnailVariant variant, bool background, CancellationToken ct)
     {
@@ -51,6 +55,28 @@ public sealed class Thumbnailer(MediaOptions options)
         {
             return target;
         }
+
+        var gate = Making.GetOrAdd(target, _ => new SemaphoreSlim(1, 1));
+        await gate.WaitAsync(ct);
+        try
+        {
+            return File.Exists(target) ? target : await MakeLockedAsync(sourcePath, kind, target, variant, background, ct);
+        }
+        finally
+        {
+            gate.Release();
+            if (gate.CurrentCount == 1)
+            {
+                Making.TryRemove(new KeyValuePair<string, SemaphoreSlim>(target, gate));
+            }
+        }
+    }
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> Making = new(StringComparer.Ordinal);
+
+    private async Task<string> MakeLockedAsync(
+        string sourcePath, MediaKind kind, string target, ThumbnailVariant variant, bool background, CancellationToken ct)
+    {
 
         if (variant == ThumbnailVariant.Preview)
         {
@@ -190,7 +216,7 @@ public sealed class Thumbnailer(MediaOptions options)
                 throw new UnsupportedMediaException("FFmpeg made no preview.");
             }
 
-            File.Move(temp, target, overwrite: true);
+            Place(temp, target);
         }
         finally
         {
@@ -204,6 +230,23 @@ public sealed class Thumbnailer(MediaOptions options)
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         var temp = target + "." + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture) + ".tmp";
         await File.WriteAllBytesAsync(temp, content);
-        File.Move(temp, target, overwrite: true);
+        Place(temp, target);
+    }
+
+    /// <summary>
+    /// Moves a finished file into place, never over an existing one: its name
+    /// is its content, so one that is already there is the same thumbnail,
+    /// and it may be being sent to someone right now.
+    /// </summary>
+    private static void Place(string temp, string target)
+    {
+        try
+        {
+            File.Move(temp, target, overwrite: false);
+        }
+        catch (IOException) when (File.Exists(target))
+        {
+            File.Delete(temp);
+        }
     }
 }
