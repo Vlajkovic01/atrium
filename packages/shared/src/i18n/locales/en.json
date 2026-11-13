@@ -84,6 +84,30 @@
       "no_storage": "This server has no storage location yet. An admin has to add one before files can be stored.",
       "quota_exceeded": "There is not enough space left in your storage quota."
     },
+    "album": {
+      "invalid_name": "Give the album a name of at most 255 characters.",
+      "not_in_album": "The cover has to be one of the album's photos."
+    },
+    "media": {
+      "unsupported": "This file cannot be shown as a picture on this server.",
+      "tool_missing": "The server is missing a tool for photos and videos. The administrator can find out more in the log.",
+      "no_thumbnail": "There is no preview of this file."
+    },
+    "library": {
+      "invalid_name": "Give the library a name of at most 128 characters.",
+      "path_not_absolute": "Enter the full path of the folder on the server, for example /photos/screenshots.",
+      "path_missing": "There is no folder at this path on the server. With Docker, the folder has to be mounted into the container first.",
+      "path_unreadable": "The server cannot read this folder. Check its permissions.",
+      "path_protected": "This folder is, contains or lies inside Atrium's own data. Choose another folder.",
+      "path_overlaps": "This folder is, contains or lies inside another library's folder. A file can belong to only one library.",
+      "not_external": "Only a library that points at an existing folder can be removed this way.",
+      "confirmation_mismatch": "Type the library's name exactly as shown to confirm.",
+      "unknown_user": "One of the chosen people no longer exists. Reload and try again.",
+      "folder_unavailable": "The folder cannot be reached. If it is on a network share or an external disk, check that it is mounted.",
+      "folder_empty": "The folder is suddenly empty. If it is on a network share or an external disk, check that it is mounted.",
+      "too_many_missing": "Most of the files disappeared at once, so nothing was removed from the library. Check that the folder is mounted, then scan again.",
+      "folder_read_only": "Atrium cannot write to this folder. With Docker, remove :ro from the folder's mount and check its permissions."
+    },
     "node": {
       "invalid_name": "That name cannot be used. Names cannot contain / or \\, end with a dot or a space, or be a reserved name such as CON.",
       "name_conflict": "Something with that name is already in this folder.",
@@ -95,7 +119,8 @@
       "not_in_trash": "This item is not in the trash.",
       "is_root": "The top folder of a library cannot be changed.",
       "cross_library": "Items cannot be moved between libraries.",
-      "too_many_items": "This folder holds too many items to copy at once (more than {max})."
+      "too_many_items": "This folder holds too many items to copy at once (more than {max}).",
+      "not_supported": "This cannot be done in a library that shows an existing folder."
     },
     "upload": {
       "offset_mismatch": "The upload got out of step with the server. It continues from where the server stopped.",
@@ -118,11 +143,14 @@
     "storage": "Storage",
     "administration": "Administration",
     "files": "Files",
-    "trash": "Trash"
+    "trash": "Trash",
+    "libraries": "Libraries",
+    "backgroundWork": "Background work"
   },
   "files": {
     "title": "Files",
     "myFiles": "My files",
+    "libraries": "Libraries",
     "noLibrary": "There is nowhere to store files yet. An admin has to add a storage location first.",
     "location": "Location",
     "actions": "Actions",
@@ -441,5 +469,79 @@
     "healthyNoFree": "Working.",
     "addHeading": "Add a location",
     "added": "The location was added."
+  },
+  "libraries": {
+    "heading": "Libraries",
+    "body": "Existing folders shown in Atrium without copying them, such as a photo folder you already have.",
+    "empty": "No folders are added yet.",
+    "online": "Online",
+    "offline": "Offline",
+    "readOnly": "Read-only",
+    "files": "{count, plural, one {# file} other {# files}}",
+    "people": "{count, plural, =0 {nobody has access} one {# person has access} other {# people have access}}",
+    "lastScan": "scanned {when}",
+    "scan": "Scan now",
+    "scanning": "Scanning… {percent}%",
+    "access": "Access",
+    "remove": "Remove",
+    "addHeading": "Add an existing folder",
+    "addNote": "Atrium only reads this folder. It never creates, renames, changes or deletes anything in it. Photos appear in the timeline of the people you choose.",
+    "added": "The folder was added and is being scanned.",
+    "name": "Name",
+    "path": "Folder on the server",
+    "pathHelp": "The full path as the server sees it. With Docker, mount the folder into the container first, preferably read-only (:ro).",
+    "tryPath": "Check folder",
+    "pathOk": "The folder can be read. {count, plural, one {# item} other {# items}} directly inside it.",
+    "whoSees": "Who sees it",
+    "accessTitle": "Who sees {name}",
+    "removeTitle": "Remove {name}?",
+    "removeBody": "Atrium forgets this library: its photos leave the timeline and every album. The folder and every file in it stay exactly as they are.",
+    "typeName": "Type {name} to confirm",
+    "writesOn": "Changes allowed",
+    "allowChanges": "Allow changes",
+    "stopChanges": "Stop changes",
+    "whoChanges": "Who may change files",
+    "whoChangesOff": "Takes effect once changes are allowed for this library.",
+    "whoChangesOn": "These people can rename, move, delete and upload in this folder.",
+    "enableTitle": "Allow changes to {name}?",
+    "enableWarning": "Atrium will change the original files in {path}. Other programs that use this folder will see every change.",
+    "enableRename": "Renaming and moving here renames and moves the files in the folder.",
+    "enableDelete": "Deleting moves a file into the folder .atrium-trash inside this folder, and it is removed for good after 30 days.",
+    "enableUpload": "Uploads are written into the folder.",
+    "enableOff": "You can stop changes at any time; nothing is changed after that, not even the trash.",
+    "enableConfirm": "Allow changes"
+  },
+  "backgroundWork": {
+    "heading": "Background work",
+    "body": "Thumbnails, scans and housekeeping run in the background. Here you choose how much of this machine they may use.",
+    "machine": "This machine",
+    "profile": "Hardware profile",
+    "profileSmall": "Small",
+    "profileMedium": "Medium",
+    "profileLarge": "Large",
+    "machineFacts": "{cores, plural, one {# core} other {# cores}}, {memory} of memory",
+    "pauseHeading": "Pause",
+    "running": "Background work is running.",
+    "pausedUntil": "Background work is paused until {when}.",
+    "pausedOpen": "Background work is paused until you resume it.",
+    "pausedBusy": "Background work is paused while the server is busy with work someone is waiting for.",
+    "pauseNote": "Work you start yourself, such as uploads, keeps running. Paused jobs continue where they stopped.",
+    "pauseHour": "Pause for an hour",
+    "pauseDay": "Pause for a day",
+    "pauseOpen": "Pause until resumed",
+    "resume": "Resume",
+    "limitsHeading": "Jobs at the same time",
+    "limitsNote": "The defaults suit this machine. A higher number finishes sooner but leaves less room for everything else.",
+    "class": {
+      "cpu": "Processor-heavy (thumbnails)",
+      "io": "Disk-heavy (scans, checks)",
+      "network": "Network",
+      "transcode": "Video conversion",
+      "gpu": "Graphics card"
+    },
+    "default": "Default ({value})",
+    "activity": "{running} running, {queued} waiting",
+    "save": "Save limits",
+    "saved": "The limits were saved."
   }
 }

@@ -142,15 +142,15 @@ and states the count and size.
   scrubber on the right that works instantly even with hundreds of
   thousands of items. Multi-select by click and drag or shift-click.
 - **Viewer.** Full-window photo or video, previous and next, zoom,
-  information panel (date, camera, location on a map), add to album,
-  download, delete.
+  information panel (date, camera, size), add to album, download,
+  delete.
 - **Albums.** Grid of albums; an album is a timeline of its items with a
   cover and title. Create from a selection.
-- **Search.** One field. Understands names, types ("video"), years
-  and months ("2024", "May 2024") and places. Date ranges use a date
-  picker; natural-language dates such as "last summer" are out of scope.
-  Filters appear as chips below the field.
-- **Map.** Clusters of photos; selecting a cluster opens it as a timeline.
+- **Search.** One field. Understands names, types ("video") and years
+  and months ("2024", "May 2024"). Date ranges use a date picker;
+  natural-language dates such as "last summer" are out of scope. Filters
+  appear as chips below the field. There is no search by place and no
+  map (D-031).
 
 ### Movies and shows (Phases 5 to 7)
 
@@ -217,8 +217,21 @@ with the server name, and shows only the shared content.
   location, mode and scan state. Enabling writes on an external library
   shows a warning that Atrium will then be able to delete from that
   folder.
+- **Libraries** (built in Phase 3). Existing folders with state, file
+  count, last scan and a running scan's progress; add one with a "Check
+  folder" step; choose who sees it and who may change files; "Allow
+  changes" opens a warning that lists what will change in the original
+  folder and asks for the library's name; "Stop changes" needs no
+  confirmation. Removing asks for the name and says the files stay.
+- **Files** shows a tab per library when there is more than one: "My
+  files" and each shared folder, with a lock where it is read-only.
 - **Transcoding.** Hardware results, limits.
 - **Jobs.** All jobs with filters, pause background work.
+- **Background work** (built in Phase 3). The detected hardware profile,
+  a pause (an hour, a day, or until resumed) with a note that work a
+  person starts keeps running, and the number of jobs per kind of work
+  that may run at once, each showing its default and how many are
+  running and waiting.
 - **Integrations.** Metadata, subtitle and translation providers, each off
   by default and stating what it sends.
 - **Backups.** List, create now, schedule, restore.

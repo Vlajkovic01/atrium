@@ -23,7 +23,7 @@ public sealed class FileServicesHost : IAsyncDisposable
     private readonly ServiceProvider _services;
     private readonly string _root = Path.Combine(Path.GetTempPath(), "atrium-tests", Guid.NewGuid().ToString("N"));
 
-    private FileServicesHost(FileTestDatabase database, FilesOptions? options)
+    private FileServicesHost(FileTestDatabase database, FilesOptions? options, Action<IServiceCollection>? configure)
     {
         Database = database;
         var services = new ServiceCollection();
@@ -38,9 +38,32 @@ public sealed class FileServicesHost : IAsyncDisposable
             services.AddSingleton(options);
         }
 
+        services.AddSingleton(new MediaTypeResolver(name => Path.GetExtension(name).ToLowerInvariant() switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".mp4" => "video/mp4",
+            ".txt" => "text/plain",
+            _ => "application/octet-stream",
+        }));
+        services.AddSingleton(new External.ExternalLibraryOptions([Path.Combine(_root, "keys")]));
+        configure?.Invoke(services);
         services.AddAtriumJobs();
         services.AddAtriumFiles();
         _services = services.BuildServiceProvider(validateScopes: true);
+    }
+
+    /// <summary>A directory for external library folders, outside every storage location.</summary>
+    public string ExternalRoot => Path.Combine(_root, "external");
+
+    /// <summary>Runs queued jobs until none is ready.</summary>
+    public async Task RunJobsAsync(CancellationToken stopping = default)
+    {
+        var runner = _services.GetRequiredService<JobRunner>();
+        while (!stopping.IsCancellationRequested
+            && await runner.RunNextAsync(Enum.GetValues<Atrium.Core.Jobs.JobResourceClass>(), stopping))
+        {
+        }
     }
 
     public FileTestDatabase Database { get; }
@@ -57,9 +80,10 @@ public sealed class FileServicesHost : IAsyncDisposable
     public IStorageProvider Raw { get; private set; } = null!;
 
     /// <summary>A host whose first location, the one personal libraries use, is local, or S3 when <paramref name="s3"/> is given.</summary>
-    public static async Task<FileServicesHost> StartAsync(FileTestDatabase database, FilesOptions? options = null, S3StorageOptions? s3 = null)
+    public static async Task<FileServicesHost> StartAsync(
+        FileTestDatabase database, FilesOptions? options = null, S3StorageOptions? s3 = null, Action<IServiceCollection>? configure = null)
     {
-        var host = new FileServicesHost(database, options);
+        var host = new FileServicesHost(database, options, configure);
         if (s3 is null)
         {
             host.Location = await host.AddLocationAsync("main", host.StorageRoot);
