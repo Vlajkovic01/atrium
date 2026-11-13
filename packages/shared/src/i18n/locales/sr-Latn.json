@@ -144,13 +144,9 @@
     "devices": "Uređaji",
     "account": "Nalog",
     "main": "Glavni meni",
-    "people": "Ljudi",
-    "storage": "Skladište",
     "administration": "Administracija",
     "files": "Fajlovi",
     "trash": "Korpa",
-    "libraries": "Biblioteke",
-    "backgroundWork": "Pozadinski rad",
     "photos": "Fotografije",
     "customize": "Prilagodi meni"
   },
@@ -534,6 +530,101 @@
     },
     "hint": "Upišite deo imena, godinu ili mesec i godinu. Izaberite vrstu da vidite sve te vrste.",
     "nothing": "Ništa nije pronađeno."
+  },
+  "admin": {
+    "title": "Administracija",
+    "lead": "Ovaj server na prvi pogled: prvo ono što traži vas, pa svaki njegov deo.",
+    "sections": "Delovi administracije",
+    "warningCount": "{count, plural, one {# upozorenje} few {# upozorenja} other {# upozorenja}}",
+    "open": "Otvori",
+    "allGood": "Sve je u redu.",
+    "attentionHeading": "Traži pažnju",
+    "section": {
+      "overview": "Pregled",
+      "people": "Ljudi",
+      "storage": "Skladište",
+      "libraries": "Biblioteke",
+      "background-work": "Pozadinski poslovi",
+      "backups": "Rezervne kopije"
+    },
+    "attention": {
+      "storage_offline": "Lokacija skladišta {name} nije dostupna. Fajlovi na njoj se ne mogu otvoriti dok se ne vrati.",
+      "library_offline": "Folder {name} nije dostupan: nedostaje, prazan je ili se ne može čitati. Ništa iz njega nije uklonjeno.",
+      "jobs_failed": "{count, plural, one {# posao nije uspeo} few {# posla nisu uspela} other {# poslova nije uspelo}} u poslednjih dan.",
+      "jobs_paused": "Pozadinski poslovi su pauzirani.",
+      "backup_none": "Još nema rezervne kopije baze.",
+      "backup_old": "Poslednja rezervna kopija je starija od dva dana.",
+      "integrity_problems": "Provera skladišta je našla {count, plural, one {# fajl koji nedostaje ili je oštećen} few {# fajla koja nedostaju ili su oštećena} other {# fajlova koji nedostaju ili su oštećeni}}.",
+      "integrity_none": "Skladište još nije provereno.",
+      "integrity_old": "Skladište nije provereno više od dve nedelje.",
+      "people_deletion": "{count, plural, one {# nalog čeka} few {# naloga čekaju} other {# naloga čeka}} brisanje."
+    },
+    "people": {
+      "total": "Ljudi",
+      "admins": "Administratori",
+      "disabled": "Isključeni",
+      "pendingDeletion": "Za brisanje"
+    },
+    "storage": {
+      "none": "Još nema lokacije skladišta.",
+      "stored": "Sačuvano: {size}",
+      "state": {
+        "online": "Radi",
+        "offline": "Nedostupna",
+        "unknown": "Nije proverena"
+      }
+    },
+    "libraries": {
+      "folders": "Postojeći folderi",
+      "offline": "Nedostupni",
+      "changesAllowed": "Dozvoljene izmene"
+    },
+    "jobs": {
+      "running": "U toku",
+      "waiting": "Čekaju",
+      "failed": "Neuspelo danas",
+      "paused": "Pauzirano dok se ne nastavi.",
+      "pausedUntil": "Pauzirano do {time}."
+    },
+    "backups": {
+      "lead": "Kopije baze podataka i provere sačuvanih fajlova.",
+      "heading": "Rezervne kopije",
+      "what": "Svakog dana Atrium kopira svoju bazu: imena, foldere, ljude i podešavanja. Sami fajlovi ostaju na svojim lokacijama skladišta i nisu deo kopije.",
+      "now": "Napravi kopiju sada",
+      "running": "Pravi se kopija…",
+      "done": "Kopija je spremna.",
+      "failed": "Kopija nije uspela. Razlog je u Pozadinskim poslovima.",
+      "never": "Još nema kopije",
+      "last": "Poslednja kopija",
+      "restore": "Vraćanje iz kopije se za sada radi iz komandne linije; uputstvo za rezervne kopije objašnjava kako.",
+      "reason": {
+        "scheduled": "Dnevna",
+        "manual": "Ručno napravljena",
+        "pre-migration": "Pre ažuriranja"
+      }
+    },
+    "integrity": {
+      "heading": "Provera skladišta",
+      "what": "Jednom nedeljno Atrium pročita svaki sačuvani fajl i uporedi ga sa onim kakav treba da bude, da se oštećenje otkrije dok kopija još može da pomogne.",
+      "now": "Proveri sada",
+      "running": "Proverava se…",
+      "never": "Još nije provereno",
+      "last": "Poslednja provera",
+      "checked": "Provereno",
+      "checkedValue": "{count, plural, one {# fajl} few {# fajla} other {# fajlova}}, {size}",
+      "missing": "Nedostaje",
+      "damaged": "Oštećeno",
+      "unknown": "Nepoznato Atriumu",
+      "problems": "Problemi",
+      "clean": "Svaki fajl je na svom mestu i nepromenjen.",
+      "explainProblems": "Neki fajlovi nedostaju ili su oštećeni. Ništa nije promenjeno; vratite ih iz kopije lokacije skladišta ako je imate.",
+      "problem": {
+        "missing": "Nedostaje",
+        "damaged": "Oštećen",
+        "unknown": "Nepoznat Atriumu",
+        "locationUnavailable": "Lokacija nedostupna"
+      }
+    }
   },
   "menu": {
     "title": "Prilagodi meni",

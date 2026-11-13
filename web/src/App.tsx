@@ -11,6 +11,9 @@ import type { IconName } from "./components/Icon.tsx";
 import { Icon, isIconName } from "./components/Icon.tsx";
 import { Logo } from "./components/Logo.tsx";
 import { Avatar, Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
+import { AdminLayout, useAdminOverview, warnings } from "./admin/AdminLayout.tsx";
+import { Backups } from "./admin/Backups.tsx";
+import { AdminOverviewPage } from "./admin/Overview.tsx";
 import { Account } from "./pages/Account.tsx";
 import { BackgroundWork } from "./pages/BackgroundWork.tsx";
 import { FileBrowser } from "./files/FileBrowser.tsx";
@@ -71,12 +74,6 @@ export function App() {
 
 type NavItemView = components["schemas"]["NavItemView"];
 
-interface NavItem {
-  readonly to: string;
-  readonly label: string;
-  readonly icon: IconName;
-}
-
 function Shell() {
   const { t } = useTranslation();
   const { user, signOut } = useSession();
@@ -112,12 +109,9 @@ function Shell() {
       setFolding(false);
     }
   };
-  const admin: readonly NavItem[] = [
-    { to: "/people", label: t("nav.people"), icon: "users" },
-    { to: "/storage", label: t("nav.storage"), icon: "drive" },
-    { to: "/libraries", label: t("nav.libraries"), icon: "folder" },
-    { to: "/background-work", label: t("nav.backgroundWork"), icon: "history" },
-  ];
+  // Administration is one entry (D-042); its badge counts what needs the admin.
+  const overview = useAdminOverview(isAdmin);
+  const adminWarnings = warnings(overview.data);
 
   const navEntry = (item: NavItemView) => {
     const builtIn: Record<string, { to: string; icon: IconName }> = {
@@ -159,20 +153,25 @@ function Shell() {
   };
 
   const administration = (
-    <div className="nav-group" role="group" aria-label={t("nav.administration")}>
-      <p className="nav-heading">{t("nav.administration")}</p>
-      {admin.map((item) => link(item))}
-    </div>
+    <NavLink
+      to="/admin"
+      className="nav-link nav-admin"
+      title={compact ? t("nav.administration") : undefined}
+      aria-label={
+        adminWarnings > 0
+          ? `${t("nav.administration")}, ${t("admin.warningCount", { count: adminWarnings })}`
+          : undefined
+      }
+    >
+      <Icon name="shield" size={20} />
+      <span>{t("nav.administration")}</span>
+      {adminWarnings > 0 ? (
+        <span className="count-badge" aria-hidden="true">
+          {adminWarnings}
+        </span>
+      ) : null}
+    </NavLink>
   );
-
-  function link(item: NavItem) {
-    return (
-      <NavLink key={item.to} to={item.to} className="nav-link" title={compact ? item.label : undefined}>
-        <Icon name={item.icon} size={20} />
-        <span>{item.label}</span>
-      </NavLink>
-    );
-  }
 
   return (
     <UploadsProvider>
@@ -243,10 +242,18 @@ function Shell() {
               <Route path="/account" element={<Account />} />
               {isAdmin ? (
                 <>
-                  <Route path="/people" element={<People />} />
-                  <Route path="/storage" element={<StorageLocations />} />
-                  <Route path="/libraries" element={<Libraries />} />
-                  <Route path="/background-work" element={<BackgroundWork />} />
+                  <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminOverviewPage />} />
+                    <Route path="people" element={<People />} />
+                    <Route path="storage" element={<StorageLocations />} />
+                    <Route path="libraries" element={<Libraries />} />
+                    <Route path="background-work" element={<BackgroundWork />} />
+                    <Route path="backups" element={<Backups />} />
+                  </Route>
+                  {/* Earlier addresses of the sections still lead to them. */}
+                  {["people", "storage", "libraries", "background-work"].map((section) => (
+                    <Route key={section} path={`/${section}`} element={<Navigate to={`/admin/${section}`} replace />} />
+                  ))}
                 </>
               ) : null}
               <Route path="*" element={<Navigate to="/files" replace />} />

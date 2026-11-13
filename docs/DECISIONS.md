@@ -660,3 +660,28 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - New entries (a folder just shared, a view just made) appear after the
   entry that precedes them by default, so a saved arrangement never hides
   something new.
+
+## D-042 Administration is one place with an overview (Owner, 2026-11-13)
+
+- Owner's decisions: one menu entry instead of a link per section, and
+  the overview, backup and storage check screens planned for Phase 11
+  built now, in Phase 3.
+- The menu shows "Administration" once, with a badge counting warnings.
+  It opens an overview; every section (People, Storage, Libraries,
+  Background work, Backups) is a tab on top of it, and each tab carries
+  its own warning count. Earlier addresses (`/people`, `/storage`,
+  `/libraries`, `/background-work`) redirect to `/admin/...`.
+- The overview (`GET /admin/overview`) is computed on request from what
+  the server already records; nothing new is stored. It lists what needs
+  attention first, each item naming the section that deals with it:
+  unreachable storage, offline folders, jobs failed in the last day, no
+  backup or one older than two days (warnings); paused work, accounts
+  waiting for deletion, no storage check yet or none for two weeks
+  (information). Thresholds follow the schedules: backups daily, checks
+  weekly.
+- Like the rest of administration it shows counts and sizes, never file
+  names. The storage check lists storage keys of missing or damaged
+  objects, which are not file names.
+- Backups: the page explains that a backup holds the database, not the
+  files, makes one on demand and follows its job, and says that restoring
+  is a command-line step until Phase 11.
