@@ -8,7 +8,7 @@ import { api, call } from "../api.ts";
 import type { IconName } from "../components/Icon.tsx";
 import { Icon, isIconName, MENU_ICONS } from "../components/Icon.tsx";
 import { Select } from "../components/Select.tsx";
-import { Badge, Button, Card, Check, ErrorMessage, Notice, PageHeader } from "../components/ui.tsx";
+import { Badge, Button, Card, Check, ErrorMessage, Flash, PageHeader } from "../components/ui.tsx";
 import type { NavigationLayout } from "../navigation.ts";
 import { useNavigation } from "../navigation.ts";
 import { useSession } from "../session.tsx";
@@ -419,7 +419,7 @@ export function MenuSettings() {
     <>
       <PageHeader title={t("menu.title")} lead={t("menu.lead")} />
       <ErrorMessage error={error ?? navigation.error} />
-      {notice ? <Notice kind="ok">{notice}</Notice> : null}
+      <Flash message={notice} />
 
       <Card title={t("menu.entries")} icon="list">
         <p className="muted">{t("menu.entriesLead")}</p>

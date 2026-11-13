@@ -46,7 +46,8 @@ public sealed record IntegrityReport(
 /// because the right repair depends on what went wrong. Progress is saved
 /// as a checkpoint, so a restart continues where it stopped.
 /// </summary>
-public sealed class ScrubHandler(AtriumDbContext db, StorageProviders providers, TimeProvider time) : IJobHandler
+public sealed class ScrubHandler(
+    AtriumDbContext db, StorageProviders providers, TimeProvider time, Atrium.Data.Notifications.NotificationStore notifications) : IJobHandler
 {
     public const string Type = "storage.scrub";
     public const string ReportSettingKey = "integrity.last_report";
@@ -94,6 +95,16 @@ public sealed class ScrubHandler(AtriumDbContext db, StorageProviders providers,
         var report = new IntegrityReport(
             state.StartedAt, time.GetUtcNow(), state.BlobsChecked, state.BytesChecked, state.Missing, state.Damaged, state.Unknown, state.Issues);
         await SaveReportAsync(report, ct);
+
+        // Damage is found while a backup can still help, so admins hear of it at once (D-045).
+        if (report.Missing + report.Damaged > 0)
+        {
+            await notifications.AddForAdminsAsync(
+                "integrity.problems",
+                new Dictionary<string, string> { ["count"] = (report.Missing + report.Damaged).ToString(System.Globalization.CultureInfo.InvariantCulture) },
+                "/admin/backups",
+                ct);
+        }
     }
 
     private async Task<State> CheckAsync(Blob blob, State state, HashSet<Guid> unreachable, CancellationToken ct)

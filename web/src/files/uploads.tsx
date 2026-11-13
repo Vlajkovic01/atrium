@@ -17,6 +17,7 @@ import { api, ApiError, call, currentAccessToken, refreshAccessToken } from "../
 import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Button, Check, useErrorText } from "../components/ui.tsx";
+import { useNotificationActions } from "../notifications.ts";
 import { formatBytes } from "./format.ts";
 
 /** A file picked or dropped, with the folders it sat in, relative to what was chosen. */
@@ -32,6 +33,9 @@ interface UploadsValue {
 }
 
 const UploadsContext = createContext<UploadsValue | null>(null);
+
+/** How long the upload panel stays once everything is done. */
+const UPLOAD_PANEL_MS = 10_000;
 
 export function useUploads(): UploadsValue {
   const value = useContext(UploadsContext);
@@ -111,6 +115,9 @@ export function UploadsProvider({ children }: { readonly children: ReactNode }) 
   const [items, setItems] = useState<readonly QueuedUpload[]>([]);
   const [question, setQuestion] = useState<{ q: ConflictQuestion; answer: (a: ConflictAnswer) => void } | null>(null);
   const finished = useRef(new Set<number>());
+  // Uploads already told about in a notification (D-045).
+  const reported = useRef(new Set<number>());
+  const actions = useNotificationActions();
   // The files behind queue items, to fingerprint them once their upload exists.
   const fileById = useRef(new Map<number, File>());
   const fingerprinting = useRef(new Set<number>());
@@ -164,6 +171,30 @@ export function UploadsProvider({ children }: { readonly children: ReactNode }) 
 
     resumeStore.write(Object.fromEntries(map));
   }, [items, queryClient]);
+
+  // When a batch is done, the notification list says how it went, so it is
+  // still known after the panel has gone away.
+  useEffect(() => {
+    const busy = items.some((i) => ["queued", "uploading", "waiting", "paused"].includes(i.status.state));
+    const fresh = items.filter((i) => !reported.current.has(i.id));
+    if (busy || fresh.length === 0) {
+      return;
+    }
+
+    fresh.forEach((i) => reported.current.add(i.id));
+    const done = fresh.filter((i) => i.status.state === "completed");
+    const failed = fresh.filter((i) => i.status.state === "failed");
+    const folders = [...new Set(done.map((i) => i.parentId))];
+    if (done.length > 0) {
+      void actions
+        .add("uploads.finished", { count: String(done.length) }, folders.length === 1 ? `/files/${folders[0]}` : null)
+        .catch(() => undefined);
+    }
+
+    if (failed.length > 0) {
+      void actions.add("uploads.failed", { count: String(failed.length) }, null).catch(() => undefined);
+    }
+  }, [items, actions]);
 
   // Leaving the page with uploads running asks first.
   useEffect(() => {
@@ -304,13 +335,31 @@ function UploadPanel() {
   const errorText = useErrorText();
   const { items, queue } = useUploads();
   const [collapsed, setCollapsed] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const active = items.filter((i) => ["queued", "uploading", "waiting", "paused"].includes(i.status.state)).length;
+
+  // Once everything is done the panel goes away by itself, unless the
+  // pointer is on it; what happened stays in the notifications (D-045).
+  useEffect(() => {
+    if (items.length === 0 || active > 0 || hovered) {
+      return;
+    }
+
+    const timer = setTimeout(() => queue.clearFinished(), UPLOAD_PANEL_MS);
+    return () => clearTimeout(timer);
+  }, [items, active, hovered, queue]);
+
   if (items.length === 0) {
     return null;
   }
 
-  const active = items.filter((i) => ["queued", "uploading", "waiting", "paused"].includes(i.status.state)).length;
   return (
-    <section className="upload-panel" aria-label={t("uploads.title")}>
+    <section
+      className="upload-panel"
+      aria-label={t("uploads.title")}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <header className="upload-panel-header">
         <h2 className="upload-panel-title">
           {active > 0 ? t("uploads.inProgress", { count: active }) : t("uploads.done")}

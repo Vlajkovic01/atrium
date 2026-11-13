@@ -275,6 +275,7 @@ public sealed class JobRunner(
                         .SetProperty(j => j.ErrorCode, outcome.Code)
                         .SetProperty(j => j.ErrorDetail, detail)
                         .SetProperty(j => j.FinishedAt, now), ct);
+                    await NotifyFailureAsync(job, outcome.Code, ct);
                 }
                 else
                 {
@@ -289,6 +290,40 @@ public sealed class JobRunner(
                 }
 
                 break;
+        }
+    }
+
+    /// <summary>Kinds of system work an admin must hear about when they fail for good (D-045).</summary>
+    private static readonly HashSet<string> AdminWatched = new(StringComparer.Ordinal)
+    {
+        "metadata.backup", "storage.scrub", "library.scan", "library.scan-all", "users.delete",
+    };
+
+    /// <summary>
+    /// Tells whoever asked for the job, or the admins for work that matters
+    /// to the whole server, that it failed for good. Work that fails file by
+    /// file (reading a photo's details) is left to Background work, or one
+    /// broken folder would flood everyone. Never fails the job's own bookkeeping.
+    /// </summary>
+    private async Task NotifyFailureAsync(Job job, string? code, CancellationToken ct)
+    {
+        try
+        {
+            await using var scope = scopes.CreateAsyncScope();
+            var store = scope.ServiceProvider.GetRequiredService<Atrium.Data.Notifications.NotificationStore>();
+            var values = new Dictionary<string, string> { ["type"] = job.Type, ["code"] = code ?? "" };
+            if (job.OwnerUserId is { } owner)
+            {
+                await store.AddAsync(owner, "job.failed", values, null, ct);
+            }
+            else if (AdminWatched.Contains(job.Type))
+            {
+                await store.AddForAdminsAsync("job.failed", values, "/admin/background-work", ct);
+            }
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            logger.LogWarning(e, "Could not record the failure of job {JobId} as a notification.", job.Id);
         }
     }
 
