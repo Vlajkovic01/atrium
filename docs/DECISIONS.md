@@ -555,3 +555,26 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - Alternatives considered: one job doing every file of a library (no
   per-file progress or retry); making every size eagerly (cache space);
   reading by path (the lock described above).
+## D-039 libvips runs in decoder processes, never in the server (Proposed, Phase 3)
+
+- Finding: with Ubuntu's libvips loaded into the server, the server in
+  the image died with a segmentation fault seconds after starting, in
+  ordinary .NET code, the mark of memory damaged by native code. Not
+  loading libvips in the server made the crash go away; the cause inside
+  libvips or its many libraries was not pinned down further.
+- Decision: thumbnails are made by decoder processes: the same program
+  started with `--image-worker`, a few at a time, each answering one
+  request per line on standard input and output. One that crashes,
+  hangs past two minutes or answers nonsense is killed and replaced; the
+  thumbnail request gets 503 and the job is retried later. A process
+  ends by itself when the server goes away, because its input closes.
+- Reasons: beyond this crash, decoding pictures people upload is the
+  most exposed native code in Atrium. A broken or hostile file must not
+  be able to take the server, its database connection or its memory
+  with it. FFmpeg already runs as separate processes for the same
+  reason.
+- Cost: each decoder process is a .NET process of a few tens of
+  megabytes; their number follows the `cpu` limit plus one. Tests and the
+  command-line tools run libvips in their own process.
+- `Atrium.Api --check-media` makes a thumbnail both ways and checks
+  FFmpeg and ffprobe; CI runs it in the image before starting it.

@@ -1,6 +1,5 @@
 using System.Globalization;
 using Atrium.Core.Files;
-using NetVips;
 
 namespace Atrium.Media;
 
@@ -26,7 +25,7 @@ public sealed class UnsupportedMediaException(string message) : Exception(messag
 /// and carries no metadata at all: nothing from the original, a location
 /// included, reaches the cache (D-031).
 /// </summary>
-public sealed class Thumbnailer(MediaOptions options)
+public sealed class Thumbnailer(MediaOptions options, IImageEncoder encoder)
 {
     private const long MaxFrameBytes = 64L * 1024 * 1024;
 
@@ -77,7 +76,6 @@ public sealed class Thumbnailer(MediaOptions options)
     private async Task<string> MakeLockedAsync(
         string sourcePath, MediaKind kind, string target, ThumbnailVariant variant, bool background, CancellationToken ct)
     {
-
         if (variant == ThumbnailVariant.Preview)
         {
             if (kind != MediaKind.Video)
@@ -93,19 +91,19 @@ public sealed class Thumbnailer(MediaOptions options)
         byte[] webp;
         if (kind == MediaKind.Video)
         {
-            webp = FromBuffer(await GrabFrameAsync(sourcePath, background, ct), size);
+            webp = await FromPictureAsync(await GrabFrameAsync(sourcePath, background, ct), size, ct);
         }
         else
         {
             try
             {
-                webp = FromFile(sourcePath, size);
+                webp = await encoder.ThumbnailAsync(sourcePath, size, ct);
             }
-            catch (Exception e) when (e is VipsException || IsLibvipsMissing(e))
+            catch (UnsupportedMediaException)
             {
                 // A format this libvips cannot read, such as HEIC with the
                 // NuGet build: FFmpeg decodes the first picture instead.
-                webp = FromBuffer(await DecodeWithFfmpegAsync(sourcePath, background, ct), size);
+                webp = await FromPictureAsync(await DecodeWithFfmpegAsync(sourcePath, background, ct), size, ct);
             }
         }
 
@@ -113,60 +111,26 @@ public sealed class Thumbnailer(MediaOptions options)
         return target;
     }
 
-    /// <summary>
-    /// libvips reads through a stream Atrium opens and closes, never by
-    /// path: given a path it may keep the file mapped after it is done,
-    /// which on Windows stops other programs from writing the user's file.
-    /// </summary>
-    private static byte[] FromFile(string path, int size)
+    /// <summary>A picture FFmpeg decoded, as PNG, handed to the encoder through a temporary file.</summary>
+    private async Task<byte[]> FromPictureAsync(byte[] png, int size, CancellationToken ct)
     {
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 81920);
-
-        // Thumbnail turns the picture upright by its EXIF orientation.
-        using var image = Image.ThumbnailStream(stream, size, height: size, size: Enums.Size.Down, failOn: Enums.FailOn.None);
-        return Save(image);
-    }
-
-    static Thumbnailer()
-    {
-        // A cached image would keep its source open after the thumbnail is made.
-        try
-        {
-            Cache.Max = 0;
-            Cache.MaxFiles = 0;
-        }
-        catch (Exception e) when (IsLibvipsMissing(e))
-        {
-        }
-    }
-
-    private static byte[] FromBuffer(byte[] buffer, int size)
-    {
-        if (buffer.Length == 0)
+        if (png.Length == 0)
         {
             throw new UnsupportedMediaException("No picture could be decoded.");
         }
 
+        Directory.CreateDirectory(options.TempDir);
+        var temp = Path.Combine(options.TempDir, $"{Guid.NewGuid():N}.png");
         try
         {
-            using var image = Image.ThumbnailBuffer(buffer, size, height: size, size: Enums.Size.Down, failOn: Enums.FailOn.None);
-            return Save(image);
+            await File.WriteAllBytesAsync(temp, png, ct);
+            return await encoder.ThumbnailAsync(temp, size, ct);
         }
-        catch (VipsException e)
+        finally
         {
-            throw new UnsupportedMediaException(e.Message);
-        }
-        catch (Exception e) when (IsLibvipsMissing(e))
-        {
-            throw new MediaToolException("libvips is not installed.", missing: true);
+            File.Delete(temp);
         }
     }
-
-    private static bool IsLibvipsMissing(Exception e) => e is DllNotFoundException or TypeInitializationException or EntryPointNotFoundException;
-
-    // No metadata is kept: not the EXIF of the original, not its location.
-    private static byte[] Save(Image image) => image.WebpsaveBuffer(q: 78, keep: Enums.ForeignKeep.None);
-
     private async Task<byte[]> GrabFrameAsync(string path, bool background, CancellationToken ct)
     {
         // A second in avoids the black first frame of many clips; a clip

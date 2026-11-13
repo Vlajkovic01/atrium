@@ -38,13 +38,42 @@ public static class MediaSelfCheck
         // exception through it. Configured as the server does, then tried.
         try
         {
-            MediaSetup.ConfigureLibvips(new Atrium.Jobs.HardwareInfo(Environment.ProcessorCount, 2L * 1024 * 1024 * 1024));
+            InProcessImageEncoder.Configure(2);
             output.WriteLine($"managed exceptions after libvips: {(NullDereferenceIsCaught() ? "ok" : "FAILED")}");
         }
         catch (Exception e)
         {
             ok = false;
             output.WriteLine($"libvips settings: FAILED: {e.GetType().Name}: {e.Message}");
+        }
+
+        // The way the server makes thumbnails: in a decoder process.
+        if (options.ImageWorker is { } start)
+        {
+            var sample = Path.Combine(Path.GetTempPath(), $"atrium-check-{Guid.NewGuid():N}.png");
+            try
+            {
+                using (var picture = (Image.Black(64, 48, bands: 3) + new double[] { 200, 80, 20 }).Cast(Enums.BandFormat.Uchar))
+                {
+                    picture.Pngsave(sample);
+                }
+
+                using var workers = new WorkerImageEncoder(start, 1, TimeSpan.FromSeconds(60));
+                for (var i = 0; i < 3; i++)
+                {
+                    var webp = await workers.ThumbnailAsync(sample, 32, CancellationToken.None);
+                    output.WriteLine($"decoder process thumbnail {i + 1}: {webp.Length} bytes");
+                }
+            }
+            catch (Exception e)
+            {
+                ok = false;
+                output.WriteLine($"decoder process: FAILED: {e.GetType().Name}: {e.Message}");
+            }
+            finally
+            {
+                File.Delete(sample);
+            }
         }
 
         foreach (var tool in new[] { options.Ffmpeg, options.Ffprobe })
