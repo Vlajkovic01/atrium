@@ -203,13 +203,6 @@ function Shell() {
               ) : null;
             })}
           </nav>
-          {/* Administration is about the server, not the person's files:
-              it sits apart, just above their name (D-043). */}
-          {isAdmin && !adminOnTop ? (
-            <nav className="sidebar-system" aria-label={t("nav.administration")}>
-              {administration}
-            </nav>
-          ) : null}
           <UserMenu adminWarnings={isAdmin ? adminWarnings : 0} adminElsewhere={adminOnTop} />
         </aside>
 

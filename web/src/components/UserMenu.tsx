@@ -18,23 +18,10 @@ interface Item {
 
 /**
  * The person's own menu, opened by clicking their name (D-043): their
- * account, arranging the menu, signing out, and on a phone Administration
- * for admins. It follows the menu button pattern: arrows move, Enter chooses,
+ * account, arranging the menu, Administration for admins, and signing
+ * out. It follows the menu button pattern: arrows move, Enter chooses,
  * Escape closes and returns focus to the name.
  */
-/** Whether the screen is phone-sized, where the sidebar becomes bars (styles.css, 52rem). */
-function usePhone(): boolean {
-  const query = "(width <= 52rem)";
-  const [phone, setPhone] = useState(() => window.matchMedia(query).matches);
-  useEffect(() => {
-    const list = window.matchMedia(query);
-    const change = (): void => setPhone(list.matches);
-    list.addEventListener("change", change);
-    return () => list.removeEventListener("change", change);
-  }, []);
-  return phone;
-}
-
 /**
  * @param adminElsewhere Administration already shows in the menu itself
  * (the admin placed it at the top), so it is never repeated here.
@@ -49,10 +36,7 @@ export function UserMenu(props: { readonly adminWarnings: number; readonly admin
   const button = useRef<HTMLButtonElement>(null);
   const items = useRef<(HTMLButtonElement | null)[]>([]);
   const [open, setOpen] = useState(false);
-  // On a computer Administration has its own place above the name; only on
-  // a phone, where that place is not shown, is it offered here.
-  const phone = usePhone();
-  const offerAdmin = user?.role === "admin" && phone && !props.adminElsewhere;
+  const offerAdmin = user?.role === "admin" && !props.adminElsewhere;
 
   // Close on a click elsewhere and whenever the page changes.
   useEffect(() => {
