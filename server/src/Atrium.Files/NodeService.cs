@@ -10,7 +10,7 @@ namespace Atrium.Files;
 /// library first; someone else's node answers "not found", the same as one
 /// that does not exist.
 /// </summary>
-public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOptions options)
+public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOptions options, External.ExternalWriter external)
 {
     /// <summary>A folder copy larger than this is refused rather than run inside one request.</summary>
     public const int MaxCopyItems = 10_000;
@@ -57,14 +57,13 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
 
     /// <summary>
     /// Writing also needs a session that may write, a library that is not
-    /// read-only and, outside a personal library, a write grant. External
-    /// libraries are only read for now.
+    /// read-only and, outside a personal library, a write grant. An external
+    /// library is read-only until an admin enables writes (D-036).
     /// </summary>
     public static bool CanWrite(FileActor actor, Library library, LibraryGrant? grant = null) =>
         CanRead(actor, library, grant)
         && actor.CanWriteAnything
         && !library.ReadOnly
-        && library.Mode == LibraryMode.Managed
         && (library.Kind == LibraryKind.Personal || grant?.Access == LibraryAccess.Write);
 
     /// <summary>The ancestors from the library root down to the node, the node excluded.</summary>
@@ -134,6 +133,11 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
         if (!parent.Ok)
         {
             return FileResult<Node>.Fail(parent.Error!, parent.Params);
+        }
+
+        if (parent.Value!.Library.Mode == LibraryMode.External)
+        {
+            return await external.CreateFolderAsync(parent.Value.Library, parent.Value.Node, name ?? string.Empty, actor.UserId, ct);
         }
 
         if (!NodeName.TryNormalize(name, out var normalized, out var key))
@@ -222,6 +226,13 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
             }
         }
 
+        if (found.Library.Mode == LibraryMode.External)
+        {
+            var targetFolder = await db.Nodes.AsNoTracking().SingleAsync(n => n.Id == parentId, ct);
+            db.ChangeTracker.Clear();
+            return await external.MoveAsync(found.Library, node.Id, targetFolder, newName ?? node.Name, ct);
+        }
+
         if (await SiblingAsync(parentId, key, except: node.Id, ct) is { } existing)
         {
             return Conflict<Node>(existing);
@@ -266,6 +277,12 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
         if (target.Value!.Library.Id != found.Library.Id)
         {
             return FileResult<Node>.Fail(FileErrors.CrossLibrary);
+        }
+
+        // Copying inside an external folder would duplicate the user's files on their disk.
+        if (found.Library.Mode == LibraryMode.External)
+        {
+            return FileResult<Node>.Fail(FileErrors.NotSupported);
         }
 
         var source = found.Node;
@@ -374,6 +391,12 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
         if (expectedVersion is { } expected && node.Version != expected)
         {
             return FileResult<Node>.Fail(FileErrors.VersionConflict);
+        }
+
+        if (found.Library.Mode == LibraryMode.External)
+        {
+            db.ChangeTracker.Clear();
+            return await external.TrashAsync(found.Library, id, ct);
         }
 
         var now = time.GetUtcNow();

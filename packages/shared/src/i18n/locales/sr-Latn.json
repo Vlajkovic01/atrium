@@ -96,7 +96,8 @@
       "unknown_user": "Neka od izabranih osoba više ne postoji. Osvežite stranicu i pokušajte ponovo.",
       "folder_unavailable": "Folder nije dostupan. Ako je na mrežnom deljenju ili spoljnom disku, proverite da li je montiran.",
       "folder_empty": "Folder je odjednom prazan. Ako je na mrežnom deljenju ili spoljnom disku, proverite da li je montiran.",
-      "too_many_missing": "Većina fajlova je nestala odjednom, pa ništa nije uklonjeno iz biblioteke. Proverite da li je folder montiran, pa skenirajte ponovo."
+      "too_many_missing": "Većina fajlova je nestala odjednom, pa ništa nije uklonjeno iz biblioteke. Proverite da li je folder montiran, pa skenirajte ponovo.",
+      "folder_read_only": "Atrium ne može da piše u ovaj folder. Sa Dockerom uklonite :ro iz montiranja foldera i proverite dozvole."
     },
     "node": {
       "invalid_name": "To ime ne može da se koristi. Ime ne sme da sadrži / ili \\, da se završava tačkom ili razmakom, niti da bude rezervisano ime kao što je CON.",
@@ -109,7 +110,8 @@
       "not_in_trash": "Ova stavka nije u korpi.",
       "is_root": "Glavni folder biblioteke ne može da se menja.",
       "cross_library": "Stavke ne mogu da se premeštaju između biblioteka.",
-      "too_many_items": "Ovaj folder ima previše stavki da bi se kopirao odjednom (više od {max})."
+      "too_many_items": "Ovaj folder ima previše stavki da bi se kopirao odjednom (više od {max}).",
+      "not_supported": "Ovo ne može da se uradi u biblioteci koja prikazuje postojeći folder."
     },
     "upload": {
       "offset_mismatch": "Otpremanje se razišlo sa serverom. Nastavlja se od mesta gde je server stao.",
@@ -139,6 +141,7 @@
   "files": {
     "title": "Fajlovi",
     "myFiles": "Moji fajlovi",
+    "libraries": "Biblioteke",
     "noLibrary": "Još nema gde da se čuvaju fajlovi. Administrator prvo mora da doda lokaciju za skladištenje.",
     "location": "Lokacija",
     "actions": "Radnje",
@@ -484,7 +487,20 @@
     "accessTitle": "Ko vidi {name}",
     "removeTitle": "Ukloniti {name}?",
     "removeBody": "Atrium zaboravlja ovu biblioteku: njene fotografije nestaju iz vremenske linije i iz svih albuma. Folder i svi fajlovi u njemu ostaju tačno kakvi jesu.",
-    "typeName": "Upišite {name} za potvrdu"
+    "typeName": "Upišite {name} za potvrdu",
+    "writesOn": "Izmene dozvoljene",
+    "allowChanges": "Dozvoli izmene",
+    "stopChanges": "Zaustavi izmene",
+    "whoChanges": "Ko sme da menja fajlove",
+    "whoChangesOff": "Važi kada se za ovu biblioteku dozvole izmene.",
+    "whoChangesOn": "Ove osobe mogu da preimenuju, premeštaju, brišu i otpremaju u ovaj folder.",
+    "enableTitle": "Dozvoliti izmene u biblioteci {name}?",
+    "enableWarning": "Atrium će menjati originalne fajlove u {path}. Drugi programi koji koriste ovaj folder videće svaku izmenu.",
+    "enableRename": "Preimenovanje i premeštanje ovde preimenuje i premešta fajlove u folderu.",
+    "enableDelete": "Brisanje premešta fajl u folder .atrium-trash unutar ovog foldera, a trajno se uklanja posle 30 dana.",
+    "enableUpload": "Otpremljeni fajlovi se upisuju u folder.",
+    "enableOff": "Izmene možete zaustaviti u svakom trenutku; posle toga se ništa ne menja, ni korpa.",
+    "enableConfirm": "Dozvoli izmene"
   },
   "backgroundWork": {
     "heading": "Pozadinski rad",

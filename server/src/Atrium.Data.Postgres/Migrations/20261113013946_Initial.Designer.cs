@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Atrium.Data.Postgres.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261113011522_Initial")]
+    [Migration("20261113013946_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -382,7 +382,7 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
-                    b.Property<Guid>("StorageLocationId")
+                    b.Property<Guid?>("StorageLocationId")
                         .HasColumnType("uuid");
 
                     b.Property<long>("UpdatedAt")
@@ -1144,8 +1144,7 @@ namespace Atrium.Data.Postgres.Migrations
                     b.HasOne("Atrium.Core.Storage.StorageLocation", null)
                         .WithMany()
                         .HasForeignKey("StorageLocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Atrium.Core.Identity.User", null)
                         .WithMany()

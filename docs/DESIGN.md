@@ -456,6 +456,12 @@ verified upload.
   entries, and is repeated every six hours. "Most files vanished" means
   more than half and at least 50. Missing entries leave the index after
   the trash retention. Content is read from disk at every request.
+- Writes, built in Phase 3 (D-036): enabled per library after typing its
+  name, for the people granted "can change". Changes go to disk first and
+  then to the index, under a lock per library shared with the scan.
+  Deletes move into `.atrium-trash/<id>/` in the library and are removed
+  after the trash retention, only while writes stay enabled. Uploads are
+  staged in `.atrium-trash/.uploads` and moved into place.
 
 ### 4.5 Consistency checks
 

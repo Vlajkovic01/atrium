@@ -25,6 +25,9 @@ public static class LibraryErrors
     public const string ConfirmationMismatch = "library.confirmation_mismatch";
     public const string UnknownUser = "library.unknown_user";
 
+    /// <summary>Writes cannot be enabled: the folder cannot be written, for example because it is mounted read-only.</summary>
+    public const string FolderReadOnly = "library.folder_read_only";
+
     /// <summary>Why a library is offline.</summary>
     public const string FolderUnavailable = "library.folder_unavailable";
     public const string FolderEmpty = "library.folder_empty";
@@ -165,9 +168,55 @@ public sealed class ExternalLibraryService(
         return FileResult<Library>.Success(library);
     }
 
-    /// <summary>Renames a library and replaces who may see it.</summary>
+    /// <summary>
+    /// Switches changes to the folder's files on or off (D-036). Switching
+    /// on needs the library's name typed by the admin and proves the folder
+    /// can be written; switching off needs nothing and takes effect at once.
+    /// </summary>
+    public async Task<FileResult<Library>> SetWritesAsync(Guid adminId, Guid id, bool enabled, string? confirmName, CancellationToken ct)
+    {
+        var library = await db.Libraries.SingleOrDefaultAsync(l => l.Id == id && l.Kind != LibraryKind.Personal, ct);
+        if (library is null)
+        {
+            return FileResult<Library>.Fail(FileErrors.NotFound);
+        }
+
+        if (library.Mode != LibraryMode.External)
+        {
+            return FileResult<Library>.Fail(LibraryErrors.NotExternal);
+        }
+
+        if (enabled)
+        {
+            if (!string.Equals(confirmName?.Trim(), library.Name, StringComparison.Ordinal))
+            {
+                return FileResult<Library>.Fail(LibraryErrors.ConfirmationMismatch);
+            }
+
+            if (!ExternalWriter.TryPrepare(library))
+            {
+                return FileResult<Library>.Fail(LibraryErrors.FolderReadOnly);
+            }
+
+            library.ReadOnly = false;
+            library.WritesEnabledAt = time.GetUtcNow();
+            library.WritesEnabledByUserId = adminId;
+        }
+        else
+        {
+            library.ReadOnly = true;
+        }
+
+        await db.SaveChangesAsync(ct);
+        return FileResult<Library>.Success(library);
+    }
+
+    /// <summary>
+    /// Renames a library and replaces who may see it and, of those, who may
+    /// change its files once writes are enabled.
+    /// </summary>
     public async Task<FileResult<Library>> UpdateAsync(
-        Guid id, int expectedVersion, string? newName, IReadOnlyList<Guid>? userIds, CancellationToken ct)
+        Guid id, int expectedVersion, string? newName, IReadOnlyList<Guid>? userIds, IReadOnlyList<Guid>? writerIds, CancellationToken ct)
     {
         var library = await db.Libraries.SingleOrDefaultAsync(l => l.Id == id && l.Kind != LibraryKind.Personal, ct);
         if (library is null)
@@ -198,14 +247,25 @@ public sealed class ExternalLibraryService(
                 return FileResult<Library>.Fail(LibraryErrors.UnknownUser);
             }
 
+            var writers = (writerIds ?? []).ToHashSet();
+            if (!writers.IsSubsetOf(wanted))
+            {
+                return FileResult<Library>.Fail(LibraryErrors.UnknownUser);
+            }
+
             var current = await db.LibraryGrants.Where(g => g.LibraryId == id).ToListAsync(ct);
             db.LibraryGrants.RemoveRange(current.Where(g => !wanted.Contains(g.UserId)));
+            foreach (var grant in current.Where(g => wanted.Contains(g.UserId)))
+            {
+                grant.Access = writers.Contains(grant.UserId) ? LibraryAccess.Write : LibraryAccess.Read;
+            }
+
             var now = time.GetUtcNow();
             db.LibraryGrants.AddRange(wanted.Where(u => current.All(g => g.UserId != u)).Select(u => new LibraryGrant
             {
                 LibraryId = id,
                 UserId = u,
-                Access = LibraryAccess.Read,
+                Access = writers.Contains(u) ? LibraryAccess.Write : LibraryAccess.Read,
                 CreatedAt = now,
             }));
 

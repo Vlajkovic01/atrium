@@ -1086,6 +1086,23 @@ export interface paths {
         patch: operations["UpdateLibrary"];
         trace?: never;
     };
+    "/api/v1/admin/libraries/{id}/writes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Lets Atrium change the folder's files (rename, move, delete into the library's own trash, upload). Enabling needs confirmName, the library's name; disabling takes effect at once. */
+        put: operations["SetLibraryWrites"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/libraries/{id}/scan": {
         parameters: {
             query?: never;
@@ -1121,6 +1138,7 @@ export interface components {
             /** Format: int32 */
             fileCount: number | string;
             userIds: string[];
+            writerIds: string[];
             /** Format: date-time */
             writesEnabledAt: null | string;
             scan: null | components["schemas"]["JobInfoBrief"];
@@ -1533,6 +1551,10 @@ export interface components {
         SetJobLimitsRequest: {
             limits: components["schemas"]["JobClassLimitSetting"][];
         };
+        SetLibraryWritesRequest: {
+            enabled: boolean;
+            confirmName: null | string;
+        };
         SetupState: {
             adminExists: boolean;
             storageConfigured: boolean;
@@ -1629,6 +1651,7 @@ export interface components {
         UpdateLibraryRequest: {
             name: null | string;
             userIds: null | string[];
+            writerIds: null | string[];
         };
         UpdateNodeRequest: {
             name: null | string;
@@ -4637,6 +4660,50 @@ export interface operations {
             };
             /** @description Precondition Required */
             428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SetLibraryWrites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetLibraryWritesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLibraryView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

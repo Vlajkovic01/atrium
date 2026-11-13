@@ -3613,6 +3613,68 @@
         }
       }
     },
+    "/api/v1/admin/libraries/{id}/writes": {
+      "put": {
+        "tags": [
+          "Administration"
+        ],
+        "description": "Lets Atrium change the folder\u0027s files (rename, move, delete into the library\u0027s own trash, upload). Enabling needs confirmName, the library\u0027s name; disabling takes effect at once.",
+        "operationId": "SetLibraryWrites",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLibraryWritesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLibraryView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/libraries/{id}/scan": {
       "post": {
         "tags": [
@@ -3670,6 +3732,7 @@
           "lastScanAt",
           "fileCount",
           "userIds",
+          "writerIds",
           "writesEnabledAt",
           "scan",
           "version"
@@ -3723,6 +3786,13 @@
             "format": "int32"
           },
           "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "writerIds": {
             "type": "array",
             "items": {
               "type": "string",
@@ -5452,6 +5522,24 @@
           }
         }
       },
+      "SetLibraryWritesRequest": {
+        "required": [
+          "enabled",
+          "confirmName"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "confirmName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SetupState": {
         "required": [
           "adminExists",
@@ -5836,7 +5924,8 @@
       "UpdateLibraryRequest": {
         "required": [
           "name",
-          "userIds"
+          "userIds",
+          "writerIds"
         ],
         "type": "object",
         "properties": {
@@ -5847,6 +5936,16 @@
             ]
           },
           "userIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "writerIds": {
             "type": [
               "null",
               "array"

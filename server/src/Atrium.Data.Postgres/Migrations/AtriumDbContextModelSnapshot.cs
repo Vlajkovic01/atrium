@@ -379,7 +379,7 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
-                    b.Property<Guid>("StorageLocationId")
+                    b.Property<Guid?>("StorageLocationId")
                         .HasColumnType("uuid");
 
                     b.Property<long>("UpdatedAt")
@@ -1141,8 +1141,7 @@ namespace Atrium.Data.Postgres.Migrations
                     b.HasOne("Atrium.Core.Storage.StorageLocation", null)
                         .WithMany()
                         .HasForeignKey("StorageLocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Atrium.Core.Identity.User", null)
                         .WithMany()

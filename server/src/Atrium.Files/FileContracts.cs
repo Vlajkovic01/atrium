@@ -35,6 +35,9 @@ public static class FileErrors
     public const string IsRoot = "node.is_root";
     public const string CrossLibrary = "node.cross_library";
     public const string TooManyItems = "node.too_many_items";
+
+    /// <summary>The operation exists, but not for this kind of library (copying inside an external folder).</summary>
+    public const string NotSupported = "node.not_supported";
 }
 
 /// <summary>The outcome of a file operation: a value, or an error code with optional parameters.</summary>

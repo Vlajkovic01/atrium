@@ -371,7 +371,7 @@ namespace Atrium.Data.Sqlite.Migrations
                     UserId = table.Column<Guid>(type: "TEXT", nullable: false),
                     LibraryId = table.Column<Guid>(type: "TEXT", nullable: false),
                     ParentId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    StorageLocationId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    StorageLocationId = table.Column<Guid>(type: "TEXT", nullable: true),
                     Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     MediaType = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),
                     Length = table.Column<long>(type: "INTEGER", nullable: false),

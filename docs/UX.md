@@ -217,6 +217,14 @@ with the server name, and shows only the shared content.
   location, mode and scan state. Enabling writes on an external library
   shows a warning that Atrium will then be able to delete from that
   folder.
+- **Libraries** (built in Phase 3). Existing folders with state, file
+  count, last scan and a running scan's progress; add one with a "Check
+  folder" step; choose who sees it and who may change files; "Allow
+  changes" opens a warning that lists what will change in the original
+  folder and asks for the library's name; "Stop changes" needs no
+  confirmation. Removing asks for the name and says the files stay.
+- **Files** shows a tab per library when there is more than one: "My
+  files" and each shared folder, with a lock where it is read-only.
 - **Transcoding.** Hardware results, limits.
 - **Jobs.** All jobs with filters, pause background work.
 - **Background work** (built in Phase 3). The detected hardware profile,

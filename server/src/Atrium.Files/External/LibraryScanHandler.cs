@@ -28,6 +28,7 @@ public sealed class LibraryScanHandler(
     AtriumDbContext db,
     MediaTypeResolver mediaTypes,
     IEnumerable<IExternalScanObserver> observers,
+    ExternalLocks locks,
     TimeProvider time,
     ILogger<LibraryScanHandler> logger) : IJobHandler
 {
@@ -83,7 +84,11 @@ public sealed class LibraryScanHandler(
 
             try
             {
-                var subfolders = await IndexFolderAsync(library, folder, relative, state.StartedAt, ct);
+                List<string> subfolders;
+                using (await locks.AcquireAsync(library.Id, ct))
+                {
+                    subfolders = await IndexFolderAsync(library, folder, relative, state.StartedAt, ct);
+                }
                 state.Pending.AddRange(subfolders.AsEnumerable().Reverse());
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
@@ -208,6 +213,7 @@ public sealed class LibraryScanHandler(
         var notSeen = db.Nodes.Where(n => n.LibraryId == library.Id
             && n.Id != library.RootNodeId
             && n.MissingSince == null
+            && !n.InTrash
             && (n.LastSeenAt == null || n.LastSeenAt < state.StartedAt));
         var candidates = await notSeen.Select(n => new { n.Id, n.Kind, n.ExternalPath }).ToListAsync(ct);
 
@@ -234,20 +240,20 @@ public sealed class LibraryScanHandler(
             await db.Nodes.Where(n => ids.Contains(n.Id)).ExecuteUpdateAsync(s => s.SetProperty(n => n.MissingSince, now), ct);
         }
 
-        var tracked = await db.Libraries.SingleAsync(l => l.Id == library.Id, ct);
-        tracked.State = LibraryState.Online;
-        tracked.StateReason = null;
-        tracked.LastScanAt = now;
-        await db.SaveChangesAsync(ct);
+        // Scan state is not something an admin edits, so it does not bump
+        // the library's version and never conflicts with an admin's change.
+        await db.Libraries.Where(l => l.Id == library.Id).ExecuteUpdateAsync(s => s
+            .SetProperty(l => l.State, LibraryState.Online)
+            .SetProperty(l => l.StateReason, (string?)null)
+            .SetProperty(l => l.LastScanAt, now), ct);
         logger.LogInformation("Scanned library {Library}: {Missing} entries no longer found.", library.Id, missing.Count);
     }
 
     private async Task GoOfflineAsync(Library library, string reason, CancellationToken ct)
     {
-        var tracked = await db.Libraries.SingleAsync(l => l.Id == library.Id, ct);
-        tracked.State = LibraryState.Offline;
-        tracked.StateReason = reason;
-        await db.SaveChangesAsync(ct);
+        await db.Libraries.Where(l => l.Id == library.Id).ExecuteUpdateAsync(s => s
+            .SetProperty(l => l.State, LibraryState.Offline)
+            .SetProperty(l => l.StateReason, reason), ct);
     }
 
     private sealed record ScanState(DateTimeOffset StartedAt, List<string> Pending, List<string> Unreadable, int Done);

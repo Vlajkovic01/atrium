@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atrium.Data.Sqlite.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261113011459_Initial")]
+    [Migration("20261113013918_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -377,7 +377,7 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("StorageLocationId")
+                    b.Property<Guid?>("StorageLocationId")
                         .HasColumnType("TEXT");
 
                     b.Property<long>("UpdatedAt")
@@ -1139,8 +1139,7 @@ namespace Atrium.Data.Sqlite.Migrations
                     b.HasOne("Atrium.Core.Storage.StorageLocation", null)
                         .WithMany()
                         .HasForeignKey("StorageLocationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Atrium.Core.Identity.User", null)
                         .WithMany()

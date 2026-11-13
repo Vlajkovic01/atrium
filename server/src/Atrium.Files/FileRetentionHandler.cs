@@ -15,6 +15,7 @@ public sealed class FileRetentionHandler(
     AtriumDbContext db,
     TimeProvider time,
     FilesOptions options,
+    External.ExternalWriter external,
     ILogger<FileRetentionHandler> logger) : IJobHandler
 {
     public const string Type = "files.retention";
@@ -24,7 +25,8 @@ public sealed class FileRetentionHandler(
     public async Task RunAsync(JobContext context, CancellationToken ct)
     {
         var now = time.GetUtcNow();
-        var trash = await TrashService.ExpireAsync(db, now, options.TrashRetention, ct);
+        var trash = await TrashService.ExpireAsync(db, now, options.TrashRetention, ct)
+            + await TrashService.ExpireExternalAsync(db, external, now, options.TrashRetention, ct);
 
         var versionCutoff = now - options.VersionRetention;
         var versions = await db.NodeVersions.Where(v => v.CreatedAt < versionCutoff).ExecuteDeleteAsync(ct);
