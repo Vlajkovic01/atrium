@@ -11,6 +11,9 @@ public static class JobsSetup
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton(new JobOptions());
         services.TryAddSingleton<JobSignal>();
+        services.TryAddSingleton(_ => HardwareInfo.Detect());
+        services.TryAddSingleton<JobLimits>();
+        services.TryAddScoped<JobSettingsStore>();
         services.TryAddScoped<JobQueue>();
         services.TryAddSingleton<JobRunner>();
         services.TryAddSingleton<RecurringJobScheduler>();

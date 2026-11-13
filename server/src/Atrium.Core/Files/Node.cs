@@ -63,7 +63,54 @@ public sealed class Node : IVersioned
     /// </summary>
     public DateTimeOffset? TrashedAt { get; set; }
 
+    /// <summary>
+    /// True for a trashed node and everything below it, so lists across a
+    /// whole library (timeline, search) can leave the trash out without
+    /// walking up the tree. Maintained with <see cref="TrashedAt"/>.
+    /// </summary>
+    public bool InTrash { get; set; }
+
+    /// <summary>
+    /// In an external library, the path relative to the library's folder,
+    /// with forward slashes and the names exactly as on disk. Null in a
+    /// managed library and for the root.
+    /// </summary>
+    public string? ExternalPath { get; set; }
+
+    /// <summary>SHA-256 of <see cref="ExternalPath"/>, unique per library; a path can be too long to index itself.</summary>
+    public byte[]? ExternalPathHash { get; set; }
+
+    /// <summary>
+    /// When a scan last found an external file gone. The node is kept, with
+    /// its albums and metadata, until the retention ends: the folder may be
+    /// on a share that is down for a day (DESIGN.md 4.4).
+    /// </summary>
+    public DateTimeOffset? MissingSince { get; set; }
+
+    /// <summary>The start of the last scan that found this external entry. What a finished scan did not find is missing.</summary>
+    public DateTimeOffset? LastSeenAt { get; set; }
+
+    /// <summary>Photo or video, from the media type; null for anything else. Set when the node is saved.</summary>
+    public MediaKind? MediaKind { get; set; }
+
+    /// <summary>
+    /// When a photo or video was taken, as the local clock time where it was
+    /// taken, stored with a zero offset (D-034). The modification time until
+    /// metadata is read. Orders the timeline.
+    /// </summary>
+    public DateTimeOffset? CapturedAt { get; set; }
+
+    /// <summary>Case-folded name without diacritics, for search. Set when the node is saved.</summary>
+    public string SearchKey { get; set; } = string.Empty;
+
     public int Version { get; set; }
 
     public bool IsFolder => Kind == NodeKind.Folder;
+}
+
+/// <summary>What the photo timeline shows.</summary>
+public enum MediaKind
+{
+    Photo,
+    Video,
 }
