@@ -1,0 +1,356 @@
+import type { components } from "@atrium/shared";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
+
+import { api, call } from "../api.ts";
+import { Dialog } from "../components/Dialog.tsx";
+import { Icon } from "../components/Icon.tsx";
+import { Badge, Button, Card, Check, ErrorMessage, Field, Notice, PageHeader } from "../components/ui.tsx";
+import { formatDateTime } from "../i18n.ts";
+
+type Library = components["schemas"]["AdminLibraryView"];
+type Person = components["schemas"]["AdminUserView"];
+type PathCheck = components["schemas"]["CheckPathResponse"];
+
+const queryKey = ["admin-libraries"];
+
+/**
+ * Existing folders shown in Atrium without copying them (DESIGN.md 4.4).
+ * Adding one only reads the folder; removing one removes Atrium's index
+ * and leaves every file where it is.
+ */
+export function Libraries() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<unknown>(null);
+  const [removing, setRemoving] = useState<Library | null>(null);
+  const [editing, setEditing] = useState<Library | null>(null);
+  const libraries = useQuery({
+    queryKey,
+    queryFn: () => call(api.GET("/api/v1/admin/libraries")),
+    // A running scan shows its progress.
+    refetchInterval: (query) => (query.state.data?.some((l) => l.scan) ? 1500 : false),
+  });
+  const people = useQuery({
+    queryKey: ["people"],
+    queryFn: () => call(api.GET("/api/v1/users", { params: { query: { limit: 200 } } })),
+  });
+
+  const refresh = (): Promise<void> => queryClient.invalidateQueries({ queryKey });
+
+  const scan = async (library: Library): Promise<void> => {
+    setError(null);
+    try {
+      await call(api.POST("/api/v1/admin/libraries/{id}/scan", { params: { path: { id: library.id } } }));
+    } catch (e) {
+      setError(e);
+    } finally {
+      await refresh();
+    }
+  };
+
+  return (
+    <>
+      <PageHeader title={t("libraries.heading")} lead={t("libraries.body")} />
+      <ErrorMessage error={error} />
+      {libraries.isPending ? <p className="muted">{t("common.loading")}</p> : null}
+      {libraries.isError ? <ErrorMessage error={libraries.error} /> : null}
+      {libraries.data?.length === 0 ? <p className="muted">{t("libraries.empty")}</p> : null}
+      {libraries.data && libraries.data.length > 0 ? (
+        <ul className="rows">
+          {libraries.data.map((library) => (
+            <li key={library.id} className="row is-stacked">
+              <div className="row-line">
+                <span className={library.state === "online" ? "row-icon is-accent" : "row-icon"}>
+                  <Icon name={library.readOnly ? "lock" : "folder"} size={20} />
+                </span>
+                <div className="row-main">
+                  <p className="row-title">
+                    {library.name}
+                    {library.state === "online" ? (
+                      <Badge tone="accent">{t("libraries.online")}</Badge>
+                    ) : (
+                      <Badge tone="danger">{t("libraries.offline")}</Badge>
+                    )}
+                    {library.readOnly ? <Badge tone="muted">{t("libraries.readOnly")}</Badge> : null}
+                  </p>
+                  <p className="row-meta">
+                    <span className="path">{library.path}</span>
+                    <span className="dot" />
+                    {t("libraries.files", { count: Number(library.fileCount) })}
+                    <span className="dot" />
+                    {t("libraries.people", { count: library.userIds.length })}
+                    {library.lastScanAt ? (
+                      <>
+                        <span className="dot" />
+                        {t("libraries.lastScan", { when: formatDateTime(library.lastScanAt) })}
+                      </>
+                    ) : null}
+                  </p>
+                </div>
+                <div className="row-actions">
+                  <Button size="sm" icon="refresh" onClick={() => void scan(library)} disabled={library.scan !== null}>
+                    {library.scan
+                      ? t("libraries.scanning", { percent: Math.round(Number(library.scan.progress ?? 0) * 100) })
+                      : t("libraries.scan")}
+                  </Button>
+                  <Button size="sm" icon="users" onClick={() => setEditing(library)}>
+                    {t("libraries.access")}
+                  </Button>
+                  <Button size="sm" variant="ghost" icon="trash" onClick={() => setRemoving(library)}>
+                    {t("libraries.remove")}
+                  </Button>
+                </div>
+              </div>
+              {library.state === "offline" && library.stateReason ? (
+                <div className="row-form">
+                  <Notice kind="warning">{t(`errors.${library.stateReason}`)}</Notice>
+                </div>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      <Card title={t("libraries.addHeading")} icon="plus">
+        <AddLibraryForm people={people.data?.items ?? []} onAdded={refresh} />
+      </Card>
+
+      {editing ? (
+        <AccessDialog
+          library={editing}
+          people={people.data?.items ?? []}
+          onClose={() => setEditing(null)}
+          onSaved={async () => {
+            setEditing(null);
+            await refresh();
+          }}
+        />
+      ) : null}
+      {removing ? (
+        <RemoveDialog
+          library={removing}
+          onClose={() => setRemoving(null)}
+          onRemoved={async () => {
+            setRemoving(null);
+            await refresh();
+          }}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function PeopleChecks(props: {
+  readonly people: readonly Person[];
+  readonly selected: ReadonlySet<string>;
+  readonly onChange: (selected: Set<string>) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <fieldset className="choices">
+      <legend>{t("libraries.whoSees")}</legend>
+      {props.people.map((person) => (
+        <Check
+          key={person.id}
+          label={person.displayName === person.name ? person.name : `${person.displayName} (${person.name})`}
+          checked={props.selected.has(person.id)}
+          onChange={(event) => {
+            const next = new Set(props.selected);
+            if (event.target.checked) {
+              next.add(person.id);
+            } else {
+              next.delete(person.id);
+            }
+
+            props.onChange(next);
+          }}
+        />
+      ))}
+    </fieldset>
+  );
+}
+
+function AddLibraryForm({
+  people,
+  onAdded,
+}: {
+  readonly people: readonly Person[];
+  readonly onAdded: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const [name, setName] = useState("");
+  const [path, setPath] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [check, setCheck] = useState<PathCheck | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [busy, setBusy] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const tryPath = async (): Promise<void> => {
+    setError(null);
+    setCheck(null);
+    try {
+      setCheck(await call(api.POST("/api/v1/admin/libraries/check-path", { body: { path } })));
+    } catch (e) {
+      setError(e);
+    }
+  };
+
+  const submit = async (event: FormEvent): Promise<void> => {
+    event.preventDefault();
+    setBusy(true);
+    setError(null);
+    setAdded(false);
+    try {
+      await call(api.POST("/api/v1/admin/libraries", { body: { name, path, userIds: [...selected] } }));
+      setName("");
+      setPath("");
+      setSelected(new Set());
+      setCheck(null);
+      setAdded(true);
+      await onAdded();
+    } catch (e) {
+      setError(e);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={(event) => void submit(event)}>
+      <Notice kind="info">{t("libraries.addNote")}</Notice>
+      {added ? <Notice kind="ok">{t("libraries.added")}</Notice> : null}
+      <ErrorMessage error={error} />
+      <Field
+        label={t("libraries.name")}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+        maxLength={128}
+      />
+      <Field
+        label={t("libraries.path")}
+        value={path}
+        onChange={(e) => {
+          setPath(e.target.value);
+          setCheck(null);
+        }}
+        required
+        spellCheck={false}
+        placeholder="/photos/screenshots"
+        help={t("libraries.pathHelp")}
+      />
+      {check ? (
+        check.ok ? (
+          <Notice kind="ok">{t("libraries.pathOk", { count: Number(check.entryCount ?? 0) })}</Notice>
+        ) : (
+          <Notice kind="error">{t(`errors.${check.errorCode ?? "library.path_unreadable"}`)}</Notice>
+        )
+      ) : null}
+      <PeopleChecks people={people} selected={selected} onChange={setSelected} />
+      <div className="actions">
+        <Button icon="check" onClick={() => void tryPath()} disabled={path.trim() === ""}>
+          {t("libraries.tryPath")}
+        </Button>
+        <Button type="submit" variant="primary" disabled={busy}>
+          {t("common.add")}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function AccessDialog(props: {
+  readonly library: Library;
+  readonly people: readonly Person[];
+  readonly onClose: () => void;
+  readonly onSaved: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const [selected, setSelected] = useState<Set<string>>(new Set(props.library.userIds));
+  const [error, setError] = useState<unknown>(null);
+
+  const save = async (): Promise<void> => {
+    setError(null);
+    try {
+      await call(
+        api.PATCH("/api/v1/admin/libraries/{id}", {
+          params: { path: { id: props.library.id } },
+          headers: { "If-Match": `"${props.library.version}"` },
+          body: { name: null, userIds: [...selected] },
+        }),
+      );
+      await props.onSaved();
+    } catch (e) {
+      setError(e);
+    }
+  };
+
+  return (
+    <Dialog
+      title={t("libraries.accessTitle", { name: props.library.name })}
+      onClose={props.onClose}
+      actions={
+        <>
+          <Button onClick={props.onClose}>{t("common.cancel")}</Button>
+          <Button variant="primary" onClick={() => void save()}>
+            {t("common.save")}
+          </Button>
+        </>
+      }
+    >
+      <ErrorMessage error={error} />
+      <PeopleChecks people={props.people} selected={selected} onChange={setSelected} />
+    </Dialog>
+  );
+}
+
+function RemoveDialog(props: {
+  readonly library: Library;
+  readonly onClose: () => void;
+  readonly onRemoved: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const [typed, setTyped] = useState("");
+  const [error, setError] = useState<unknown>(null);
+
+  const remove = async (): Promise<void> => {
+    setError(null);
+    try {
+      await call(
+        api.DELETE("/api/v1/admin/libraries/{id}", {
+          params: { path: { id: props.library.id }, query: { confirmName: typed } },
+        }),
+      );
+      await props.onRemoved();
+    } catch (e) {
+      setError(e);
+    }
+  };
+
+  return (
+    <Dialog
+      title={t("libraries.removeTitle", { name: props.library.name })}
+      onClose={props.onClose}
+      actions={
+        <>
+          <Button onClick={props.onClose}>{t("common.cancel")}</Button>
+          <Button variant="danger" onClick={() => void remove()} disabled={typed !== props.library.name}>
+            {t("libraries.remove")}
+          </Button>
+        </>
+      }
+    >
+      <p>{t("libraries.removeBody")}</p>
+      <ErrorMessage error={error} />
+      <Field
+        label={t("libraries.typeName", { name: props.library.name })}
+        value={typed}
+        onChange={(e) => setTyped(e.target.value)}
+        autoComplete="off"
+      />
+    </Dialog>
+  );
+}

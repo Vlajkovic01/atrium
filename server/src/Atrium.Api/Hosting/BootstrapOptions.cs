@@ -24,15 +24,24 @@ public sealed class BootstrapOptions
     public const string DatabaseProviderKey = "ATRIUM_DB_PROVIDER";
     public const string DatabaseConnectionKey = "ATRIUM_DB_CONNECTION";
     public const string TrustedProxiesKey = "ATRIUM_TRUSTED_PROXIES";
+    public const string CacheDirKey = "ATRIUM_CACHE_DIR";
 
     private BootstrapOptions(
-        string configDir, DatabaseProvider provider, string connectionString, IReadOnlyList<IPNetwork> trustedProxies)
+        string configDir, DatabaseProvider provider, string connectionString, IReadOnlyList<IPNetwork> trustedProxies, string cacheDir)
     {
         ConfigDir = configDir;
         DatabaseProvider = provider;
         ConnectionString = connectionString;
         TrustedProxies = trustedProxies;
+        CacheDir = cacheDir;
     }
+
+    /// <summary>
+    /// Thumbnails and other data that can be deleted at any time and is made
+    /// again (DESIGN.md 3.4). <c>/cache</c> in the image; next to the
+    /// database by default.
+    /// </summary>
+    public string CacheDir { get; }
 
     /// <summary>
     /// Addresses of reverse proxies whose forwarding headers are believed
@@ -56,6 +65,7 @@ public sealed class BootstrapOptions
         var configDir = Path.GetFullPath(NonEmpty(configuration[ConfigDirKey]) ?? ".atrium");
         var connection = NonEmpty(configuration[DatabaseConnectionKey]);
         var proxies = ParseProxies(NonEmpty(configuration[TrustedProxiesKey]));
+        var cacheDir = Path.GetFullPath(NonEmpty(configuration[CacheDirKey]) ?? Path.Combine(configDir, "cache"));
 
         var providerName = NonEmpty(configuration[DatabaseProviderKey]) ?? "sqlite";
         switch (providerName.ToLowerInvariant())
@@ -65,7 +75,7 @@ public sealed class BootstrapOptions
                 {
                     DataSource = Path.Combine(configDir, "atrium.db"),
                 }.ToString();
-                return new BootstrapOptions(configDir, DatabaseProvider.Sqlite, connection, proxies);
+                return new BootstrapOptions(configDir, DatabaseProvider.Sqlite, connection, proxies, cacheDir);
 
             case "postgres" or "postgresql":
                 if (connection is null)
@@ -75,7 +85,7 @@ public sealed class BootstrapOptions
                         "Set it to a PostgreSQL connection string.");
                 }
 
-                return new BootstrapOptions(configDir, DatabaseProvider.Postgres, connection, proxies);
+                return new BootstrapOptions(configDir, DatabaseProvider.Postgres, connection, proxies, cacheDir);
 
             default:
                 throw new InvalidOperationException(

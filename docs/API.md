@@ -109,9 +109,10 @@ approve pairings or create link codes.
 | GET, PATCH, DELETE | `/storage-locations/{id}` | Not built yet. Delete only when no library uses it |
 | POST | `/storage-locations/{id}/check` | Verify the identity, then the probe; records online or offline |
 | GET, POST | `/libraries` | `GET` built in Phase 2: the caller's libraries, with the personal one created on first use and its root folder ID. A session approved with "hide my personal files" does not see it; a read-only session sees every library as read-only |
-| GET, PATCH, DELETE | `/libraries/{id}` | Deleting an external library removes only the index |
-| GET, PUT | `/libraries/{id}/grants` | Who can read or write |
-| POST | `/libraries/{id}/scan` | Enqueue a scan job |
+| GET, POST | `/admin/libraries` | Built in Phase 3. Non-personal libraries only (D-004), with path, state, file count, who has access and a running scan. `POST` adds an external folder: `name`, `path`, `userIds`; it is checked first (D-035) and scanned at once |
+| POST | `/admin/libraries/check-path` | Try a folder before adding it. Reads only; always 200 with `ok`, `errorCode` and the number of entries |
+| PATCH, DELETE | `/admin/libraries/{id}` | Rename or replace `userIds` (`If-Match`). Delete needs `confirmName` and removes only Atrium's index, never a file |
+| POST | `/admin/libraries/{id}/scan` | Enqueue a scan job; returns 202 with the job |
 
 ## Files and folders (Phase 2)
 

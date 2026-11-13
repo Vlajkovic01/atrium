@@ -1035,10 +1035,98 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/libraries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListAdminLibraries"];
+        put?: never;
+        post: operations["CreateExternalLibrary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/libraries/check-path": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Tries a folder before adding it as a library. Reads only; always 200 with the outcome inside. */
+        post: operations["CheckLibraryPath"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/libraries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Removes an external library from Atrium. Its folder and files are not touched. confirmName must be the library's name. */
+        delete: operations["DeleteLibrary"];
+        options?: never;
+        head?: never;
+        /** @description Rename, or replace who may see the library. Requires If-Match with the version read. */
+        patch: operations["UpdateLibrary"];
+        trace?: never;
+    };
+    "/api/v1/admin/libraries/{id}/scan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ScanLibrary"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdminLibraryView: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["LibraryKind"];
+            mode: components["schemas"]["LibraryMode"];
+            path: null | string;
+            readOnly: boolean;
+            state: components["schemas"]["LibraryState"];
+            stateReason: null | string;
+            /** Format: date-time */
+            lastScanAt: null | string;
+            /** Format: int32 */
+            fileCount: number | string;
+            userIds: string[];
+            /** Format: date-time */
+            writesEnabledAt: null | string;
+            scan: null | components["schemas"]["JobInfoBrief"];
+            /** Format: int32 */
+            version: number | string;
+        };
         AdminUserView: {
             /** Format: uuid */
             id: string;
@@ -1111,6 +1199,15 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        CheckPathRequest: {
+            path: null | string;
+        };
+        CheckPathResponse: {
+            ok: boolean;
+            errorCode: null | string;
+            /** Format: int32 */
+            entryCount: null | number | string;
+        };
         /** @enum {unknown} */
         ConflictPolicy: "fail" | "rename" | "replace" | null;
         ContentUrlRequest: {
@@ -1122,6 +1219,11 @@ export interface components {
             /** Format: uuid */
             parentId: string;
             name: null | string;
+        };
+        CreateExternalLibraryRequest: {
+            name: string;
+            path: string;
+            userIds: null | string[];
         };
         CreateFirstAdminRequest: {
             name: string;
@@ -1254,6 +1356,13 @@ export interface components {
             /** Format: date-time */
             finishedAt: null | string;
         };
+        JobInfoBrief: {
+            /** Format: uuid */
+            id: string;
+            state: components["schemas"]["JobState"];
+            /** Format: double */
+            progress: null | number | string;
+        };
         JobPage: {
             items: components["schemas"]["JobInfo"][];
             nextCursor: null | string;
@@ -1277,11 +1386,14 @@ export interface components {
             /** Format: uuid */
             rootNodeId: string;
             readOnly: boolean;
+            state: components["schemas"]["LibraryState"];
         };
         /** @enum {unknown} */
         LibraryKind: "personal" | "shared" | "photos" | "movies" | "shows";
         /** @enum {unknown} */
         LibraryMode: "managed" | "external";
+        /** @enum {unknown} */
+        LibraryState: "online" | "offline";
         LinkCodeResponse: {
             code: string;
             /** Format: int32 */
@@ -1513,6 +1625,10 @@ export interface components {
             /** Format: date-time */
             deleteAt: string;
             location: components["schemas"]["LocationSegment"][];
+        };
+        UpdateLibraryRequest: {
+            name: null | string;
+            userIds: null | string[];
         };
         UpdateNodeRequest: {
             name: null | string;
@@ -4347,6 +4463,216 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BackgroundWorkInfo"];
+                };
+            };
+        };
+    };
+    ListAdminLibraries: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLibraryView"][];
+                };
+            };
+        };
+    };
+    CreateExternalLibrary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExternalLibraryRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLibraryView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    CheckLibraryPath: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckPathRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckPathResponse"];
+                };
+            };
+        };
+    };
+    DeleteLibrary: {
+        parameters: {
+            query?: {
+                confirmName?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UpdateLibrary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLibraryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLibraryView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Precondition Failed */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Precondition Required */
+            428: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ScanLibrary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobStarted"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
         };

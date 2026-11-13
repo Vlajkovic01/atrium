@@ -328,6 +328,7 @@ namespace Atrium.Data.Postgres.Migrations
                     ExternalPath = table.Column<string>(type: "character varying(4096)", maxLength: 4096, nullable: true),
                     ExternalPathHash = table.Column<byte[]>(type: "bytea", maxLength: 32, nullable: true),
                     MissingSince = table.Column<long>(type: "bigint", nullable: true),
+                    LastSeenAt = table.Column<long>(type: "bigint", nullable: true),
                     MediaKind = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: true),
                     CapturedAt = table.Column<long>(type: "bigint", nullable: true),
                     SearchKey = table.Column<string>(type: "character varying(510)", maxLength: 510, nullable: false),

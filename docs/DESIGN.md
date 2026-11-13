@@ -449,6 +449,13 @@ verified upload.
   removed from the index. Vanished files are marked missing and kept, with
   their watch state and metadata, for a retention period. A network share
   that drops for a day must not wipe a library's history.
+- Built in Phase 3 for photo folders, read-only (D-035): an admin adds a
+  folder path, which is checked against Atrium's own directories, storage
+  locations and other libraries, and grants access. The `library.scan`
+  job walks it with a checkpoint, skips links and hidden or system
+  entries, and is repeated every six hours. "Most files vanished" means
+  more than half and at least 50. Missing entries leave the index after
+  the trash retention. Content is read from disk at every request.
 
 ### 4.5 Consistency checks
 

@@ -29,9 +29,19 @@ public sealed class FileRetentionHandler(
         var versionCutoff = now - options.VersionRetention;
         var versions = await db.NodeVersions.Where(v => v.CreatedAt < versionCutoff).ExecuteDeleteAsync(ct);
 
-        if (trash + versions > 0)
+        // External files gone from their folder for as long as the trash
+        // keeps things leave the index, with their albums and metadata.
+        // Only rows: the file itself was already gone.
+        var missingCutoff = now - options.TrashRetention;
+        var missing = await db.Nodes.Where(n => n.MissingSince != null && n.MissingSince < missingCutoff).ExecuteDeleteAsync(ct);
+
+        if (trash + versions + missing > 0)
         {
-            logger.LogInformation("Retention removed {Trash} trashed items and {Versions} old versions.", trash, versions);
+            logger.LogInformation(
+                "Retention removed {Trash} trashed items, {Versions} old versions and {Missing} long-missing external entries.",
+                trash,
+                versions,
+                missing);
         }
     }
 }

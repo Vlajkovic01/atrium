@@ -328,6 +328,7 @@ namespace Atrium.Data.Sqlite.Migrations
                     ExternalPath = table.Column<string>(type: "TEXT", maxLength: 4096, nullable: true),
                     ExternalPathHash = table.Column<byte[]>(type: "BLOB", maxLength: 32, nullable: true),
                     MissingSince = table.Column<long>(type: "INTEGER", nullable: true),
+                    LastSeenAt = table.Column<long>(type: "INTEGER", nullable: true),
                     MediaKind = table.Column<string>(type: "TEXT", maxLength: 32, nullable: true),
                     CapturedAt = table.Column<long>(type: "INTEGER", nullable: true),
                     SearchKey = table.Column<string>(type: "TEXT", maxLength: 510, nullable: false),
