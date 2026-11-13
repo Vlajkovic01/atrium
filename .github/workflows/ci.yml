@@ -136,9 +136,19 @@ jobs:
       # The same command a person installing Atrium runs, building from
       # source. --wait returns only when the container reports healthy,
       # which exercises the image's own health check.
+      - name: Build the image
+        working-directory: deploy
+        run: docker compose build
+
+      # libvips, its HEIC decoder, FFmpeg and ffprobe, tried for real inside
+      # the image before the server starts.
+      - name: The media tools work in the image
+        working-directory: deploy
+        run: docker compose run --rm --no-deps atrium --check-media
+
       - name: Start with Compose
         working-directory: deploy
-        run: docker compose up --detach --build --wait --wait-timeout 180
+        run: docker compose up --detach --wait --wait-timeout 180
 
       - name: The server answers and serves the web app
         run: |
@@ -148,13 +158,6 @@ jobs:
           curl --fail --silent --show-error http://localhost:8080/ | grep --quiet '<div id="root">'
           curl --fail --silent --show-error --head http://localhost:8080/ | grep --ignore-case --quiet 'content-security-policy'
 
-      - name: The image has the media tools, with HEIC support
-        working-directory: deploy
-        run: |
-          set -euo pipefail
-          docker compose exec --no-TTY atrium ffprobe -version
-          docker compose exec --no-TTY atrium sh -c 'ls /usr/lib/*/libvips.so.42'
-          docker compose exec --no-TTY atrium sh -c 'ls /usr/lib/*/libheif/plugins/ | grep -i de265'
 
       - name: The server does not run as root
         working-directory: deploy
@@ -242,4 +245,7 @@ jobs:
       - name: Show logs if something failed
         if: failure()
         working-directory: deploy
-        run: docker compose logs
+        run: |
+          docker compose ps --all
+          docker inspect --format 'exit code {{.State.ExitCode}}, restarts {{.RestartCount}}, error "{{.State.Error}}"' atrium-atrium-1 || true
+          docker compose logs
