@@ -759,3 +759,31 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   until closed or fixed.
 - Alternative considered: notifications in the browser's storage only
   (simpler, but not on other devices and lost with the browser's data).
+
+## D-046 Development builds are published as "edge", also to Docker Hub (Owner, 2026-11-15)
+
+- Owner's request: a Docker action that pushes to Docker Hub, where the
+  owner has an account. Owner's choice: on every merge to master, under
+  the tag `edge`.
+- Supersedes one consequence of D-030 ("nothing is published before the
+  release"). The rest of D-030 stands: no version tags and no release
+  before Phase 12.
+- The publish workflow runs on a merge to master, on a version tag and
+  by hand. Master gives `edge` and `sha-<commit>`; a version tag gives
+  `1.2.3`, `1.2` and `latest`. Because there is no version tag before
+  the release, `latest` does not exist until then, so nobody who follows
+  the installation guide gets a development build by accident.
+- Registries: GitHub's (as before, with the built-in token) and Docker
+  Hub, as `<DOCKERHUB_USERNAME>/atrium`. Docker Hub needs the repository
+  variable `DOCKERHUB_USERNAME` and the secret `DOCKERHUB_TOKEN`, an
+  access token limited to read and write, never the account password.
+  Without the variable the Docker Hub steps are skipped and the workflow
+  still succeeds.
+- Warning that goes with `edge`: until the release the database of a
+  development build cannot be upgraded by a later one whenever the
+  schema changed (D-026). An `edge` install is for trying Atrium, not
+  for keeping files one cannot lose.
+- Master is protected, so everything that reaches it has passed CI; the
+  workflow does not run the tests again. Alternatives considered: only
+  by hand (nothing published unless asked), only on version tags
+  (nothing until the release).
