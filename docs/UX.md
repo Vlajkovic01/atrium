@@ -138,6 +138,27 @@ and states the count and size.
 
 ### Photos (Phase 3)
 
+Built in Phase 3, with these details settled while building it:
+
+- Photos sits under Files in the sidebar, with three tabs: Timeline,
+  Albums and Search.
+- The scrubber lists years and months with photos; choosing a month
+  shows the timeline from that month back, with "Back to the newest".
+  On a phone the scrubber is hidden.
+- Selecting: the round check on a tile, or Ctrl, Cmd or Shift with a
+  click; once something is selected a click selects. The bar offers Add
+  to album, Download (one ZIP), Move to trash and Clear selection.
+- The viewer shows the large image (made when first opened) or plays the
+  original video; arrows step, Escape closes, "i" or Information shows
+  when it was taken, the camera, size, length and format. In an album the
+  viewer also offers Make cover.
+- Search reads a year or a month and year in English or Serbian ("maj
+  2024", "avg 2022") out of the text and shows the range as a chip; type
+  chips narrow to photos, videos, documents or folders. Photos and videos
+  show as a grid, other results as a list leading to their folder.
+- Videos show their length on the tile. Thumbnails are made on the
+  server; until a video's preview exists, the tile shows its first frame.
+
 - **Timeline.** A justified grid grouped by day, with a month and year
   scrubber on the right that works instantly even with hundreds of
   thousands of items. Multi-select by click and drag or shift-click.

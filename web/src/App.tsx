@@ -13,6 +13,9 @@ import { BackgroundWork } from "./pages/BackgroundWork.tsx";
 import { FileBrowser } from "./files/FileBrowser.tsx";
 import { Trash } from "./files/Trash.tsx";
 import { UploadsProvider } from "./files/uploads.tsx";
+import { AlbumPage, Albums } from "./photos/Albums.tsx";
+import { Photos } from "./photos/Photos.tsx";
+import { Search } from "./photos/Search.tsx";
 import { Devices } from "./pages/Devices.tsx";
 import { Libraries } from "./pages/Libraries.tsx";
 import { People } from "./pages/People.tsx";
@@ -74,6 +77,7 @@ function Shell() {
 
   const personal: readonly NavItem[] = [
     { to: "/files", label: t("nav.files"), icon: "folder" },
+    { to: "/photos", label: t("nav.photos"), icon: "image" },
     { to: "/trash", label: t("nav.trash"), icon: "trash" },
     { to: "/devices", label: t("nav.devices"), icon: "devices" },
     { to: "/account", label: t("nav.account"), icon: "user" },
@@ -131,6 +135,10 @@ function Shell() {
             <Routes>
               <Route path="/files" element={<FileBrowser />} />
               <Route path="/files/:folderId" element={<FileBrowser />} />
+              <Route path="/photos" element={<Photos />} />
+              <Route path="/photos/albums" element={<Albums />} />
+              <Route path="/photos/albums/:albumId" element={<AlbumPage />} />
+              <Route path="/search" element={<Search />} />
               <Route path="/trash" element={<Trash />} />
               <Route path="/devices" element={<Devices />} />
               {/* The address a device's QR code points at: opens the approval with the code filled in. */}
