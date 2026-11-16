@@ -111,6 +111,6 @@ test("search finds the picture by name and by type", async ({ page }) => {
 
   await page.getByRole("searchbox").fill("");
   await page.getByRole("button", { name: "Documents" }).click();
-  await expect(page.getByRole("link", { name: "notes.txt" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "notes.txt" })).toBeVisible();
   await expect(page.getByRole("button", { name: "sunset.png", exact: true })).toHaveCount(0);
 });

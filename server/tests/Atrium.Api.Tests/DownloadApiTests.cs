@@ -177,6 +177,25 @@ public sealed class DownloadApiTests : IDisposable
     }
 
     [Fact]
+    public async Task A_pdf_shown_inline_may_be_framed_by_this_site_only_and_loads_nothing_else()
+    {
+        var (token, library) = await SignInAsync("ana");
+        var pdf = await AddFileAsync("ana", library.RootNodeId, "lease.pdf", "%PDF-1.4", "application/pdf");
+        var text = await AddFileAsync("ana", library.RootNodeId, "notes.txt", "hello", "text/plain");
+
+        var shown = await GetAsync(await SignedUrlAsync(token, pdf.Id, new { inline = true }), null);
+        var plain = await GetAsync(await SignedUrlAsync(token, text.Id, new { inline = true }), null);
+
+        Assert.Equal("inline", shown.Content.Headers.ContentDisposition!.DispositionType);
+        Assert.Equal("SAMEORIGIN", Assert.Single(shown.Headers.GetValues("X-Frame-Options")));
+        Assert.Equal("default-src 'none'; frame-ancestors 'self'", Assert.Single(shown.Headers.GetValues("Content-Security-Policy")));
+
+        // Everything else stays sandboxed and unframeable.
+        Assert.StartsWith("sandbox", Assert.Single(plain.Headers.GetValues("Content-Security-Policy")));
+        Assert.Equal("DENY", Assert.Single(plain.Headers.GetValues("X-Frame-Options")));
+    }
+
+    [Fact]
     public async Task Another_users_content_is_not_found_and_cannot_be_signed()
     {
         var (anaToken, library) = await SignInAsync("ana");

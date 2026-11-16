@@ -867,5 +867,11 @@
     "label": "Vaš meni",
     "account": "Nalog i podešavanja",
     "open": "{name}: vaš meni"
+  },
+  "preview": {
+    "details": "Detalji",
+    "none": "Ova vrsta fajla ne može da se prikaže ovde. Preuzmite ga da biste ga otvorili na svom uređaju.",
+    "office": "Word, Excel i PowerPoint fajlovi još ne mogu da se prikažu ovde. Preuzmite fajl da biste ga otvorili na svom uređaju.",
+    "showInFolder": "Prikaži u folderu"
   }
 }

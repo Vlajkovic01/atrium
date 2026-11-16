@@ -71,6 +71,13 @@ test("an admin adds an existing folder and every file in it is there to browse",
   await page.getByRole("button", { name: "2024", exact: true }).click();
   await expect(page.getByRole("button", { name: "lease.pdf", exact: true })).toBeVisible();
 
+  // Any file opens where it is: the PDF in the browser's own viewer.
+  await page.getByRole("button", { name: "lease.pdf", exact: true }).click();
+  const preview = page.getByRole("dialog", { name: "lease.pdf" });
+  await expect(preview.locator("iframe")).toHaveAttribute("src", /\/content\?/);
+  await page.keyboard.press("Escape");
+  await expect(preview).toHaveCount(0);
+
   // Nothing can be changed yet, and the page says why and where.
   await expect(page.getByText(/nothing in it can be changed here yet/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Open Libraries" })).toBeVisible();

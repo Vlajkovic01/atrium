@@ -3242,3 +3242,55 @@ a {
     left: auto;
   }
 }
+
+/* ---- Showing any file (D-044) -------------------------------------------- */
+
+.preview-frame {
+  width: min(100%, 64rem);
+  height: 100%;
+  border: none;
+  border-radius: var(--radius-s);
+  background: #fff;
+}
+
+.preview-text {
+  width: min(100%, 64rem);
+  max-height: 100%;
+  margin: 0;
+  padding: 1.25rem 1.5rem;
+  overflow: auto;
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  color: var(--ink);
+  font:
+    0.88rem/1.55 ui-monospace,
+    "Cascadia Code",
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 4;
+}
+
+.preview-none,
+.preview-audio {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  max-width: 28rem;
+  padding: 2rem;
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: center;
+}
+
+.preview-audio audio {
+  width: min(24rem, 80vw);
+}
+
+.viewer-stage.is-pdf,
+.viewer-stage.is-text {
+  align-items: stretch;
+  padding-block: 1rem;
+}

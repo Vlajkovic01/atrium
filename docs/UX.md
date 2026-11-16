@@ -114,6 +114,15 @@ default" undoes the arrangement; an admin can make theirs the default
 for everyone. Administration always stays visible to admins. On a phone
 the bottom bar shows the built-in entries only.
 
+### Opening a file (Phase 3, D-044)
+
+Opening a file anywhere (Files, search, a view) shows it in a
+full-window viewer: pictures, playable video and audio, PDF in the
+browser's viewer, text and code. Arrows go to the previous and next file,
+Escape closes; Download and Details are in the top bar. Other kinds,
+Office files included for now, say they cannot be shown yet and offer the
+download. A file in search results or a view also links to its folder.
+
 ### Files (Phase 2)
 
 Built in Phase 2 as described below, with these details settled while
