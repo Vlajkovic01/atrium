@@ -124,6 +124,19 @@ pnpm exec expo prebuild --platform android
 cd android && ./gradlew assembleRelease
 ```
 
+To look at the app's screens without a phone, `preview` runs them in a
+browser at a phone's size against a real server and saves a picture of
+each into `screenshots/mobile/`:
+
+```
+dotnet build server/src/Atrium.Api --configuration Release
+pnpm --filter @atrium/mobile run preview
+```
+
+It shows layout, texts, colours and the flow between screens. What exists
+only on a phone (the camera, the Keystore, background work) is not part
+of it; that is checked on a phone.
+
 iOS is not built yet (D-048).
 
 ## Contributing

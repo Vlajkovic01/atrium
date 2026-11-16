@@ -15,3 +15,5 @@ dist/
 .expo/
 mobile/android/
 mobile/ios/
+mobile/dist-web/
+test-results/

@@ -147,7 +147,58 @@
     "welcome": {
       "heading": "Vaši fajlovi, na vašem serveru",
       "body": "Atrium prikazuje fajlove, fotografije i video snimke koji se čuvaju na serveru koji vi kontrolišete. Ništa se ne čuva nigde drugde.",
-      "how": "Za povezivanje ćete skenirati kod prikazan u Atrium web aplikaciji pod Uređaji, ili upisati adresu svog servera."
+      "scan": "Skeniraj kod",
+      "type": "Upiši adresu servera",
+      "where": "Kod se nalazi u Atrium web aplikaciji: Uređaji, Poveži telefon. Skeniranjem se prijavljujete bez kucanja lozinke."
+    },
+    "address": {
+      "heading": "Adresa vašeg servera",
+      "body": "Adresa na kojoj otvarate Atrium u pregledaču.",
+      "label": "Adresa",
+      "placeholder": "192.168.1.20:8080 ili cloud.example.com",
+      "checking": "Tražim server…",
+      "empty": "Prvo upišite adresu servera.",
+      "invalid": "To ne izgleda kao adresa. Adresa je ime ili broj, na primer 192.168.1.20:8080 ili cloud.example.com."
+    },
+    "probe": {
+      "unreachable": "Na toj adresi se ništa ne odaziva. Proverite adresu i da li je telefon na mreži sa koje se server vidi.",
+      "not_atrium": "Na toj adresi se nešto odaziva, ali to nije Atrium server. Proverite adresu i port.",
+      "setup_incomplete": "Ovaj server još nije podešen. Otvorite ga u pregledaču i prvo završite podešavanje.",
+      "client_too_old": "Ovom serveru je potrebna novija verzija aplikacije. Ažurirajte aplikaciju i pokušajte ponovo."
+    },
+    "insecure": {
+      "heading": "Ovaj server ne može da se koristi odavde",
+      "body": "Adresa {server} koristi običan HTTP i nije na vašoj lokalnoj mreži. Preko običnog HTTP-a vašu lozinku i fajlove mogao bi da pročita bilo ko usput, pa se aplikacija ne povezuje.",
+      "local": "Na kućnoj mreži običan HTTP radi, jer ne izlazi iz kuće.",
+      "fix": "Da biste do servera došli spolja, dajte mu HTTPS: ugrađeni HTTPS servis, svoj reverse proxy ili tunel. Uputstvo za instalaciju objašnjava svaki.",
+      "guide": "Otvori uputstvo za instalaciju",
+      "other": "Probaj drugu adresu"
+    },
+    "scan": {
+      "heading": "Skeniraj kod",
+      "body": "Usmerite kameru na kod prikazan u Atrium web aplikaciji pod Uređaji, Poveži telefon.",
+      "permissionHeading": "Za skeniranje je potrebna kamera",
+      "permissionBody": "Atrium koristi kameru samo da pročita kod. Ništa se ne snima niti šalje.",
+      "allow": "Dozvoli kameru",
+      "openSettings": "Otvori podešavanja",
+      "unavailable": "Ovaj uređaj nema kameru koju aplikacija može da koristi. Umesto toga upišite adresu servera.",
+      "notACode": "To nije Atrium kod za povezivanje. Skenirajte kod pod Uređaji, Poveži telefon.",
+      "connecting": "Povezivanje…",
+      "again": "Skeniraj ponovo"
+    },
+    "signIn": {
+      "server": "Prijava na {server}"
+    },
+    "home": {
+      "heading": "Povezano",
+      "signedInAs": "{name} na {server}",
+      "servers": "Serveri",
+      "current": "U upotrebi",
+      "use": "Koristi ovaj server",
+      "addServer": "Dodaj još jedan server",
+      "signOut": "Odjavi se sa ovog servera",
+      "signOutBody": "Ovaj telefon će zaboraviti {server}. Fajlovi na serveru se ne diraju.",
+      "soon": "Fajlovi i fotografije stižu sa sledećim verzijama aplikacije."
     },
     "about": {
       "version": "Verzija {version}"

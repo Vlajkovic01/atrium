@@ -147,7 +147,58 @@
     "welcome": {
       "heading": "Your files, on your own server",
       "body": "Atrium shows the files, photos and videos kept on a server you control. Nothing is stored anywhere else.",
-      "how": "To connect, you will scan the code shown in the Atrium web app under Devices, or type your server's address."
+      "scan": "Scan the code",
+      "type": "Type the server's address",
+      "where": "The code is in the Atrium web app: Devices, Connect a phone. Scanning it signs you in without typing a password."
+    },
+    "address": {
+      "heading": "Your server's address",
+      "body": "The address you open Atrium at in a browser.",
+      "label": "Address",
+      "placeholder": "192.168.1.20:8080 or cloud.example.com",
+      "checking": "Looking for the server…",
+      "empty": "Type the server's address first.",
+      "invalid": "That does not look like an address. An address is a name or a number such as 192.168.1.20:8080 or cloud.example.com."
+    },
+    "probe": {
+      "unreachable": "Nothing answered at that address. Check the address, and that this phone is on a network that can reach the server.",
+      "not_atrium": "Something answered at that address, but it is not an Atrium server. Check the address and the port.",
+      "setup_incomplete": "This server has not been set up yet. Open it in a browser and finish the setup first.",
+      "client_too_old": "This server needs a newer version of the app. Update the app and try again."
+    },
+    "insecure": {
+      "heading": "This server cannot be used from here",
+      "body": "The address {server} uses plain HTTP and is not on your local network. Over plain HTTP your password and files could be read by anyone on the way, so the app does not connect.",
+      "local": "On your home network plain HTTP works, because it never leaves the building.",
+      "fix": "To reach the server from outside, give it HTTPS: the built-in HTTPS service, your own reverse proxy, or a tunnel. The installation guide explains each.",
+      "guide": "Open the installation guide",
+      "other": "Try another address"
+    },
+    "scan": {
+      "heading": "Scan the code",
+      "body": "Point the camera at the code shown in the Atrium web app under Devices, Connect a phone.",
+      "permissionHeading": "The camera is needed to scan",
+      "permissionBody": "Atrium uses the camera only to read the code. Nothing is recorded or sent.",
+      "allow": "Allow the camera",
+      "openSettings": "Open settings",
+      "unavailable": "This device has no camera the app can use. Type the server's address instead.",
+      "notACode": "That is not an Atrium connection code. Scan the code under Devices, Connect a phone.",
+      "connecting": "Connecting…",
+      "again": "Scan again"
+    },
+    "signIn": {
+      "server": "Signing in to {server}"
+    },
+    "home": {
+      "heading": "Connected",
+      "signedInAs": "{name} on {server}",
+      "servers": "Servers",
+      "current": "In use",
+      "use": "Use this server",
+      "addServer": "Add another server",
+      "signOut": "Sign out of this server",
+      "signOutBody": "This phone will forget {server}. Files on the server are not touched.",
+      "soon": "Files and photos arrive with the next versions of the app."
     },
     "about": {
       "version": "Version {version}"

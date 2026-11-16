@@ -16,9 +16,39 @@
     },
     "ios": {
       "bundleIdentifier": "app.atrium.mobile",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      }
     },
-    "plugins": ["expo-router", "expo-status-bar", "expo-localization"],
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-localization",
+      "expo-secure-store",
+      "expo-sqlite",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Atrium uses the camera to scan the code that connects this phone to your server.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
     }
