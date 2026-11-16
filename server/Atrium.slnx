@@ -8,6 +8,7 @@
     <Project Path="src/Atrium.Files/Atrium.Files.csproj" />
     <Project Path="src/Atrium.Identity/Atrium.Identity.csproj" />
     <Project Path="src/Atrium.Jobs/Atrium.Jobs.csproj" />
+    <Project Path="src/Atrium.Media/Atrium.Media.csproj" />
     <Project Path="src/Atrium.Storage/Atrium.Storage.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -17,6 +18,7 @@
     <Project Path="tests/Atrium.Files.Tests/Atrium.Files.Tests.csproj" />
     <Project Path="tests/Atrium.Identity.Tests/Atrium.Identity.Tests.csproj" />
     <Project Path="tests/Atrium.Jobs.Tests/Atrium.Jobs.Tests.csproj" />
+    <Project Path="tests/Atrium.Media.Tests/Atrium.Media.Tests.csproj" />
     <Project Path="tests/Atrium.Storage.Tests/Atrium.Storage.Tests.csproj" />
   </Folder>
 </Solution>

@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Atrium.Files.Tests;
 
 /// <summary>Counts folders indexed, and can stop the scan after a number of them.</summary>
-public sealed class CountingObserver : IExternalScanObserver
+public sealed class CountingObserver : INodeContentObserver
 {
     public int Calls { get; private set; }
 
@@ -18,7 +18,7 @@ public sealed class CountingObserver : IExternalScanObserver
 
     public List<Node> Files { get; } = [];
 
-    public Task FilesChangedAsync(Library library, IReadOnlyList<Node> files, CancellationToken ct)
+    public Task ContentChangedAsync(Library library, IReadOnlyList<Node> files, CancellationToken ct)
     {
         Files.AddRange(files);
         if (++Calls >= StopAfter)
@@ -49,7 +49,7 @@ public abstract class ExternalLibraryContractTests<TDatabase> : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await _database.InitializeAsync();
-        _host = await FileServicesHost.StartAsync(_database, configure: s => s.AddSingleton<IExternalScanObserver>(_observer));
+        _host = await FileServicesHost.StartAsync(_database, configure: s => s.AddSingleton<INodeContentObserver>(_observer));
         Directory.CreateDirectory(Folder);
     }
 

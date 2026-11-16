@@ -27,10 +27,28 @@ public sealed class SignedUrls(ServerKeys keys, SessionRevocationCache revocatio
 
     private readonly byte[] _key = keys.Derive("atrium/signed-url/v1");
 
+    /// <summary>
+    /// Thumbnail URLs expire at the end of a fixed six-hour window, at least
+    /// an hour away, so the same picture keeps the same URL for hours and
+    /// the browser's cache can serve it.
+    /// </summary>
+    public static readonly TimeSpan CacheWindow = TimeSpan.FromHours(6);
+
     /// <summary>A signed version of <paramref name="path"/> with the given extra parameters.</summary>
-    public (string Url, DateTimeOffset ExpiresAt) Sign(string path, Guid sessionId, IReadOnlyDictionary<string, string>? options = null)
+    public (string Url, DateTimeOffset ExpiresAt) Sign(string path, Guid sessionId, IReadOnlyDictionary<string, string>? options = null) =>
+        Sign(path, sessionId, options, time.GetUtcNow() + DefaultLifetime);
+
+    /// <summary>Like <see cref="Sign(string, Guid, IReadOnlyDictionary{string, string}?)"/>, but stable within a <see cref="CacheWindow"/>.</summary>
+    public (string Url, DateTimeOffset ExpiresAt) SignForCaching(string path, Guid sessionId, IReadOnlyDictionary<string, string>? options = null)
     {
-        var expires = time.GetUtcNow() + DefaultLifetime;
+        var earliest = (time.GetUtcNow() + DefaultLifetime).ToUnixTimeSeconds();
+        var window = (long)CacheWindow.TotalSeconds;
+        var expires = ((earliest / window) + 1) * window;
+        return Sign(path, sessionId, options, DateTimeOffset.FromUnixTimeSeconds(expires));
+    }
+
+    private (string Url, DateTimeOffset ExpiresAt) Sign(string path, Guid sessionId, IReadOnlyDictionary<string, string>? options, DateTimeOffset expires)
+    {
         var exp = expires.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
         var parameters = new Dictionary<string, string?>(StringComparer.Ordinal);
         foreach (var option in options ?? new Dictionary<string, string>())

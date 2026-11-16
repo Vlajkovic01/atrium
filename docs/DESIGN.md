@@ -761,6 +761,15 @@ depending on type:
 Location is not read or stored (D-031): no coordinates, place names or
 map.
 
+Built in Phase 3 (D-037) in `Atrium.Media`: jobs `media.extract`,
+`media.preview` and the hourly `media.sweep`; EXIF through
+MetadataExtractor, video through ffprobe; thumbnails through libvips
+(FFmpeg for video frames and formats libvips cannot read), saved as WebP
+without metadata under `thumbs/<key>-<variant>` in the cache. The grid
+size is made for every file, the viewer size when first requested.
+libvips runs only in decoder processes started by the server
+(`--image-worker`, D-039), never inside the server itself.
+
 ### 7.2 Client capability profile
 
 When starting playback a client sends what it can play:

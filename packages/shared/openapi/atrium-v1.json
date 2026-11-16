@@ -348,6 +348,104 @@
         }
       }
     },
+    "/api/v1/nodes/{id}/thumbnail": {
+      "get": {
+        "tags": [
+          "Photos"
+        ],
+        "description": "size: small (grid) or large (viewer). A WebP image without any metadata. Bearer token or signed URL.",
+        "operationId": "GetThumbnail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{id}/preview": {
+      "get": {
+        "tags": [
+          "Photos"
+        ],
+        "description": "A video\u0027s short silent preview clip (MP4). Bearer token or signed URL.",
+        "operationId": "GetPreview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{id}/media-info": {
+      "get": {
+        "tags": [
+          "Photos"
+        ],
+        "operationId": "GetMediaInfo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaInfoView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/setup/state": {
       "get": {
         "tags": [
@@ -5054,6 +5152,110 @@
           "totpRequired"
         ]
       },
+      "MediaInfoView": {
+        "required": [
+          "kind",
+          "width",
+          "height",
+          "durationMs",
+          "format",
+          "videoCodec",
+          "audioCodec",
+          "capturedAt",
+          "capturedOffsetMinutes",
+          "cameraMake",
+          "cameraModel",
+          "thumbnailState"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/MediaKind"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "durationMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "format": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "videoCodec": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "audioCodec": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "capturedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "capturedOffsetMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cameraMake": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cameraModel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "thumbnailState": {
+            "$ref": "#/components/schemas/ThumbnailState"
+          }
+        }
+      },
+      "MediaKind": {
+        "enum": [
+          "photo",
+          "video"
+        ]
+      },
       "NodeInfo": {
         "required": [
           "id",
@@ -5788,6 +5990,14 @@
           }
         }
       },
+      "ThumbnailState": {
+        "enum": [
+          "pending",
+          "ready",
+          "failed",
+          "unsupported"
+        ]
+      },
       "TokenResponse": {
         "required": [
           "accessToken",
@@ -6328,6 +6538,9 @@
     },
     {
       "name": "Files"
+    },
+    {
+      "name": "Photos"
     },
     {
       "name": "Setup"
