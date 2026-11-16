@@ -100,7 +100,65 @@ export function BackgroundWork() {
           />
         </>
       ) : null}
+      <FailedJobs />
     </>
+  );
+}
+
+/**
+ * Jobs that failed for good, newest first, with what went wrong as a code
+ * and a way to run each again. The overview warns about them and leads
+ * here. The detail text is left out: it can name a file (D-004).
+ */
+function FailedJobs() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [error, setError] = useState<unknown>(null);
+  const failed = useQuery({
+    queryKey: ["jobs", "failed"],
+    queryFn: () => call(api.GET("/api/v1/jobs", { params: { query: { state: "failed", limit: 50 } } })),
+    refetchInterval: 15_000,
+  });
+
+  const retry = async (id: string): Promise<void> => {
+    setError(null);
+    try {
+      await call(api.POST("/api/v1/jobs/{id}/retry", { params: { path: { id } } }));
+    } catch (e) {
+      setError(e);
+    } finally {
+      await queryClient.invalidateQueries({ queryKey: ["jobs", "failed"] });
+      await queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
+    }
+  };
+
+  const items = failed.data?.items ?? [];
+  return (
+    <Card title={t("backgroundWork.failedHeading")} icon="alert">
+      <ErrorMessage error={error ?? failed.error} />
+      {failed.isSuccess && items.length === 0 ? <p className="muted">{t("backgroundWork.noFailures")}</p> : null}
+      <ul className="rows">
+        {items.map((job) => (
+          <li key={job.id} className="row">
+            <div className="row-main">
+              <p className="row-title">
+                {t(`backgroundWork.jobTypes.${job.type.replace(".", "_")}`, { defaultValue: job.type })}
+              </p>
+              <p className="row-meta">
+                {t([`errors.${job.errorCode ?? "job.unexpected_error"}`, "errors.job.unexpected_error"])}
+                <span className="dot" />
+                {formatDateTime(job.finishedAt ?? job.createdAt)}
+                <span className="dot" />
+                {t("backgroundWork.attempts", { count: Number(job.attempts) })}
+              </p>
+            </div>
+            <Button size="sm" icon="refresh" onClick={() => void retry(job.id)}>
+              {t("backgroundWork.retry")}
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
 

@@ -30,6 +30,10 @@ test("administration is one menu entry that opens an overview of the server", as
   const tabs = page.getByRole("navigation", { name: "Administration sections" });
   await tabs.getByRole("link", { name: "Libraries" }).click();
   await expect(page).toHaveURL(/\/admin\/libraries$/);
+  await tabs.getByRole("link", { name: "Storage" }).click();
+  await expect(page.getByText(/ stored/).first()).toBeVisible();
+  await tabs.getByRole("link", { name: "Background work" }).click();
+  await expect(page.getByText("Failed jobs")).toBeVisible();
 
   // An earlier address still leads to its section.
   await page.goto("/people");
