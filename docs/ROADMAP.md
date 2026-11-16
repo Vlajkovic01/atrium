@@ -66,7 +66,14 @@ protect files keep growing with every phase.
   scheduled user deletion (D-025) and the storage integrity check, which
   cover release requirements 1 and 5 in part. The change feed moved to
   Phase 4 (D-027).
-- Phase 3: in progress.
+- Phase 3: built, awaiting the owner's approval. Media jobs with
+  hardware profiles, per-class limits and a pause; metadata, thumbnails
+  and video previews made in separate decoder processes (D-039); the
+  photo timeline, albums and search by name, type and date, without
+  location (D-031); external photo folders, read-only by default, with
+  changes allowed per library after a typed confirmation (D-035, D-036).
+  It adds to release requirement 3 (an interrupted scan resumes) and 4
+  (external libraries join the security review's scope).
 
 ## Sequencing notes
 

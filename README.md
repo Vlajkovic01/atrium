@@ -42,7 +42,14 @@ Tests in the `Containers` category start PostgreSQL in Docker. Plain
 `dotnet test` runs them too and is what CI does.
 
 The server keeps its database and keys in the directory named by
-`ATRIUM_CONFIG_DIR` (default `.atrium` in the working directory). SQLite
+`ATRIUM_CONFIG_DIR` (default `.atrium` in the working directory), and
+thumbnails in `ATRIUM_CACHE_DIR` (default `cache` inside it).
+
+Photos and videos need FFmpeg and ffprobe on the `PATH` (or set
+`ATRIUM_FFMPEG` and `ATRIUM_FFPROBE`). libvips comes with the server on
+Windows; on Linux install the distribution's `libvips42t64` (with
+`libheif-plugin-libde265` for HEIC). `dotnet run --project
+src/Atrium.Api -- --check-media` says whether everything works. SQLite
 is the default database; set `ATRIUM_DB_PROVIDER=postgres` and
 `ATRIUM_DB_CONNECTION` to use PostgreSQL.
 
