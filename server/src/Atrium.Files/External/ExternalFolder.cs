@@ -141,7 +141,7 @@ public sealed class ExternalFolder
                 relative,
                 isFolder,
                 isFolder ? 0 : ((FileInfo)info).Length,
-                new DateTimeOffset(info.LastWriteTimeUtc, TimeSpan.Zero)));
+                WrittenAt(info)));
         }
 
         result.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
@@ -158,9 +158,15 @@ public sealed class ExternalFolder
 
         var info = new FileInfo(full);
         return info.Exists && info.LinkTarget is null
-            ? new ExternalEntry(info.Name, relativePath, false, info.Length, new DateTimeOffset(info.LastWriteTimeUtc, TimeSpan.Zero))
+            ? new ExternalEntry(info.Name, relativePath, false, info.Length, WrittenAt(info))
             : null;
     }
+
+    // Whole milliseconds, which is what the database keeps (D-020). With the
+    // disk's finer time, a file would differ from its own index entry at
+    // every scan and look changed although nobody touched it.
+    private static DateTimeOffset WrittenAt(FileSystemInfo info) =>
+        DateTimeOffset.FromUnixTimeMilliseconds(new DateTimeOffset(info.LastWriteTimeUtc, TimeSpan.Zero).ToUnixTimeMilliseconds());
 
     /// <summary>Opens a file for reading. Other programs may keep writing, renaming or deleting it meanwhile.</summary>
     /// <exception cref="FileNotFoundException">Gone, or not inside the folder.</exception>
