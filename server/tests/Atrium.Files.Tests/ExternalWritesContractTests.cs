@@ -64,13 +64,13 @@ public abstract class ExternalWritesContractTests<TDatabase> : IAsyncLifetime
         var viewer = await _database.AddUserAsync("bob");
         var library = (await LibrariesAsync(s => s.CreateAsync(admin.Id, new NewExternalLibrary("Photos", Folder, [writer.Id, viewer.Id]), None))).Value!;
         await Host.RunJobsAsync();
-        var updated = await LibrariesAsync(s => s.UpdateAsync(library.Id, library.Version, null, [writer.Id, viewer.Id], [writer.Id], None));
+        var updated = await LibrariesAsync(s => s.UpdateAsync(library.Id, library.Version, null, [writer.Id, viewer.Id], [writer.Id], null, None));
         Assert.True(updated.Ok, updated.Error);
         return (updated.Value!, new FileActor(writer.Id, false, false, false), new FileActor(viewer.Id, false, false, false));
     }
 
     private Task<FileResult<Library>> EnableAsync(Library library, string name = "Photos") =>
-        LibrariesAsync(s => s.SetWritesAsync(_adminId, library.Id, true, name, None));
+        LibrariesAsync(s => s.SetWritesAsync(_adminId, library.Id, true, name, null, None));
 
     private async Task<Node> NodeAsync(Guid libraryId, string name)
     {
@@ -97,6 +97,25 @@ public abstract class ExternalWritesContractTests<TDatabase> : IAsyncLifetime
         Assert.True(enabled.Ok);
         Assert.False(enabled.Value!.ReadOnly);
         Assert.NotNull(enabled.Value.WritesEnabledAt);
+    }
+
+    [Fact]
+    public async Task Allowing_changes_also_chooses_who_makes_them_so_it_is_never_on_for_nobody()
+    {
+        var admin = await _database.AddUserAsync("root", UserRole.Admin);
+        var library = (await LibrariesAsync(s => s.CreateAsync(admin.Id, new NewExternalLibrary("Photos", Folder, [admin.Id]), None))).Value!;
+        await Host.RunJobsAsync();
+        var actor = new FileActor(admin.Id, false, false, false);
+        var a = await NodeAsync(library.Id, "a.jpg");
+
+        var enabled = await LibrariesAsync(s => s.SetWritesAsync(admin.Id, library.Id, true, "Photos", [admin.Id], None));
+        Assert.True(enabled.Ok, enabled.Error);
+
+        Assert.True((await Host.NodesAsync(n => n.UpdateAsync(actor, a.Id, a.Version, "renamed.jpg", null, None))).Ok);
+        Assert.True(File.Exists(Disk("renamed.jpg")));
+        Assert.Equal(
+            LibraryErrors.UnknownUser,
+            (await LibrariesAsync(s => s.SetWritesAsync(admin.Id, library.Id, true, "Photos", [Guid.NewGuid()], None))).Error);
     }
 
     [Fact]
@@ -202,7 +221,7 @@ public abstract class ExternalWritesContractTests<TDatabase> : IAsyncLifetime
         var inTrash = Disk($"{ExternalFolder.TrashFolderName}/{a.Id:N}/a.jpg");
 
         // Writes switched off: past the retention, the file is still kept.
-        await LibrariesAsync(s => s.SetWritesAsync(_adminId, library.Id, false, null, None));
+        await LibrariesAsync(s => s.SetWritesAsync(_adminId, library.Id, false, null, null, None));
         Host.Time.Advance(TimeSpan.FromDays(31));
         await Host.WithAsync(async sp =>
         {
@@ -226,7 +245,7 @@ public abstract class ExternalWritesContractTests<TDatabase> : IAsyncLifetime
     {
         var (library, writer, _) = await LibraryAsync();
         await EnableAsync(library);
-        await LibrariesAsync(s => s.SetWritesAsync(_adminId, library.Id, false, null, None));
+        await LibrariesAsync(s => s.SetWritesAsync(_adminId, library.Id, false, null, null, None));
         var a = await NodeAsync(library.Id, "a.jpg");
 
         Assert.Equal(FileErrors.ReadOnly, (await Host.NodesAsync(n => n.TrashAsync(writer, a.Id, null, None))).Error);

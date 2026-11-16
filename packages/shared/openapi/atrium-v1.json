@@ -4428,6 +4428,7 @@
           "name",
           "kind",
           "mode",
+          "rootNodeId",
           "path",
           "readOnly",
           "state",
@@ -4436,6 +4437,7 @@
           "fileCount",
           "userIds",
           "writerIds",
+          "showInTimeline",
           "writesEnabledAt",
           "scan",
           "version"
@@ -4454,6 +4456,10 @@
           },
           "mode": {
             "$ref": "#/components/schemas/LibraryMode"
+          },
+          "rootNodeId": {
+            "type": "string",
+            "format": "uuid"
           },
           "path": {
             "type": [
@@ -4501,6 +4507,9 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "showInTimeline": {
+            "type": "boolean"
           },
           "writesEnabledAt": {
             "type": [
@@ -5047,7 +5056,8 @@
         "required": [
           "name",
           "path",
-          "userIds"
+          "userIds",
+          "showInTimeline"
         ],
         "type": "object",
         "properties": {
@@ -5066,6 +5076,12 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "showInTimeline": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },
@@ -5721,7 +5737,8 @@
           "mode",
           "rootNodeId",
           "readOnly",
-          "state"
+          "state",
+          "changesAllowed"
         ],
         "type": "object",
         "properties": {
@@ -5747,6 +5764,9 @@
           },
           "state": {
             "$ref": "#/components/schemas/LibraryState"
+          },
+          "changesAllowed": {
+            "type": "boolean"
           }
         }
       },
@@ -5756,7 +5776,8 @@
           "shared",
           "photos",
           "movies",
-          "shows"
+          "shows",
+          "folder"
         ]
       },
       "LibraryMode": {
@@ -6642,7 +6663,8 @@
       "SetLibraryWritesRequest": {
         "required": [
           "enabled",
-          "confirmName"
+          "confirmName",
+          "writerIds"
         ],
         "type": "object",
         "properties": {
@@ -6654,6 +6676,16 @@
               "null",
               "string"
             ]
+          },
+          "writerIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -7106,7 +7138,8 @@
         "required": [
           "name",
           "userIds",
-          "writerIds"
+          "writerIds",
+          "showInTimeline"
         ],
         "type": "object",
         "properties": {
@@ -7135,6 +7168,12 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "showInTimeline": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         }
       },

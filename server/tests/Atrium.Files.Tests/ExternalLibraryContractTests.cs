@@ -44,7 +44,7 @@ public abstract class ExternalLibraryContractTests<TDatabase> : IAsyncLifetime
 
     private FileServicesHost Host => _host ?? throw new InvalidOperationException("Not initialized.");
 
-    private string Folder => Path.Combine(Host.ExternalRoot, "Screenshots");
+    private string Folder => Path.Combine(Host.ExternalRoot, "Shared");
 
     public async Task InitializeAsync()
     {
@@ -77,7 +77,7 @@ public abstract class ExternalLibraryContractTests<TDatabase> : IAsyncLifetime
     {
         var admin = await _database.AddUserAsync("admin" + Guid.NewGuid().ToString("N")[..6], UserRole.Admin);
         var viewer = await _database.AddUserAsync("ana" + Guid.NewGuid().ToString("N")[..6]);
-        var created = await WithLibrariesAsync(s => s.CreateAsync(admin.Id, new NewExternalLibrary("Screenshots", path ?? Folder, [viewer.Id]), None));
+        var created = await WithLibrariesAsync(s => s.CreateAsync(admin.Id, new NewExternalLibrary("Shared", path ?? Folder, [viewer.Id]), None));
         Assert.True(created.Ok, created.Error);
         return (created.Value!, new FileActor(viewer.Id, false, false, false));
     }
@@ -285,8 +285,8 @@ public abstract class ExternalLibraryContractTests<TDatabase> : IAsyncLifetime
         var (library, _) = await AddLibraryAsync();
         await Host.RunJobsAsync();
 
-        Assert.Equal(LibraryErrors.ConfirmationMismatch, (await WithLibrariesAsync(s => s.DeleteAsync(library.Id, "screenshots", None))).Error);
-        Assert.True((await WithLibrariesAsync(s => s.DeleteAsync(library.Id, "Screenshots", None))).Ok);
+        Assert.Equal(LibraryErrors.ConfirmationMismatch, (await WithLibrariesAsync(s => s.DeleteAsync(library.Id, "shared", None))).Error);
+        Assert.True((await WithLibrariesAsync(s => s.DeleteAsync(library.Id, "Shared", None))).Ok);
 
         Assert.Empty(await NodesAsync(library.Id));
         Assert.Equal(before, Snapshot(Folder));

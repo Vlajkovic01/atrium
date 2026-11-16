@@ -101,18 +101,52 @@ public abstract class PhotoServiceContractTests<TDatabase> : IAsyncLifetime
     [Fact]
     public async Task A_shared_folder_appears_in_the_timeline_of_those_it_is_shared_with()
     {
-        var folder = Path.Combine(Host.ExternalRoot, "Screenshots");
+        var folder = Path.Combine(Host.ExternalRoot, "Shared");
         Directory.CreateDirectory(folder);
         await File.WriteAllBytesAsync(Path.Combine(folder, "shot.png"), Samples.Png(8, 8));
         var admin = await _database.AddUserAsync("admin", UserRole.Admin);
         var (ana, _) = await Host.NewUserAsync("ana");
         var (bob, _) = await Host.NewUserAsync("bob");
         await Host.WithAsync(sp => sp.GetRequiredService<ExternalLibraryService>()
-            .CreateAsync(admin.Id, new NewExternalLibrary("Screenshots", folder, [ana.UserId]), None));
+            .CreateAsync(admin.Id, new NewExternalLibrary("Shared", folder, [ana.UserId]), None));
         await Host.RunJobsAsync();
 
         Assert.Single((await PhotosAsync(p => p.TimelineAsync(ana, null, null, null, null, 100, None))).Items);
         Assert.Empty((await PhotosAsync(p => p.TimelineAsync(bob, null, null, null, null, 100, None))).Items);
+    }
+
+    [Fact]
+    public async Task A_folder_of_any_files_shows_everything_and_joins_the_timeline_only_when_chosen()
+    {
+        var folder = Path.Combine(Host.ExternalRoot, "Archive");
+        Directory.CreateDirectory(Path.Combine(folder, "Contracts", "2024"));
+        await File.WriteAllTextAsync(Path.Combine(folder, "Contracts", "2024", "lease.pdf"), "pdf");
+        await File.WriteAllTextAsync(Path.Combine(folder, "budget.xlsx"), "xlsx");
+        await File.WriteAllBytesAsync(Path.Combine(folder, "clip.mp4"), [0, 0, 0, 24]);
+        await File.WriteAllBytesAsync(Path.Combine(folder, "scan.jpg"), Samples.JpegWithExif(16, 16));
+        var admin = await _database.AddUserAsync("admin", UserRole.Admin);
+        var (ana, _) = await Host.NewUserAsync("ana");
+        var created = await Host.WithAsync(sp => sp.GetRequiredService<ExternalLibraryService>()
+            .CreateAsync(admin.Id, new NewExternalLibrary("Archive", folder, [ana.UserId], ShowInTimeline: false), None));
+        var library = created.Value!;
+        await Host.RunJobsAsync();
+
+        // Every file and folder is there to browse.
+        var top = await Host.NodesAsync(n => n.ChildrenAsync(ana, library.RootNodeId, ChildSort.Name, false, null, 0, 100, None));
+        Assert.Equal(["Contracts", "budget.xlsx", "clip.mp4", "scan.jpg"], top.Value.Items.Select(i => i.Name));
+        var found = await PhotosAsync(p => p.SearchAsync(ana, new SearchRequest("lease", null, null, null, null, null, 10), None));
+        Assert.Equal(["lease.pdf"], found.Items.Select(i => i.Node.Name));
+
+        // Kept out of the timeline, as chosen; the photo and the video can still be found and opened.
+        Assert.Empty((await PhotosAsync(p => p.TimelineAsync(ana, null, null, null, null, 100, None))).Items);
+        Assert.Equal(2, (await PhotosAsync(p => p.SearchAsync(ana, new SearchRequest(null, null, null, null, library.Id, null, 10), None)))
+            .Items.Count(i => i.Node.MediaKind is not null));
+
+        // Joining the timeline brings the photo and the video, not the documents.
+        await Host.WithAsync(sp => sp.GetRequiredService<ExternalLibraryService>()
+            .UpdateAsync(library.Id, library.Version, null, null, null, showInTimeline: true, None));
+        var timeline = await PhotosAsync(p => p.TimelineAsync(ana, null, null, null, null, 100, None));
+        Assert.Equal(["clip.mp4", "scan.jpg"], timeline.Items.Select(i => i.Node.Name).Order(StringComparer.Ordinal));
     }
 
     [Fact]

@@ -17,6 +17,7 @@ import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Select } from "../components/Select.tsx";
 import { Badge, Button, ErrorMessage, Field, Notice, PageHeader, useErrorText } from "../components/ui.tsx";
+import { useSession } from "../session.tsx";
 import { batch, downloadArchive, downloadFile, restore, type BatchItem, type NodeInfo } from "./actions.ts";
 import { Details } from "./Details.tsx";
 import { FolderPicker } from "./FolderPicker.tsx";
@@ -50,6 +51,7 @@ export function FileBrowser() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { upload } = useUploads();
+  const { user } = useSession();
   const params = useParams();
 
   const libraries = useQuery({ queryKey: ["libraries"], queryFn: () => call(api.GET("/api/v1/libraries")) });
@@ -327,6 +329,23 @@ export function FileBrowser() {
         </nav>
       ) : null}
 
+      {/* Saying why nothing can be changed, and who can change that. */}
+      {!canWrite && library.mode === "external" ? (
+        <Notice kind="info">
+          {library.changesAllowed
+            ? t("files.readOnlyNotWriter")
+            : user?.role === "admin"
+              ? t("files.readOnlyFolderAdmin")
+              : t("files.readOnlyFolder")}
+          {!library.changesAllowed && user?.role === "admin" ? (
+            <>
+              {" "}
+              <Link to="/libraries">{t("files.manageLibraries")}</Link>
+            </>
+          ) : null}
+        </Notice>
+      ) : null}
+
       {/* At the top of the library the title already says where you are. */}
       {crumbs.length > 1 ? (
         <nav className="crumbs" aria-label={t("files.location")}>
@@ -360,9 +379,12 @@ export function FileBrowser() {
                 <Button size="sm" variant="ghost" icon="move" onClick={() => setDialog("move")}>
                   {t("files.move")}
                 </Button>
-                <Button size="sm" variant="ghost" icon="copy" onClick={() => setDialog("copy")}>
-                  {t("files.copy")}
-                </Button>
+                {/* Copying inside an existing folder would duplicate files on its own disk. */}
+                {library.mode === "managed" ? (
+                  <Button size="sm" variant="ghost" icon="copy" onClick={() => setDialog("copy")}>
+                    {t("files.copy")}
+                  </Button>
+                ) : null}
                 <Button size="sm" variant="ghost" icon="trash" onClick={trashSelection}>
                   {t("files.delete")}
                 </Button>

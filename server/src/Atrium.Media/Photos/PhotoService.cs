@@ -44,7 +44,7 @@ public sealed class PhotoService(AtriumDbContext db, NodeService nodes, TimeProv
     /// <summary>Months with their counts, newest first, for a scrubber that works with any number of photos.</summary>
     public async Task<List<TimelineBucket>> BucketsAsync(FileActor actor, Guid? libraryId, CancellationToken ct)
     {
-        var libraries = await LibraryIdsAsync(actor, libraryId, ct);
+        var libraries = await LibraryIdsAsync(actor, libraryId, ct, timelineOnly: true);
 
         // One indexed column; grouped here because the month of a stored
         // millisecond count is spelled differently on every database.
@@ -60,7 +60,7 @@ public sealed class PhotoService(AtriumDbContext db, NodeService nodes, TimeProv
     public async Task<PhotoPage> TimelineAsync(
         FileActor actor, Guid? libraryId, DateTimeOffset? from, DateTimeOffset? to, string? cursor, int limit, CancellationToken ct)
     {
-        var libraries = await LibraryIdsAsync(actor, libraryId, ct);
+        var libraries = await LibraryIdsAsync(actor, libraryId, ct, timelineOnly: true);
         var query = Visible(libraries);
         if (from is { } f)
         {
@@ -306,10 +306,20 @@ public sealed class PhotoService(AtriumDbContext db, NodeService nodes, TimeProv
         db.Nodes.AsNoTracking().Where(n =>
             libraries.Contains(n.LibraryId) && n.MediaKind != null && n.CapturedAt != null && !n.InTrash && n.MissingSince == null);
 
-    private async Task<List<Guid>> LibraryIdsAsync(FileActor actor, Guid? only, CancellationToken ct)
+    /// <summary>
+    /// The libraries to look in. The timeline leaves out folders whose
+    /// admin chose to keep them out of it, unless one is asked for by name;
+    /// search and albums look everywhere the person can read.
+    /// </summary>
+    private async Task<List<Guid>> LibraryIdsAsync(FileActor actor, Guid? only, CancellationToken ct, bool timelineOnly = false)
     {
-        var ids = (await nodes.ReadableLibrariesAsync(actor, ct)).Select(l => l.Id).ToList();
-        return only is { } id ? ids.Where(x => x == id).ToList() : ids;
+        var libraries = await nodes.ReadableLibrariesAsync(actor, ct);
+        if (only is { } id)
+        {
+            return libraries.Where(l => l.Id == id).Select(l => l.Id).ToList();
+        }
+
+        return libraries.Where(l => !timelineOnly || Library.IsOnTimeline(l.Kind)).Select(l => l.Id).ToList();
     }
 
     /// <summary>Keyset paging on (capture time, id), newest first: stable while photos are added.</summary>

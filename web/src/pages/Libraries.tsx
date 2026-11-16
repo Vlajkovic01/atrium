@@ -2,12 +2,14 @@ import type { components } from "@atrium/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 
 import { api, call } from "../api.ts";
 import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Badge, Button, Card, Check, ErrorMessage, Field, Notice, PageHeader } from "../components/ui.tsx";
 import { formatDateTime } from "../i18n.ts";
+import { useSession } from "../session.tsx";
 
 type Library = components["schemas"]["AdminLibraryView"];
 type Person = components["schemas"]["AdminUserView"];
@@ -22,6 +24,7 @@ const queryKey = ["admin-libraries"];
  */
 export function Libraries() {
   const { t } = useTranslation();
+  const { user } = useSession();
   const queryClient = useQueryClient();
   const [error, setError] = useState<unknown>(null);
   const [removing, setRemoving] = useState<Library | null>(null);
@@ -38,7 +41,11 @@ export function Libraries() {
     queryFn: () => call(api.GET("/api/v1/users", { params: { query: { limit: 200 } } })),
   });
 
-  const refresh = (): Promise<void> => queryClient.invalidateQueries({ queryKey });
+  // The menu lists the folders the admin can open, so it follows every change here.
+  const refresh = async (): Promise<void> => {
+    await queryClient.invalidateQueries({ queryKey });
+    await queryClient.invalidateQueries({ queryKey: ["libraries"] });
+  };
 
   const scan = async (library: Library): Promise<void> => {
     setError(null);
@@ -58,7 +65,7 @@ export function Libraries() {
       await call(
         api.PUT("/api/v1/admin/libraries/{id}/writes", {
           params: { path: { id: library.id } },
-          body: { enabled: false, confirmName: null },
+          body: { enabled: false, confirmName: null, writerIds: null },
         }),
       );
     } catch (e) {
@@ -96,6 +103,7 @@ export function Libraries() {
                     ) : (
                       <Badge tone="gold">{t("libraries.writesOn")}</Badge>
                     )}
+                    {library.showInTimeline ? null : <Badge tone="muted">{t("libraries.notOnTimeline")}</Badge>}
                   </p>
                   <p className="row-meta">
                     <span className="path">{library.path}</span>
@@ -103,6 +111,12 @@ export function Libraries() {
                     {t("libraries.files", { count: Number(library.fileCount) })}
                     <span className="dot" />
                     {t("libraries.people", { count: library.userIds.length })}
+                    {library.readOnly ? null : (
+                      <>
+                        <span className="dot" />
+                        {t("libraries.writers", { count: library.writerIds.length })}
+                      </>
+                    )}
                     {library.lastScanAt ? (
                       <>
                         <span className="dot" />
@@ -112,6 +126,12 @@ export function Libraries() {
                   </p>
                 </div>
                 <div className="row-actions">
+                  {user && library.userIds.includes(user.id) ? (
+                    <Link className="btn btn-primary btn-sm" to={`/files/${library.rootNodeId}`}>
+                      <Icon name="folder" size={16} />
+                      {t("libraries.open")}
+                    </Link>
+                  ) : null}
                   <Button size="sm" icon="refresh" onClick={() => void scan(library)} disabled={library.scan !== null}>
                     {library.scan
                       ? t("libraries.scanning", { percent: Math.round(Number(library.scan.progress ?? 0) * 100) })
@@ -134,6 +154,16 @@ export function Libraries() {
                   </Button>
                 </div>
               </div>
+              {!library.readOnly && library.writerIds.length === 0 ? (
+                <div className="row-form">
+                  <Notice kind="warning">{t("libraries.nobodyWrites")}</Notice>
+                </div>
+              ) : null}
+              {user && !library.userIds.includes(user.id) ? (
+                <div className="row-form">
+                  <p className="muted">{t("libraries.notForYou")}</p>
+                </div>
+              ) : null}
               {library.state === "offline" && library.stateReason ? (
                 <div className="row-form">
                   <Notice kind="warning">{t(`errors.${library.stateReason}`)}</Notice>
@@ -162,6 +192,8 @@ export function Libraries() {
       {enabling ? (
         <EnableWritesDialog
           library={enabling}
+          people={people.data?.items ?? []}
+          me={user?.id ?? null}
           onClose={() => setEnabling(null)}
           onEnabled={async () => {
             setEnabling(null);
@@ -224,6 +256,7 @@ function AddLibraryForm({
   const [name, setName] = useState("");
   const [path, setPath] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [timeline, setTimeline] = useState(true);
   const [check, setCheck] = useState<PathCheck | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
@@ -245,7 +278,11 @@ function AddLibraryForm({
     setError(null);
     setAdded(false);
     try {
-      await call(api.POST("/api/v1/admin/libraries", { body: { name, path, userIds: [...selected] } }));
+      await call(
+        api.POST("/api/v1/admin/libraries", {
+          body: { name, path, userIds: [...selected], showInTimeline: timeline },
+        }),
+      );
       setName("");
       setPath("");
       setSelected(new Set());
@@ -280,7 +317,7 @@ function AddLibraryForm({
         }}
         required
         spellCheck={false}
-        placeholder="/photos/screenshots"
+        placeholder={t("libraries.pathExample")}
         help={t("libraries.pathHelp")}
       />
       {check ? (
@@ -290,6 +327,12 @@ function AddLibraryForm({
           <Notice kind="error">{t(`errors.${check.errorCode ?? "library.path_unreadable"}`)}</Notice>
         )
       ) : null}
+      <Check
+        label={t("libraries.showInTimeline")}
+        checked={timeline}
+        onChange={(event) => setTimeline(event.target.checked)}
+      />
+      <p className="help">{t("libraries.showInTimelineHelp")}</p>
       <PeopleChecks people={people} selected={selected} onChange={setSelected} />
       <div className="actions">
         <Button icon="check" onClick={() => void tryPath()} disabled={path.trim() === ""}>
@@ -312,6 +355,7 @@ function AccessDialog(props: {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<Set<string>>(new Set(props.library.userIds));
   const [writers, setWriters] = useState<Set<string>>(new Set(props.library.writerIds));
+  const [timeline, setTimeline] = useState(props.library.showInTimeline);
   const [error, setError] = useState<unknown>(null);
 
   const save = async (): Promise<void> => {
@@ -321,7 +365,12 @@ function AccessDialog(props: {
         api.PATCH("/api/v1/admin/libraries/{id}", {
           params: { path: { id: props.library.id } },
           headers: { "If-Match": `"${props.library.version}"` },
-          body: { name: null, userIds: [...selected], writerIds: [...writers].filter((id) => selected.has(id)) },
+          body: {
+            name: null,
+            userIds: [...selected],
+            writerIds: [...writers].filter((id) => selected.has(id)),
+            showInTimeline: timeline,
+          },
         }),
       );
       await props.onSaved();
@@ -344,6 +393,11 @@ function AccessDialog(props: {
       }
     >
       <ErrorMessage error={error} />
+      <Check
+        label={t("libraries.showInTimeline")}
+        checked={timeline}
+        onChange={(event) => setTimeline(event.target.checked)}
+      />
       <PeopleChecks people={props.people} selected={selected} onChange={setSelected} />
       <fieldset className="choices">
         <legend>{t("libraries.whoChanges")}</legend>
@@ -379,12 +433,28 @@ function AccessDialog(props: {
  */
 function EnableWritesDialog(props: {
   readonly library: Library;
+  readonly people: readonly Person[];
+  readonly me: string | null;
   readonly onClose: () => void;
   readonly onEnabled: () => Promise<void>;
 }) {
   const { t } = useTranslation();
   const [typed, setTyped] = useState("");
   const [error, setError] = useState<unknown>(null);
+  const viewers = props.people.filter((person) => props.library.userIds.includes(person.id));
+
+  // Who makes changes is chosen here, so changes are never on for nobody.
+  // The admin doing this is suggested when they can see the folder.
+  const [writers, setWriters] = useState<Set<string>>(
+    () =>
+      new Set(
+        props.library.writerIds.length > 0
+          ? props.library.writerIds
+          : props.me && props.library.userIds.includes(props.me)
+            ? [props.me]
+            : [],
+      ),
+  );
 
   const enable = async (): Promise<void> => {
     setError(null);
@@ -392,7 +462,7 @@ function EnableWritesDialog(props: {
       await call(
         api.PUT("/api/v1/admin/libraries/{id}/writes", {
           params: { path: { id: props.library.id } },
-          body: { enabled: true, confirmName: typed },
+          body: { enabled: true, confirmName: typed, writerIds: [...writers] },
         }),
       );
       await props.onEnabled();
@@ -408,7 +478,11 @@ function EnableWritesDialog(props: {
       actions={
         <>
           <Button onClick={props.onClose}>{t("common.cancel")}</Button>
-          <Button variant="danger" onClick={() => void enable()} disabled={typed !== props.library.name}>
+          <Button
+            variant="danger"
+            onClick={() => void enable()}
+            disabled={typed !== props.library.name || writers.size === 0}
+          >
             {t("libraries.enableConfirm")}
           </Button>
         </>
@@ -421,6 +495,27 @@ function EnableWritesDialog(props: {
         <li>{t("libraries.enableUpload")}</li>
         <li>{t("libraries.enableOff")}</li>
       </ul>
+      <fieldset className="choices">
+        <legend>{t("libraries.whoChanges")}</legend>
+        {viewers.length === 0 ? <Notice kind="warning">{t("libraries.nobodySees")}</Notice> : null}
+        {viewers.map((person) => (
+          <Check
+            key={person.id}
+            label={person.displayName === person.name ? person.name : `${person.displayName} (${person.name})`}
+            checked={writers.has(person.id)}
+            onChange={(event) => {
+              const next = new Set(writers);
+              if (event.target.checked) {
+                next.add(person.id);
+              } else {
+                next.delete(person.id);
+              }
+
+              setWriters(next);
+            }}
+          />
+        ))}
+      </fieldset>
       <ErrorMessage error={error} />
       <Field
         label={t("libraries.typeName", { name: props.library.name })}

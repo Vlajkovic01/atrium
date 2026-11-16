@@ -184,7 +184,8 @@ Library `kind`:
 |---|---|---|
 | `personal` | managed | One per user, private. "My files", including camera uploads. |
 | `shared` | managed | A shared space with grants. |
-| `photos` | external | An existing photo folder, shown in the timeline. |
+| `photos` | external | An existing folder of any files; its photos and videos are also shown in the timeline. |
+| `folder` | external | An existing folder of any files, kept out of the timeline (D-040). |
 | `movies`, `shows` | external or managed | Video library with metadata. |
 
 The photo timeline is a view, not a library: it shows every photo and video
@@ -449,7 +450,7 @@ verified upload.
   removed from the index. Vanished files are marked missing and kept, with
   their watch state and metadata, for a retention period. A network share
   that drops for a day must not wipe a library's history.
-- Built in Phase 3 for photo folders, read-only (D-035): an admin adds a
+- Built in Phase 3 for folders of any files, read-only by default (D-035, D-040): an admin adds a
   folder path, which is checked against Atrium's own directories, storage
   locations and other libraries, and grants access. The `library.scan`
   job walks it with a checkpoint, skips links and hidden or system

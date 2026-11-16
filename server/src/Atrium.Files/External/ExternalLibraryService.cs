@@ -40,7 +40,8 @@ public sealed record ExternalLibraryOptions(IReadOnlyList<string> ProtectedPaths
 public sealed record PathCheck(bool Ok, string? ErrorCode, int? EntryCount);
 
 /// <param name="UserIds">Who may see the library. The admin who adds it sees it only if listed.</param>
-public sealed record NewExternalLibrary(string Name, string Path, IReadOnlyList<Guid> UserIds);
+/// <param name="ShowInTimeline">Its photos and videos also appear on the timeline; every file shows in Files either way.</param>
+public sealed record NewExternalLibrary(string Name, string Path, IReadOnlyList<Guid> UserIds, bool ShowInTimeline = true);
 
 /// <summary>
 /// Adds and manages external libraries: existing folders Atrium indexes
@@ -142,7 +143,7 @@ public sealed class ExternalLibraryService(
         {
             Id = libraryId,
             Name = name,
-            Kind = LibraryKind.Photos,
+            Kind = request.ShowInTimeline ? LibraryKind.Photos : LibraryKind.Folder,
             Mode = LibraryMode.External,
             ExternalPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(request.Path.Trim())),
             CreatedByUserId = adminId,
@@ -173,7 +174,8 @@ public sealed class ExternalLibraryService(
     /// on needs the library's name typed by the admin and proves the folder
     /// can be written; switching off needs nothing and takes effect at once.
     /// </summary>
-    public async Task<FileResult<Library>> SetWritesAsync(Guid adminId, Guid id, bool enabled, string? confirmName, CancellationToken ct)
+    public async Task<FileResult<Library>> SetWritesAsync(
+        Guid adminId, Guid id, bool enabled, string? confirmName, IReadOnlyList<Guid>? writerIds, CancellationToken ct)
     {
         var library = await db.Libraries.SingleOrDefaultAsync(l => l.Id == id && l.Kind != LibraryKind.Personal, ct);
         if (library is null)
@@ -198,6 +200,22 @@ public sealed class ExternalLibraryService(
                 return FileResult<Library>.Fail(LibraryErrors.FolderReadOnly);
             }
 
+            // Who may change files is chosen in the same step, so changes
+            // are never on for a library nobody can actually change.
+            if (writerIds is not null)
+            {
+                var grants = await db.LibraryGrants.Where(g => g.LibraryId == id).ToListAsync(ct);
+                if (!writerIds.All(w => grants.Any(g => g.UserId == w)))
+                {
+                    return FileResult<Library>.Fail(LibraryErrors.UnknownUser);
+                }
+
+                foreach (var grant in grants)
+                {
+                    grant.Access = writerIds.Contains(grant.UserId) ? LibraryAccess.Write : LibraryAccess.Read;
+                }
+            }
+
             library.ReadOnly = false;
             library.WritesEnabledAt = time.GetUtcNow();
             library.WritesEnabledByUserId = adminId;
@@ -216,7 +234,7 @@ public sealed class ExternalLibraryService(
     /// change its files once writes are enabled.
     /// </summary>
     public async Task<FileResult<Library>> UpdateAsync(
-        Guid id, int expectedVersion, string? newName, IReadOnlyList<Guid>? userIds, IReadOnlyList<Guid>? writerIds, CancellationToken ct)
+        Guid id, int expectedVersion, string? newName, IReadOnlyList<Guid>? userIds, IReadOnlyList<Guid>? writerIds, bool? showInTimeline, CancellationToken ct)
     {
         var library = await db.Libraries.SingleOrDefaultAsync(l => l.Id == id && l.Kind != LibraryKind.Personal, ct);
         if (library is null)
@@ -237,6 +255,11 @@ public sealed class ExternalLibraryService(
             }
 
             library.Name = name;
+        }
+
+        if (showInTimeline is { } timeline && library.Mode == LibraryMode.External)
+        {
+            library.Kind = timeline ? LibraryKind.Photos : LibraryKind.Folder;
         }
 
         if (userIds is not null)
