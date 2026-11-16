@@ -46,3 +46,37 @@ test("a backup is made and the storage is checked on demand", async ({ page }) =
   await expect(page.getByRole("button", { name: "Check now" })).toBeEnabled({ timeout: 30_000 });
   await expect(page.getByText("Every file is where it should be and unchanged.")).toBeVisible();
 });
+
+test("a person is found, given a limit, and scheduled for deletion and spared", async ({ page }) => {
+  await signIn(page, "/admin/people");
+  await page.getByRole("button", { name: "Add person" }).click();
+  const add = page.getByRole("dialog", { name: "Add a person" });
+  await add.getByLabel("Name", { exact: true }).fill("temp");
+  await add.getByLabel("Password", { exact: true }).fill("a temporary passphrase");
+  await add.getByRole("button", { name: "Add person" }).click();
+  await expect(page.getByText("temp can now sign in.")).toBeVisible();
+
+  await page.getByLabel("Find").fill("tem");
+  const rows = page.locator("ul.people > li");
+  await expect(rows).toHaveCount(1);
+  await rows.getByRole("button", { name: "Manage" }).click();
+  const manage = page.getByRole("dialog", { name: "temp" });
+
+  await manage.getByLabel("Limit in GB").fill("1");
+  await manage.getByRole("button", { name: "Save limit" }).click();
+  await expect(manage.getByText("The limit was saved.")).toBeVisible();
+  await expect(manage.getByText("0 byte of 1 GB")).toBeVisible();
+
+  await manage.getByRole("button", { name: "Delete account…" }).click();
+  await expect(manage.getByText(/will be deleted/)).toBeVisible();
+  const confirm = manage.getByRole("button", { name: "Delete account", exact: true });
+  await expect(confirm).toBeDisabled();
+  await manage.getByLabel("Type temp to confirm").fill("temp");
+  await confirm.click();
+  await expect(manage.getByText(/will be deleted with its files on/)).toBeVisible();
+  await expect(rows.getByText(/Deleted on/)).toBeVisible();
+
+  await manage.getByRole("button", { name: "Cancel deletion" }).click();
+  await expect(manage.getByText(/The deletion was cancelled/)).toBeVisible();
+  await expect(rows.getByText("Turned off")).toBeVisible();
+});

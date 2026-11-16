@@ -89,7 +89,7 @@ Linking a phone by QR (DESIGN.md 6.5):
 
 | Method | Path | Notes |
 |---|---|---|
-| GET, POST | `/users` | List, create |
+| GET, POST | `/users` | List, create. Each person in the list carries `usedBytes` (as counted for the quota) and `lastActiveAt` (the last time any of their devices was seen) |
 | GET, PATCH | `/users/{id}` | Role, quota, disable. `PATCH` requires `If-Match` with the version read. The last active admin cannot be demoted or disabled |
 | GET | `/users/{id}/deletion` | What deleting would remove: file and folder counts and bytes, never names (D-004); and the schedule if one is set |
 | POST | `/users/{id}/deletion` | Schedule deletion (D-025). Body `confirmName` must match the account's name. Disables the account and signs it out at once; files are removed 30 days later. Not for yourself or the last active admin |

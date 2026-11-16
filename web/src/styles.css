@@ -3031,3 +3031,102 @@ a {
 .admin-list-name {
   font-weight: 600;
 }
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.filters > * {
+  flex: 1 1 11rem;
+  margin: 0;
+}
+
+.filters > :first-child {
+  flex: 2 1 16rem;
+}
+
+.usage {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 9rem;
+  text-align: right;
+}
+
+.usage-text {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.usage-bar {
+  display: block;
+  height: 0.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-sunk);
+}
+
+.usage-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.usage-bar.is-full > span {
+  background: var(--danger);
+}
+
+.manage-section .usage {
+  text-align: left;
+  max-width: 20rem;
+}
+
+.manage-section {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.manage-section h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.manage-section .actions {
+  margin-top: 0;
+}
+
+.manage-section.is-danger h3 {
+  color: var(--danger);
+}
+
+.confirm-box {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-m);
+  background: var(--surface-sunk);
+}
+
+.confirm-box p {
+  margin: 0;
+}
+
+@media (width <= 52rem) {
+  .people .row {
+    flex-wrap: wrap;
+  }
+
+  .people .usage {
+    order: 3;
+    flex-basis: 100%;
+    text-align: left;
+  }
+}

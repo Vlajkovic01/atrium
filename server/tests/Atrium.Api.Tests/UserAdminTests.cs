@@ -1,7 +1,12 @@
 using System.Net;
 using Atrium.Api.Endpoints;
+using Atrium.Core.Files;
 using Atrium.Core.Identity;
+using Atrium.Files;
+using Atrium.Files.Blobs;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Atrium.Api.Tests;
 
@@ -250,5 +255,37 @@ public sealed class UserAdminTests : IDisposable
         Assert.Equal(HttpStatusCode.BadRequest, reset.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
         await client.SignInAsync("admin");
+    }
+
+    [Fact]
+    public async Task The_list_shows_the_space_each_person_uses_and_when_they_were_last_active()
+    {
+        await _factory.AddLocalStorageAsync();
+        using var client = NewClient();
+        var admin = await AdminAsync(client);
+        await _factory.CreateUserAsync("ana", Password);
+        var ana = await client.SignInAsync("ana");
+        await client.SendAsync(HttpMethod.Get, "/api/v1/libraries", ana.AccessToken);
+        await _factory.CreateUserAsync("bob", Password);
+
+        await using (var scope = _factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<Atrium.Data.AtriumDbContext>();
+            var library = await db.Libraries.SingleAsync(l => l.OwnerUserId == ana.User.Id);
+            var blob = await scope.ServiceProvider.GetRequiredService<BlobStore>()
+                .StoreAsync(library.StorageLocationId!.Value, new MemoryStream(new byte[1234]), null, CancellationToken.None);
+            var added = await scope.ServiceProvider.GetRequiredService<NodeService>().AddFileAsync(
+                new FileActor(ana.User.Id, false, false, false), library.RootNodeId, "a.bin", blob, "application/octet-stream", null,
+                ConflictPolicy.Fail, CancellationToken.None);
+            Assert.True(added.Ok, added.Error);
+        }
+
+        var page = await (await client.SendAsync(HttpMethod.Get, UsersUrl, admin.AccessToken)).ReadAsync<UserPage>();
+        var anaView = page.Items.Single(u => u.Name == "ana");
+        var bobView = page.Items.Single(u => u.Name == "bob");
+        Assert.Equal(1234, anaView.UsedBytes);
+        Assert.NotNull(anaView.LastActiveAt);
+        Assert.Equal(0, bobView.UsedBytes);
+        Assert.Null(bobView.LastActiveAt);
     }
 }

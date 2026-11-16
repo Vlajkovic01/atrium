@@ -2,6 +2,7 @@ using System.Globalization;
 using Atrium.Api.Auth;
 using Atrium.Core.Identity;
 using Atrium.Data;
+using Atrium.Files;
 using Atrium.Files.Users;
 using Atrium.Identity.Users;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -14,6 +15,8 @@ namespace Atrium.Api.Endpoints;
 /// What an admin sees about a user: the account, never its content
 /// (DESIGN.md 6.3, D-004).
 /// </summary>
+/// <param name="UsedBytes">The space their files take, counted as for their quota.</param>
+/// <param name="LastActiveAt">When any of their devices was last seen; null if never.</param>
 public sealed record AdminUserView(
     Guid Id,
     string Name,
@@ -26,7 +29,9 @@ public sealed record AdminUserView(
     bool TotpEnabled,
     int Version,
     DateTimeOffset? DeletionScheduledAt,
-    DateTimeOffset? DeleteAfter);
+    DateTimeOffset? DeleteAfter,
+    long UsedBytes = 0,
+    DateTimeOffset? LastActiveAt = null);
 
 public sealed record UserPage(IReadOnlyList<AdminUserView> Items, string? NextCursor);
 
@@ -109,8 +114,20 @@ public static class UserEndpoints
             .Select(t => t.UserId)
             .ToListAsync(ct);
 
+        var used = await UsageService.UsedByOwnersAsync(db, ids, ct);
+        var seen = (await db.Sessions.AsNoTracking()
+                .Where(s => ids.Contains(s.UserId))
+                .Select(s => new { s.UserId, s.LastSeenAt })
+                .ToListAsync(ct))
+            .GroupBy(s => s.UserId)
+            .ToDictionary(g => g.Key, g => g.Max(s => s.LastSeenAt));
+
         return new UserPage(
-            [.. page.Select(u => ToView(u, withTotp.Contains(u.Id)))],
+            [.. page.Select(u => ToView(u, withTotp.Contains(u.Id)) with
+            {
+                UsedBytes = used.GetValueOrDefault(u.Id),
+                LastActiveAt = seen.TryGetValue(u.Id, out var at) ? at : null,
+            })],
             rows.Count > take ? page[^1].NameKey : null);
     }
 
