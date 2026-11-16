@@ -849,3 +849,39 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   through the list of libraries, not through the feed.
 - **Not in the feed**: albums, the menu, notifications. They are small
   and read whole.
+
+## D-048 Mobile app: Android first, files open in other apps (Owner, 2026-11-16)
+
+- **Android first.** The iOS app is not built or tested for now: the
+  owner has no Mac. The code stays shared and free of Android-only
+  assumptions where that costs nothing, and an iOS build can be added to
+  CI later. Background work and the biometric lock on iOS would still
+  need a real device to be trusted.
+- **Office files are not converted on the server.** Instead of LibreOffice
+  in the image (D-044), the mobile app offers "Open in another app" for
+  every file Atrium does not show itself, whatever its kind, and the
+  system lists the apps that can open it. The web app keeps offering the
+  download, which is all a browser can do.
+- **PDF is shown inside the mobile app.**
+
+## D-049 Plain HTTP only to a local address (Proposed, Phase 4)
+
+- Decision: every client accepts `http://` only for an address that can
+  only be on the local network or the device itself: private, loopback
+  and link-local IP ranges, 100.64.0.0/10 (used between the devices of a
+  carrier or a mesh VPN), `localhost`, names ending in `.local`, `.lan`,
+  `.home.arpa` or `.internal`, and names without a dot. Anything else
+  needs HTTPS; the app explains why and points to the access guide. A
+  typed address without a scheme is taken as HTTP when local and HTTPS
+  otherwise.
+- Reasons: over plain HTTP a password or token can be read on the way
+  (DESIGN.md 12, risk 6). Android cannot limit HTTP to address ranges by
+  configuration, so the rule lives in the shared package
+  (`parseServerAddress`), where the web, mobile and TV apps and their
+  tests share it. The QR codes are written and read by the same package.
+- Alternatives: allow HTTP anywhere with a warning (the warning is the
+  thing people stop reading); HTTPS only (a home server out of the box
+  speaks HTTP, D-006).
+- Limit: a name without a dot or ending in `.lan` is trusted to be local
+  because it does not resolve on the internet; a hostile network could
+  answer for it, as it could for any plain HTTP address on that network.

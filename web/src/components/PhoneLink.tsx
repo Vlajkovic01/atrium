@@ -1,3 +1,4 @@
+import { buildPhoneLink } from "@atrium/shared";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -56,9 +57,7 @@ export function PhoneLink({ autoStart = false }: { readonly autoStart?: boolean 
 
   const secondsLeft = code ? Math.max(0, Math.ceil((code.expiresAt - now) / 1000)) : 0;
   const expired = code !== null && secondsLeft === 0;
-  const content = code
-    ? `atrium://link?server=${encodeURIComponent(window.location.origin)}&code=${encodeURIComponent(code.value)}`
-    : "";
+  const content = code ? buildPhoneLink(window.location.origin, code.value) : "";
 
   return (
     <div className="qr">
