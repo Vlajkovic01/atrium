@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 
 import { initI18n } from "../src/i18n.ts";
+import { ServersProvider } from "../src/servers.tsx";
 import { useTheme } from "../src/theme.ts";
 
-/** The frame around every screen: translations ready before anything is drawn, colours from the system's light or dark setting. */
+/**
+ * The frame around every screen: translations and the list of servers are
+ * ready before anything is drawn, colours follow the system's light or
+ * dark setting.
+ */
 export default function RootLayout() {
   const { colors, isDark } = useTheme();
   const [ready, setReady] = useState(false);
@@ -20,9 +25,9 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <ServersProvider>
       <StatusBar style={isDark ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }} />
-    </>
+    </ServersProvider>
   );
 }

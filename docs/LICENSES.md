@@ -131,6 +131,12 @@ repository. None is GPL or AGPL (flag 3).
 | @formatjs/intl-pluralrules | 7.0.4 | MIT | Plural rules for the message format, which Hermes lacks |
 | i18next, react-i18next, i18next-icu, intl-messageformat | as on the web | MIT; BSD-3-Clause | Translations, same messages as the web app |
 | Android Gradle plugin, Gradle, Kotlin | by React Native | Apache-2.0 | Build only |
+| expo-secure-store | 58.0.3 | MIT | Refresh tokens in the Android Keystore and the iOS Keychain |
+| expo-sqlite | 58.0.17 | MIT | The app's own database: settings now, offline copies later. Brings SQLite (public domain) |
+| expo-camera | 58.0.14 | MIT | Scanning the "connect a phone" code. On Android it reads codes with Google ML Kit's bundled barcode model: free to distribute, runs on the device and sends nothing, but closed source, which would matter only for a store that takes open source alone |
+| expo-build-properties | 58.0.12 | MIT | Build setting that lets the Android app speak plain HTTP at all; the app itself allows it only to local addresses (D-049) |
+| react-native-web, react-dom | 0.21.4, 19.3.0 | MIT | Development only: shows the app's screens in a browser (`mobile/preview`). Not in the app |
+| Playwright | 1.65.0 | Apache-2.0 | Development only, as for the web app |
 
 ## Candidates, not yet approved
 

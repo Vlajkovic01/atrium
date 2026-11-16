@@ -18,6 +18,7 @@ test-results/
 expo-env.d.ts
 /mobile/android/
 /mobile/ios/
+/mobile/dist-web/
 
 # Editors and OS
 .vs/

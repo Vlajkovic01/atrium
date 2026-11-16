@@ -13,6 +13,7 @@ export default tseslint.config(
       "**/.expo/**",
       "mobile/android/**",
       "mobile/ios/**",
+      "mobile/dist-web/**",
       // Generated from the OpenAPI contract; never edited by hand.
       "packages/shared/src/api/schema.d.ts",
     ],

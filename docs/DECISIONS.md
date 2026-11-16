@@ -885,3 +885,34 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - Limit: a name without a dot or ending in `.lan` is trusted to be local
   because it does not resolve on the internet; a hostile network could
   answer for it, as it could for any plain HTTP address on that network.
+
+## D-050 How the mobile app connects and how its screens are checked (Proposed, Phase 4)
+
+- **Tokens.** The refresh token of each server is kept in the Android
+  Keystore or the iOS Keychain, readable after the first unlock and never
+  copied to another device; the access token only in memory. The list of
+  servers, without any token, is in the app's own database. Signing out
+  of a server tells the server and forgets its token even when the
+  server cannot be reached.
+- **A server is asked who it is before a password is typed.** The
+  address is checked (D-049), then `/system/info` must answer as an
+  Atrium server that is set up and not too new for the app. Each failure
+  has its own explanation.
+- **Plain HTTP in the build.** Android refuses plain HTTP unless the app
+  allows it for every address; it cannot be limited to address ranges
+  there. The build therefore allows it, and the rule of D-049 in the
+  app's own code decides. iOS allows plain HTTP only to the local
+  network by configuration.
+- **Scanning a code** signs in with the single-use code and no password.
+  The same link opened from the phone's own camera (`atrium://link`)
+  does the same. The camera permission is asked for when the scan
+  screen opens, with the reason, and typing the address is always
+  offered instead.
+- **Checking screens without a phone.** The owner's laptop has no
+  Android tools (and will not get them), so `mobile/preview` runs the
+  app in a browser at a phone's size through react-native-web, against a
+  real server, and saves a picture of every screen. It checks layout,
+  both languages, both themes and the flow; it cannot check the camera,
+  the Keystore or background work, which are tried on the owner's phone
+  with the APK from CI. An emulator in CI can be added when the app has
+  enough to test there.
