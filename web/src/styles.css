@@ -2653,10 +2653,172 @@ a {
   display: contents;
 }
 
-.nav-customize {
-  margin-top: 0.5rem;
-  font-size: 0.88rem;
+/* A group heading folds its entries away. */
+.nav-fold {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  border: none;
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nav-fold:hover {
+  color: var(--ink-soft);
+}
+
+.nav-separator {
+  margin: 0.5rem 0.75rem;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+/* Compact: icons only, names on hover and for screen readers. */
+@media (width > 52rem) {
+  .app.is-compact {
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+  }
+
+  .is-compact .sidebar {
+    padding-inline: 0.6rem;
+  }
+
+  .is-compact .nav-link {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .is-compact .nav-link span,
+  .is-compact .nav-heading span,
+  .is-compact .nav-heading:not(.nav-fold),
+  .is-compact .user-text,
+  .is-compact .logo-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .is-compact .nav-fold {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .is-compact .sidebar-user {
+    flex-direction: column;
+    padding: 0.4rem 0;
+  }
+
+  .is-compact .sidebar-brand {
+    padding: 0;
+    text-align: center;
+  }
+}
+
+/* Arranging the menu: the list looks like the menu, a name is typed over,
+   entries are dragged between groups. */
+.menu-entries .row[draggable="true"] {
+  cursor: grab;
+}
+
+.menu-entries .row.is-dragging {
+  opacity: 0.45;
+}
+
+.menu-entries .row.is-drop-target,
+.menu-section.is-drop-target {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.menu-entries .row.is-hidden .inline-name {
   color: var(--ink-faint);
+  text-decoration: line-through;
+}
+
+.menu-grip {
+  padding: 0.25rem 0.15rem;
+  color: var(--ink-faint);
+  cursor: grab;
+  letter-spacing: -0.2em;
+  user-select: none;
+}
+
+.menu-name {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.inline-name {
+  width: 100%;
+  min-width: 0;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-s, 6px);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: text;
+}
+
+.inline-name:hover {
+  border-color: var(--line);
+}
+
+.inline-name:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+  outline: none;
+}
+
+.menu-section {
+  margin-top: 0.75rem;
+  border-radius: var(--radius-m);
+}
+
+.menu-section + .menu-section {
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--line);
+}
+
+.menu-section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  color: var(--ink-soft);
+}
+
+.menu-group-name {
+  flex: 1;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.menu-drop {
+  margin: 0.25rem 0 0.5rem;
+  padding: 0.9rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-m);
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.icon-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.icon-choices button[aria-pressed="true"] {
+  background: var(--accent-wash);
+  color: var(--accent-wash-ink);
 }
 
 .menu-order {
@@ -2679,7 +2841,7 @@ a {
 @media (max-width: 760px) {
   .nav-extra,
   .nav-group .nav-heading,
-  .nav-customize {
+  .nav-separator {
     display: none;
   }
 }

@@ -9,15 +9,20 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Atrium.Api.Endpoints;
 
-/// <param name="Kind"><c>files</c>, <c>photos</c>, <c>trash</c>, <c>devices</c>, <c>account</c>, <c>library</c> or <c>view</c>.</param>
+/// <param name="Kind"><c>files</c>, <c>photos</c>, <c>trash</c>, <c>devices</c>, <c>account</c>, <c>library</c>, <c>view</c>, <c>folder</c>, <c>album</c> or <c>separator</c>.</param>
 /// <param name="Label">The person's own name for it; null shows the usual one.</param>
 /// <param name="Name">For a library or a view, its own name.</param>
-/// <param name="TargetId">For a library, its top folder; for a view, the view.</param>
-/// <param name="ReadOnly">For a library, whether the person cannot change it.</param>
-public sealed record NavItemView(string Key, string Kind, string? Label, string? Name, bool Hidden, string? Group, Guid? TargetId, bool ReadOnly);
+/// <param name="TargetId">For a library, its top folder; for a view, the view; for a pinned folder or album, that folder or album.</param>
+/// <param name="ReadOnly">For a library or pinned folder, whether the person cannot change it.</param>
+/// <param name="Icon">The person's own icon, by name; null for the usual one.</param>
+public sealed record NavItemView(
+    string Key, string Kind, string? Label, string? Name, bool Hidden, string? Group, Guid? TargetId, bool ReadOnly, string? Icon = null);
 
 /// <param name="Custom">Whether the person arranged the menu themselves, rather than using the default.</param>
-public sealed record NavigationView(IReadOnlyList<NavItemView> Items, IReadOnlyList<NavGroup> Groups, bool Custom);
+/// <param name="Density"><c>comfortable</c> or <c>compact</c> (icons only).</param>
+/// <param name="AdminPosition"><c>bottom</c> or <c>top</c>.</param>
+public sealed record NavigationView(
+    IReadOnlyList<NavItemView> Items, IReadOnlyList<NavGroup> Groups, bool Custom, string Density, string AdminPosition);
 
 public sealed record SaveViewRequest(string Name, ViewRulesData Rules);
 
@@ -208,6 +213,7 @@ public static partial class NavigationEndpoints
     /// </summary>
     private static async Task<NavigationView> ResolveAsync(HttpContext http, PreferencesStore store, NodeService nodes, CancellationToken ct)
     {
+        var photos = http.RequestServices.GetRequiredService<PhotoService>();
         var actor = http.User.Actor();
         var own = await store.NavigationAsync(actor.UserId, ct);
         var layout = own ?? await store.DefaultNavigationAsync(ct) ?? NavigationLayout.Empty;
@@ -235,13 +241,15 @@ public static partial class NavigationEndpoints
         var result = new List<NavItemView>();
         foreach (var entry in layout.Entries)
         {
-            if (byKey.Remove(entry.Key, out var item))
+            var item = byKey.Remove(entry.Key, out var known) ? known : await PinnedAsync(entry.Key, actor, nodes, photos, ct);
+            if (item is not null)
             {
                 result.Add(item with
                 {
                     Hidden = entry.Hidden,
                     Label = entry.Label,
                     Group = entry.Group is { } g && groupIds.Contains(g) ? g : null,
+                    Icon = entry.Icon,
                 });
             }
         }
@@ -253,7 +261,42 @@ public static partial class NavigationEndpoints
             result.Insert(after, item);
         }
 
-        return new NavigationView(result, groups, own is not null);
+        return new NavigationView(
+            result,
+            groups,
+            own is not null,
+            layout.Density == "compact" ? "compact" : "comfortable",
+            layout.AdminPosition == "top" ? "top" : "bottom");
+    }
+
+    /// <summary>
+    /// A pinned folder or album, or a separator line. A pin to something the
+    /// person can no longer see (gone, in the trash, access withdrawn) is
+    /// left out, never shown as a broken entry.
+    /// </summary>
+    private static async Task<NavItemView?> PinnedAsync(string key, FileActor actor, NodeService nodes, PhotoService photos, CancellationToken ct)
+    {
+        var colon = key.IndexOf(':');
+        if (colon < 0 || !Guid.TryParseExact(key[(colon + 1)..], "N", out var id))
+        {
+            return null;
+        }
+
+        switch (key[..colon])
+        {
+            case "separator":
+                return new NavItemView(key, "separator", null, null, false, null, null, false);
+            case "folder":
+                return await nodes.FindAsync(actor, id, ct) is { Node.IsFolder: true, InTrash: false } found
+                    ? new NavItemView(key, "folder", null, found.Node.Name, false, null, id, !found.CanWrite)
+                    : null;
+            case "album":
+                return await photos.AlbumAsync(actor, id, ct) is { } album
+                    ? new NavItemView(key, "album", null, album.Name, false, null, id, false)
+                    : null;
+            default:
+                return null;
+        }
     }
 
     /// <summary>Where a new entry goes: after the entry that comes before it in the default order, or at the end.</summary>
@@ -275,7 +318,9 @@ public static partial class NavigationEndpoints
 
     private static bool IsValid(NavigationLayout? layout)
     {
-        if (layout?.Entries is null || layout.Groups is null || layout.Entries.Count > 500 || layout.Groups.Count > 20)
+        if (layout?.Entries is null || layout.Groups is null || layout.Entries.Count > 500 || layout.Groups.Count > 20
+            || layout.Density is not (null or "comfortable" or "compact")
+            || layout.AdminPosition is not (null or "top" or "bottom"))
         {
             return false;
         }
@@ -295,6 +340,7 @@ public static partial class NavigationEndpoints
             && EntryKey().IsMatch(e.Key)
             && keys.Add(e.Key)
             && (e.Label is null || Normalize(e.Label, 64) is not null)
+            && (e.Icon is null || IconName().IsMatch(e.Icon))
             && (e.Group is null || groupIds.Contains(e.Group)));
     }
 
@@ -304,6 +350,9 @@ public static partial class NavigationEndpoints
         return string.IsNullOrEmpty(trimmed) || trimmed.Length > max || trimmed.Any(char.IsControl) ? null : trimmed;
     }
 
-    [GeneratedRegex("^(files|photos|trash|devices|account|(library|view):[0-9a-f]{32})$")]
+    [GeneratedRegex("^(files|photos|trash|devices|account|(library|view|folder|album|separator):[0-9a-f]{32})$")]
     private static partial Regex EntryKey();
+
+    [GeneratedRegex("^[a-zA-Z]{1,32}$")]
+    private static partial Regex IconName();
 }

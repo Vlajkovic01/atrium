@@ -17,6 +17,7 @@ import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Select } from "../components/Select.tsx";
 import { Badge, Button, ErrorMessage, Field, Notice, PageHeader, useErrorText } from "../components/ui.tsx";
+import { usePin } from "../navigation.ts";
 import { useSession } from "../session.tsx";
 import { batch, downloadArchive, downloadFile, restore, type BatchItem, type NodeInfo } from "./actions.ts";
 import { Details } from "./Details.tsx";
@@ -30,6 +31,7 @@ type View = "list" | "grid";
 const VIEW_KEY = "atrium.files.view";
 const NODE_DRAG = "application/x-atrium-nodes";
 const PAGE = 500;
+const READING_POLL = 2000;
 
 function storedView(): View {
   try {
@@ -54,9 +56,16 @@ export function FileBrowser() {
   const { user } = useSession();
   const params = useParams();
 
-  const libraries = useQuery({ queryKey: ["libraries"], queryFn: () => call(api.GET("/api/v1/libraries")) });
+  // While an existing folder just added is read for the first time, its
+  // files appear as they are found: the page keeps looking until it is done.
+  const libraries = useQuery({
+    queryKey: ["libraries"],
+    queryFn: () => call(api.GET("/api/v1/libraries")),
+    refetchInterval: (query) => (query.state.data?.some((l) => l.firstReading) ? READING_POLL : false),
+  });
   const home = libraries.data?.find((l) => l.kind === "personal") ?? libraries.data?.[0];
   const folderId = params["folderId"] ?? home?.rootNodeId;
+  const pin = usePin("folder", folderId);
 
   const [sort, setSort] = useState<Sort>("name");
   const [descending, setDescending] = useState(false);
@@ -76,6 +85,7 @@ export function FileBrowser() {
     enabled: folderId !== undefined,
     queryFn: () => call(api.GET("/api/v1/nodes/{id}", { params: { path: { id: folderId! } } })),
   });
+  const reading = libraries.data?.find((l) => l.id === folder.data?.libraryId)?.firstReading ?? false;
   const path = useQuery({
     queryKey: ["path", folderId],
     enabled: folderId !== undefined,
@@ -95,6 +105,7 @@ export function FileBrowser() {
         }),
       ),
     getNextPageParam: (page) => page.nextCursor ?? null,
+    refetchInterval: () => (reading ? READING_POLL : false),
   });
 
   // The library the open folder belongs to: the personal one, or an
@@ -329,6 +340,9 @@ export function FileBrowser() {
         </nav>
       ) : null}
 
+      <ErrorMessage error={pin.error} />
+      {reading ? <Notice kind="info">{t("files.firstReading")}</Notice> : null}
+
       {/* Saying why nothing can be changed, and who can change that. */}
       {!canWrite && library.mode === "external" ? (
         <Notice kind="info">
@@ -397,6 +411,11 @@ export function FileBrowser() {
           </span>
         )}
         <span className="toolbar-spacer" />
+        {pin.ready ? (
+          <Button size="sm" variant="ghost" icon="pin" disabled={pin.busy} onClick={() => void pin.toggle()}>
+            {pin.pinned ? t("menu.unpin") : t("menu.pin")}
+          </Button>
+        ) : null}
         <Select
           label={t("files.sortBy")}
           hideLabel

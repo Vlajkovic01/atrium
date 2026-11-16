@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 
 import { api, call } from "../api.ts";
 import { Badge, Button, Card, ErrorMessage, Field, LanguagePicker, Notice, PageHeader } from "../components/ui.tsx";
@@ -87,6 +88,13 @@ export function Account() {
             </Button>
           </div>
         </form>
+      </Card>
+
+      <Card title={t("menu.openSettings")} icon="list">
+        <p className="card-lead">{t("menu.openSettingsLead")}</p>
+        <Link className="btn" to="/menu">
+          {t("menu.openSettings")}
+        </Link>
       </Card>
 
       <TwoStep enabled={me.data.totpEnabled} />

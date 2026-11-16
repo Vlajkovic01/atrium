@@ -7,6 +7,7 @@ import { api, call } from "../api.ts";
 import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Button, ErrorMessage, Field, PageHeader } from "../components/ui.tsx";
+import { usePin } from "../navigation.ts";
 import { LoadMore, PhotoTabs, SelectionBar } from "./Photos.tsx";
 import { formatDay, PhotoGrid, type PhotoItem } from "./PhotoGrid.tsx";
 import { Viewer } from "./Viewer.tsx";
@@ -114,6 +115,7 @@ export function AlbumPage() {
   const [dialog, setDialog] = useState<"rename" | "delete" | null>(null);
   const [name, setName] = useState("");
   const [error, setError] = useState<unknown>(null);
+  const pin = usePin("album", albumId);
 
   const album = useQuery({
     queryKey: ["album", albumId],
@@ -190,6 +192,11 @@ export function AlbumPage() {
               >
                 {t("files.rename")}
               </Button>
+              {pin.ready ? (
+                <Button icon="pin" disabled={pin.busy} onClick={() => void pin.toggle()}>
+                  {pin.pinned ? t("menu.unpin") : t("menu.pin")}
+                </Button>
+              ) : null}
               <Button variant="ghost" icon="trash" onClick={() => setDialog("delete")}>
                 {t("albums.delete")}
               </Button>
@@ -198,7 +205,7 @@ export function AlbumPage() {
         }
       />
       <PhotoTabs />
-      <ErrorMessage error={error ?? album.error ?? pages.error} />
+      <ErrorMessage error={error ?? pin.error ?? album.error ?? pages.error} />
       <SelectionBar
         selected={selected}
         onClear={() => setSelected(new Set())}

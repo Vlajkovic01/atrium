@@ -9,16 +9,23 @@ namespace Atrium.Api.Preferences;
 /// <summary>One entry of the menu as a person arranged it.</summary>
 /// <param name="Key">
 /// <c>files</c>, <c>photos</c>, <c>trash</c>, <c>devices</c>, <c>account</c>,
-/// <c>library:&lt;id&gt;</c> or <c>view:&lt;id&gt;</c>.
+/// <c>library:&lt;id&gt;</c>, <c>view:&lt;id&gt;</c>, a pinned
+/// <c>folder:&lt;id&gt;</c> or <c>album:&lt;id&gt;</c>, or a
+/// <c>separator:&lt;id&gt;</c> line.
 /// </param>
 /// <param name="Label">The person's own name for it; null for the usual one.</param>
 /// <param name="Group">The group it is listed under; null for none.</param>
-public sealed record NavEntry(string Key, bool Hidden, string? Label, string? Group);
+/// <param name="Icon">The person's own icon for it, by name; null for the usual one.</param>
+public sealed record NavEntry(string Key, bool Hidden, string? Label, string? Group, string? Icon = null);
 
-public sealed record NavGroup(string Id, string Name);
+/// <param name="Collapsed">Shown folded, with only its heading.</param>
+public sealed record NavGroup(string Id, string Name, bool Collapsed = false);
 
-/// <summary>The order of the menu, what is hidden, renamed or grouped.</summary>
-public sealed record NavigationLayout(IReadOnlyList<NavEntry> Entries, IReadOnlyList<NavGroup> Groups)
+/// <summary>The order of the menu, what is hidden, renamed, grouped, and how the menu is shown.</summary>
+/// <param name="Density"><c>comfortable</c> (default) or <c>compact</c>, which shows icons only.</param>
+/// <param name="AdminPosition"><c>bottom</c> (default) or <c>top</c>: where Administration sits.</param>
+public sealed record NavigationLayout(
+    IReadOnlyList<NavEntry> Entries, IReadOnlyList<NavGroup> Groups, string? Density = null, string? AdminPosition = null)
 {
     public static NavigationLayout Empty { get; } = new([], []);
 }
