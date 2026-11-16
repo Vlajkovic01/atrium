@@ -280,6 +280,27 @@ namespace Atrium.Data.Sqlite.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Changes",
+                columns: table => new
+                {
+                    Sequence = table.Column<long>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    LibraryId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    NodeId = table.Column<Guid>(type: "TEXT", nullable: true),
+                    At = table.Column<long>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Changes", x => x.Sequence);
+                    table.ForeignKey(
+                        name: "FK_Changes_Libraries_LibraryId",
+                        column: x => x.LibraryId,
+                        principalTable: "Libraries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "LibraryGrants",
                 columns: table => new
                 {
@@ -634,6 +655,11 @@ namespace Atrium.Data.Sqlite.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Changes_LibraryId",
+                table: "Changes",
+                column: "LibraryId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Jobs_ActiveDedupeKey",
                 table: "Jobs",
                 column: "ActiveDedupeKey",
@@ -847,6 +873,9 @@ namespace Atrium.Data.Sqlite.Migrations
         {
             migrationBuilder.DropTable(
                 name: "AlbumItems");
+
+            migrationBuilder.DropTable(
+                name: "Changes");
 
             migrationBuilder.DropTable(
                 name: "Jobs");

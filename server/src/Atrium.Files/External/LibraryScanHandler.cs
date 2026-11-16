@@ -237,8 +237,13 @@ public sealed class LibraryScanHandler(
         var now = time.GetUtcNow();
         foreach (var chunk in missing.Select(m => m.Id).Chunk(500))
         {
+            // A missing file is gone for everyone who reads the library, and
+            // the change feed says so together with the mark.
             var ids = chunk.ToList();
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
             await db.Nodes.Where(n => ids.Contains(n.Id)).ExecuteUpdateAsync(s => s.SetProperty(n => n.MissingSince, now), ct);
+            await db.RecordChangesAsync(library.Id, ids, ct);
+            await transaction.CommitAsync(ct);
         }
 
         // Scan state is not something an admin edits, so it does not bump

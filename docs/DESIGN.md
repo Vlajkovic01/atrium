@@ -169,7 +169,7 @@ PostgreSQL `tsvector`).
 | `Node` | library, parent, name, name key, type, blob or external path, size, modified, created, owner, trashed at, original parent, version | A file or folder |
 | `NodeVersion` | node, blob, size, modified, created, created by | Earlier content of a file, kept when it is replaced (D-019) |
 | `Upload` | user, target folder, name, declared length, offset, state, provider upload state, expires | A tus upload in progress |
-| `ChangeLogEntry` | sequence, library, node, change kind | Feeds client sync and offline copies |
+| `ChangeEntry` | sequence, library, node, time | The change feed for sync and offline copies (D-047). An entry says "look at this item again", not what changed |
 
 Library `mode`:
 
@@ -214,6 +214,25 @@ the phases that need them.
   stray delete.
 - Moves check for cycles. A move is a metadata change only.
 - Several nodes may reference one blob (deduplication, copies).
+
+Change feed, built in Phase 4 (D-047):
+
+- Every saved change of a node writes one `ChangeEntry` in the same
+  transaction, in one place in the database context; the few bulk
+  statements that bypass it write theirs explicitly. A scan that merely
+  finds a file again writes nothing and leaves its version alone.
+- `GET /changes` answers with the items as they are now, or as removed.
+  A change to a folder (trashed, restored, removed) is one entry that
+  speaks for everything below it. A file a scan no longer finds is
+  removed for readers.
+- Entries become visible in sequence order. SQLite has one writer;
+  on PostgreSQL every transaction that writes entries takes one advisory
+  lock until it ends.
+- The cursor names an entry and is sealed with the server key. It works
+  only while that entry exists. Entries are kept 30 days, and the newest
+  of the older ones stays, so a client that is up to date never loses its
+  place. The feed is not part of a backup: after a restore every cursor
+  is expired and clients read their folders again.
 
 ### 2.3 Media
 

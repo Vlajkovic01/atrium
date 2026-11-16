@@ -10,8 +10,16 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Atrium.Data;
 
-public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) : DbContext(options)
+/// <param name="time">Dates the change feed's entries. Optional so that tools and tests can create a context from options alone.</param>
+public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options, TimeProvider? time = null) : DbContext(options)
 {
+    // Any fixed number: the key of the PostgreSQL lock that puts writers of
+    // the change feed in one line.
+    private const long ChangeFeedLockKey = 0x41747269756D4346;
+
+    private readonly TimeProvider _time = time ?? TimeProvider.System;
+
+    public DbSet<ChangeEntry> Changes => Set<ChangeEntry>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
@@ -277,6 +285,17 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
             e.HasIndex(v => new { v.NodeId, v.CreatedAt });
         });
 
+        modelBuilder.Entity<ChangeEntry>(e =>
+        {
+            e.ToTable("Changes");
+            e.HasKey(c => c.Sequence);
+            e.Property(c => c.Sequence).ValueGeneratedOnAdd();
+
+            // A library that is removed takes its entries along: readers
+            // notice the library itself is gone.
+            e.HasOne<Library>().WithMany().HasForeignKey(c => c.LibraryId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         modelBuilder.Entity<Upload>(e =>
         {
             e.Property(u => u.Name).HasMaxLength(NodeName.MaxLength);
@@ -300,17 +319,133 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
-        BumpVersions();
         DeriveNodeFields();
-        return base.SaveChanges(acceptAllChangesOnSuccess);
+        BumpVersions();
+        if (!RecordNodeChanges() || !OrdersChangeFeedByLock)
+        {
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        if (Database.CurrentTransaction is not null)
+        {
+            Database.ExecuteSql($"SELECT pg_advisory_xact_lock({ChangeFeedLockKey})");
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        using var transaction = Database.BeginTransaction();
+        Database.ExecuteSql($"SELECT pg_advisory_xact_lock({ChangeFeedLockKey})");
+        var saved = base.SaveChanges(acceptAllChangesOnSuccess);
+        transaction.Commit();
+        return saved;
     }
 
-    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
-        BumpVersions();
         DeriveNodeFields();
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        BumpVersions();
+        if (!RecordNodeChanges() || !OrdersChangeFeedByLock)
+        {
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        if (Database.CurrentTransaction is not null)
+        {
+            await LockChangeFeedAsync(cancellationToken);
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        await using var transaction = await Database.BeginTransactionAsync(cancellationToken);
+        await LockChangeFeedAsync(cancellationToken);
+        var saved = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return saved;
     }
+
+    /// <summary>
+    /// Writes change feed entries for items changed by a bulk statement,
+    /// which the context does not see. Call it in the transaction that makes
+    /// the change, so the entry and the change appear together; without one,
+    /// the entries are written in a transaction of their own.
+    /// </summary>
+    public async Task RecordChangesAsync(Guid libraryId, IReadOnlyCollection<Guid> nodeIds, CancellationToken ct)
+    {
+        if (nodeIds.Count == 0)
+        {
+            return;
+        }
+
+        var own = Database.CurrentTransaction is null ? await Database.BeginTransactionAsync(ct) : null;
+        try
+        {
+            if (OrdersChangeFeedByLock)
+            {
+                await LockChangeFeedAsync(ct);
+            }
+
+            var at = _time.GetUtcNow().ToUnixTimeMilliseconds();
+            foreach (var nodeId in nodeIds)
+            {
+                await Database.ExecuteSqlAsync(
+                    $"""INSERT INTO "Changes" ("LibraryId", "NodeId", "At") VALUES ({libraryId}, {nodeId}, {at})""", ct);
+            }
+
+            if (own is not null)
+            {
+                await own.CommitAsync(ct);
+            }
+        }
+        finally
+        {
+            if (own is not null)
+            {
+                await own.DisposeAsync();
+            }
+        }
+    }
+
+    // The feed promises that entries become visible in sequence order. SQLite
+    // gives that by itself: it has one writer at a time, from its first
+    // write to its commit. PostgreSQL does not: of two transactions, the one
+    // with the higher sequence can commit first, and a reader in between
+    // would move past an entry it never saw. So every transaction that
+    // writes entries takes one lock, held until it ends.
+    private bool OrdersChangeFeedByLock => Database.ProviderName?.Contains("Npgsql", StringComparison.Ordinal) == true;
+
+    private Task LockChangeFeedAsync(CancellationToken ct) =>
+        Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({ChangeFeedLockKey})", ct);
+
+    // Every saved change of a node is one feed entry, written by the same
+    // save. Bulk statements bypass this and call RecordChangesAsync.
+    private bool RecordNodeChanges()
+    {
+        List<ChangeEntry>? entries = null;
+        foreach (var entry in ChangeTracker.Entries<Node>())
+        {
+            var changed = entry.State switch
+            {
+                EntityState.Added or EntityState.Deleted => true,
+                EntityState.Modified => !IsOnlySeenByScan(entry),
+                _ => false,
+            };
+            if (changed)
+            {
+                (entries ??= []).Add(new ChangeEntry { LibraryId = entry.Entity.LibraryId, NodeId = entry.Entity.Id, At = _time.GetUtcNow() });
+            }
+        }
+
+        if (entries is null)
+        {
+            return false;
+        }
+
+        Changes.AddRange(entries);
+        return true;
+    }
+
+    // A scan stamps every entry it finds. That is bookkeeping, not a change
+    // anyone made: it must not look like one to clients.
+    private static bool IsOnlySeenByScan(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry) =>
+        entry.Properties.Where(p => p.IsModified).All(p => p.Metadata.Name is nameof(Node.LastSeenAt));
 
     // Fields that follow from others are set here, in one place, so no code
     // path that saves a node can forget them. Bulk updates bypass this and
@@ -360,7 +495,7 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options) :
     {
         foreach (var entry in ChangeTracker.Entries<IVersioned>())
         {
-            if (entry.State == EntityState.Modified)
+            if (entry.State == EntityState.Modified && !(entry.Entity is Node && IsOnlySeenByScan(entry)))
             {
                 entry.Entity.Version++;
             }

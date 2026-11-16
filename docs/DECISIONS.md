@@ -799,3 +799,53 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - Alternatives considered for when to publish: only
   by hand (nothing published unless asked), only on version tags
   (nothing until the release).
+
+## D-047 The change feed (Proposed, Phase 4)
+
+- **An entry says "look again", not what changed.** `Changes` holds a
+  sequence, the library, the node and a time. `GET /changes` answers with
+  each item as it is now, or as removed. Alternative: entries that
+  describe the change (created, renamed, moved), which a client would
+  have to replay in order and which every new kind of change would have
+  to remember to describe. With the current state there is nothing to
+  replay: applying an answer twice, or after a later one, ends the same.
+- **Written where nodes are saved.** The database context writes the
+  entry in the same save as the change, so no code path can forget it
+  and the two are never apart. Bulk statements bypass the context; the
+  ones a client can see (emptying the trash, the end of its retention, a
+  scan marking files missing) write their entries in the same
+  transaction.
+- **A folder speaks for what is below it.** Trashing, restoring or
+  removing a folder is one entry. Clients know the tree and apply it to
+  the subtree; a folder with 50,000 files does not write 50,000 entries.
+- **A scan that finds a file again is not a change.** It neither writes
+  an entry nor raises the node's version. Found while building this: the
+  scan compared the disk's modification time, finer than a millisecond,
+  with the stored one, so nearly every file looked changed at every
+  scan, was dated again and read again. The folder's times are now
+  compared in whole milliseconds.
+- **Order.** A client that has seen everything up to a sequence must
+  never meet an earlier one later. SQLite gives that with its single
+  writer. On PostgreSQL the transaction with the higher sequence can
+  commit first, so every transaction that writes entries takes one
+  advisory lock until it ends. Cost: changes to files are written one
+  transaction at a time on PostgreSQL, as they already are on SQLite;
+  two transactions that also wait for each other's rows are told apart
+  by the database, which fails one of them.
+- **The cursor names an entry**, by sequence and time, sealed with the
+  server key. It is accepted only while that entry exists. After a
+  restored backup or a new database the numbers start over, and an old
+  cursor must not silently continue in another history; the feed is
+  therefore left out of backups, so a restore expires every cursor.
+  Sealing also hides the sequence, which counts changes by everyone on
+  the server, from clients. An empty feed gets a marker entry, so "now"
+  is always a real entry.
+- **Retention**: 30 days, and the newest entry older than that stays. A
+  client that has seen everything keeps its place however long nothing
+  happens; one that was away for more than 30 days gets 410
+  `changes.cursor_expired` and reads its folders again.
+- **Access** is decided when the feed is read: entries of libraries the
+  caller can read now. A library that appears or disappears is noticed
+  through the list of libraries, not through the feed.
+- **Not in the feed**: albums, the menu, notifications. They are small
+  and read whole.

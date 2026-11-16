@@ -129,7 +129,7 @@ public sealed class TrashService(AtriumDbContext db, NodeService nodes, External
         }
 
         // The database removes the subtree and its versions (cascade).
-        await db.Nodes.Where(n => n.Id == id && n.TrashedAt != null).ExecuteDeleteAsync(ct);
+        await RemoveAsync(db, library.Id, [id], ct);
         return FileResult<bool>.Success(true);
     }
 
@@ -151,7 +151,8 @@ public sealed class TrashService(AtriumDbContext db, NodeService nodes, External
             }
             else
             {
-                removed += await db.Nodes.Where(n => n.LibraryId == library.Id && n.TrashedAt != null).ExecuteDeleteAsync(ct);
+                var ids = await db.Nodes.Where(n => n.LibraryId == library.Id && n.TrashedAt != null).Select(n => n.Id).ToListAsync(ct);
+                removed += await RemoveAsync(db, library.Id, ids, ct);
             }
         }
 
@@ -159,17 +160,44 @@ public sealed class TrashService(AtriumDbContext db, NodeService nodes, External
     }
 
     /// <summary>
+    /// Removes trashed items for good and says so in the change feed, in one
+    /// transaction. One entry per item: it speaks for everything below it.
+    /// </summary>
+    private static async Task<int> RemoveAsync(AtriumDbContext db, Guid libraryId, IReadOnlyCollection<Guid> ids, CancellationToken ct)
+    {
+        var removed = 0;
+        foreach (var chunk in ids.Chunk(500))
+        {
+            var chunkIds = chunk.ToList();
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            await db.RecordChangesAsync(libraryId, chunkIds, ct);
+            removed += await db.Nodes.Where(n => chunkIds.Contains(n.Id) && n.TrashedAt != null).ExecuteDeleteAsync(ct);
+            await transaction.CommitAsync(ct);
+        }
+
+        return removed;
+    }
+
+    /// <summary>
     /// Removes items whose retention ended in managed libraries: rows only,
     /// content follows through the blob collector. External libraries are
     /// handled by <see cref="ExpireExternalAsync"/>.
     /// </summary>
-    public static Task<int> ExpireAsync(AtriumDbContext db, DateTimeOffset now, TimeSpan retention, CancellationToken ct)
+    public static async Task<int> ExpireAsync(AtriumDbContext db, DateTimeOffset now, TimeSpan retention, CancellationToken ct)
     {
         var cutoff = now - retention;
-        return db.Nodes
+        var expired = await db.Nodes
             .Where(n => n.TrashedAt != null && n.TrashedAt < cutoff
                 && db.Libraries.Any(l => l.Id == n.LibraryId && l.Mode == LibraryMode.Managed))
-            .ExecuteDeleteAsync(ct);
+            .Select(n => new { n.LibraryId, n.Id })
+            .ToListAsync(ct);
+        var removed = 0;
+        foreach (var library in expired.GroupBy(n => n.LibraryId))
+        {
+            removed += await RemoveAsync(db, library.Key, library.Select(n => n.Id).ToList(), ct);
+        }
+
+        return removed;
     }
 
     /// <summary>

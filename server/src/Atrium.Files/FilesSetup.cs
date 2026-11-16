@@ -21,6 +21,7 @@ public static class FilesSetup
         services.AddScoped<BlobStore>();
         services.AddScoped<NodeService>();
         services.AddScoped<TrashService>();
+        services.AddScoped<ChangeFeed>();
         services.AddScoped<VersionService>();
         services.AddScoped<UsageService>();
         services.AddJobHandler<FileRetentionHandler>(FileRetentionHandler.Type);

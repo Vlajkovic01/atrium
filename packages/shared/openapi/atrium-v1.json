@@ -65,6 +65,68 @@
         }
       }
     },
+    "/api/v1/changes": {
+      "get": {
+        "tags": [
+          "Files"
+        ],
+        "description": "Without a cursor: no items and a cursor that means now. With one: the files and folders to look at again in the libraries the caller can read, each once, as they are now. A change to a folder (trashed, restored, removed) speaks for everything below it. 410 changes.cursor_expired: read everything again.",
+        "operationId": "ListChanges",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "410": {
+            "description": "Gone",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/me/usage": {
       "get": {
         "tags": [
@@ -5566,6 +5628,64 @@
           }
         }
       },
+      "ChangeInfo": {
+        "required": [
+          "nodeId",
+          "libraryId",
+          "removed",
+          "inTrash",
+          "node"
+        ],
+        "type": "object",
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "libraryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "removed": {
+            "type": "boolean"
+          },
+          "inTrash": {
+            "type": "boolean"
+          },
+          "node": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NodeInfo"
+              }
+            ]
+          }
+        }
+      },
+      "ChangePage": {
+        "required": [
+          "items",
+          "cursor",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChangeInfo"
+            }
+          },
+          "cursor": {
+            "type": "string"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        }
+      },
       "ChangePasswordRequest": {
         "required": [
           "currentPassword",
@@ -8907,10 +9027,10 @@
       "name": "Atrium.Api"
     },
     {
-      "name": "Me"
+      "name": "Files"
     },
     {
-      "name": "Files"
+      "name": "Me"
     },
     {
       "name": "Administration"

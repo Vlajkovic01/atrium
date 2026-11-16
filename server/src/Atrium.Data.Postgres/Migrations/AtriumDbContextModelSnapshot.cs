@@ -60,6 +60,30 @@ namespace Atrium.Data.Postgres.Migrations
                     b.ToTable("Blobs");
                 });
 
+            modelBuilder.Entity("Atrium.Core.Files.ChangeEntry", b =>
+                {
+                    b.Property<long>("Sequence")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Sequence"));
+
+                    b.Property<long>("At")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("LibraryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("NodeId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Sequence");
+
+                    b.HasIndex("LibraryId");
+
+                    b.ToTable("Changes", (string)null);
+                });
+
             modelBuilder.Entity("Atrium.Core.Files.Library", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1046,6 +1070,14 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasForeignKey("StorageLocationId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Atrium.Core.Files.ChangeEntry", b =>
+                {
+                    b.HasOne("Atrium.Core.Files.Library", null)
+                        .WithMany()
+                        .HasForeignKey("LibraryId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Atrium.Core.Files.Library", b =>

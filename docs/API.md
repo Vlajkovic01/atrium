@@ -144,7 +144,7 @@ SVG, is a download with the type `application/octet-stream`.
 | GET | `/trash` | The user's trashed items with size, item count and the date retention removes them |
 | POST | `/trash/{id}/restore` | Back to the original parent, or to `parentId`, which is required when the original folder is in the trash too. `onConflict`: `fail` or `rename` |
 | DELETE | `/trash/{id}`, `/trash` | Remove permanently, empty trash. Rows only; content follows through the blob collector |
-| GET | `/changes?cursor=` | Change feed for sync and offline copies. Moved to Phase 4 (D-027) |
+| GET | `/changes?cursor=&limit=` | Built in Phase 4 (D-047). Without a cursor: no items and a cursor meaning "now". With one: the files and folders to look at again in every library the caller can read, each once, as it is now (`node`), or `removed`. An entry about a folder speaks for everything below it. `hasMore` says to ask again at once; `limit` up to 1,000. 410 `changes.cursor_expired` when the server cannot continue from the cursor: the client reads its folders again |
 | GET | `/me/usage` | Used bytes split into files, trash and versions, and the quota |
 
 Uploads use the tus protocol with the creation, termination, checksum and

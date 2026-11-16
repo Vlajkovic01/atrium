@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -275,6 +276,27 @@ namespace Atrium.Data.Postgres.Migrations
                         name: "FK_TotpCredentials_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Changes",
+                columns: table => new
+                {
+                    Sequence = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    LibraryId = table.Column<Guid>(type: "uuid", nullable: true),
+                    NodeId = table.Column<Guid>(type: "uuid", nullable: true),
+                    At = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Changes", x => x.Sequence);
+                    table.ForeignKey(
+                        name: "FK_Changes_Libraries_LibraryId",
+                        column: x => x.LibraryId,
+                        principalTable: "Libraries",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -634,6 +656,11 @@ namespace Atrium.Data.Postgres.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Changes_LibraryId",
+                table: "Changes",
+                column: "LibraryId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Jobs_ActiveDedupeKey",
                 table: "Jobs",
                 column: "ActiveDedupeKey",
@@ -847,6 +874,9 @@ namespace Atrium.Data.Postgres.Migrations
         {
             migrationBuilder.DropTable(
                 name: "AlbumItems");
+
+            migrationBuilder.DropTable(
+                name: "Changes");
 
             migrationBuilder.DropTable(
                 name: "Jobs");
