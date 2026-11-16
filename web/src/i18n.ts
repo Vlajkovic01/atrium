@@ -73,3 +73,21 @@ export function formatBytes(bytes: number): string {
 export function formatDateTime(iso: string): string {
   return new Intl.DateTimeFormat(currentLocale(), { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
 }
+
+/** How long ago, such as "2 days ago", in the current language. */
+export function formatAgo(iso: string, now: number = Date.now()): string {
+  const seconds = Math.round((Date.parse(iso) - now) / 1000);
+  const steps: [Intl.RelativeTimeFormatUnit, number][] = [
+    ["day", 86_400],
+    ["hour", 3_600],
+    ["minute", 60],
+  ];
+  const format = new Intl.RelativeTimeFormat(currentLocale(), { numeric: "auto" });
+  for (const [unit, size] of steps) {
+    if (Math.abs(seconds) >= size) {
+      return format.format(Math.round(seconds / size), unit);
+    }
+  }
+
+  return format.format(0, "minute");
+}

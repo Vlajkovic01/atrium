@@ -144,13 +144,9 @@
     "devices": "Devices",
     "account": "Account",
     "main": "Main",
-    "people": "People",
-    "storage": "Storage",
     "administration": "Administration",
     "files": "Files",
     "trash": "Trash",
-    "libraries": "Libraries",
-    "backgroundWork": "Background work",
     "photos": "Photos",
     "customize": "Customize menu"
   },
@@ -534,6 +530,101 @@
     },
     "hint": "Type part of a name, a year or a month and year. Choose a type to see all of that kind.",
     "nothing": "Nothing found."
+  },
+  "admin": {
+    "title": "Administration",
+    "lead": "This server at a glance: what needs you first, then each part of it.",
+    "sections": "Administration sections",
+    "warningCount": "{count, plural, one {# warning} other {# warnings}}",
+    "open": "Open",
+    "allGood": "Everything is in order.",
+    "attentionHeading": "Needs attention",
+    "section": {
+      "overview": "Overview",
+      "people": "People",
+      "storage": "Storage",
+      "libraries": "Libraries",
+      "background-work": "Background work",
+      "backups": "Backups"
+    },
+    "attention": {
+      "storage_offline": "The storage location {name} cannot be reached. Files on it cannot be opened until it is back.",
+      "library_offline": "The folder {name} is offline: it is missing, empty or unreadable. Nothing in it was removed.",
+      "jobs_failed": "{count, plural, one {# job} other {# jobs}} failed in the last day.",
+      "jobs_paused": "Background work is paused.",
+      "backup_none": "There is no backup of the database yet.",
+      "backup_old": "The last backup is more than two days old.",
+      "integrity_problems": "The storage check found {count, plural, one {# file} other {# files}} missing or damaged.",
+      "integrity_none": "Storage has not been checked yet.",
+      "integrity_old": "Storage has not been checked for more than two weeks.",
+      "people_deletion": "{count, plural, one {# account is} other {# accounts are}} waiting to be deleted."
+    },
+    "people": {
+      "total": "People",
+      "admins": "Admins",
+      "disabled": "Turned off",
+      "pendingDeletion": "To be deleted"
+    },
+    "storage": {
+      "none": "No storage location yet.",
+      "stored": "{size} stored",
+      "state": {
+        "online": "Working",
+        "offline": "Unreachable",
+        "unknown": "Not checked"
+      }
+    },
+    "libraries": {
+      "folders": "Existing folders",
+      "offline": "Offline",
+      "changesAllowed": "Changes allowed"
+    },
+    "jobs": {
+      "running": "Running",
+      "waiting": "Waiting",
+      "failed": "Failed today",
+      "paused": "Paused until resumed.",
+      "pausedUntil": "Paused until {time}."
+    },
+    "backups": {
+      "lead": "Copies of the database and checks of the stored files.",
+      "heading": "Backups",
+      "what": "Every day Atrium copies its database: names, folders, people and settings. The files themselves stay on their storage locations and are not part of it.",
+      "now": "Back up now",
+      "running": "Backing up…",
+      "done": "The backup is ready.",
+      "failed": "The backup failed. Background work shows why.",
+      "never": "No backup yet",
+      "last": "Last backup",
+      "restore": "Restoring a backup is done from the command line for now; the backup guide explains how.",
+      "reason": {
+        "scheduled": "Daily",
+        "manual": "Made by hand",
+        "pre-migration": "Before an update"
+      }
+    },
+    "integrity": {
+      "heading": "Storage check",
+      "what": "Once a week Atrium reads every stored file and compares it with what it should be, so damage is found while a backup can still help.",
+      "now": "Check now",
+      "running": "Checking…",
+      "never": "Not checked yet",
+      "last": "Last check",
+      "checked": "Checked",
+      "checkedValue": "{count, plural, one {# file} other {# files}}, {size}",
+      "missing": "Missing",
+      "damaged": "Damaged",
+      "unknown": "Not known to Atrium",
+      "problems": "Problems",
+      "clean": "Every file is where it should be and unchanged.",
+      "explainProblems": "Some files are missing or damaged. Nothing was changed; restore them from a copy of the storage location if you have one.",
+      "problem": {
+        "missing": "Missing",
+        "damaged": "Damaged",
+        "unknown": "Not known to Atrium",
+        "locationUnavailable": "Location unreachable"
+      }
+    }
   },
   "menu": {
     "title": "Customize menu",

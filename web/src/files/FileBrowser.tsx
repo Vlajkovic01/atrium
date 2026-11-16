@@ -354,7 +354,7 @@ export function FileBrowser() {
           {!library.changesAllowed && user?.role === "admin" ? (
             <>
               {" "}
-              <Link to="/libraries">{t("files.manageLibraries")}</Link>
+              <Link to="/admin/libraries">{t("files.manageLibraries")}</Link>
             </>
           ) : null}
         </Notice>

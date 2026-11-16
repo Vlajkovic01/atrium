@@ -133,6 +133,7 @@ v1.MapUploadEndpoints();
 v1.MapContentEndpoints();
 v1.MapBackupEndpoints();
 v1.MapIntegrityEndpoints();
+v1.MapAdminOverviewEndpoints();
 v1.MapBackgroundWorkEndpoints();
 v1.MapAdminLibraryEndpoints();
 v1.MapMediaEndpoints();

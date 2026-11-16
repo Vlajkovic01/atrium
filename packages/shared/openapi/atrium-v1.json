@@ -348,6 +348,26 @@
         }
       }
     },
+    "/api/v1/admin/overview": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "GetAdminOverview",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/nodes/{id}/thumbnail": {
       "get": {
         "tags": [
@@ -4814,6 +4834,42 @@
   },
   "components": {
     "schemas": {
+      "AdminAttention": {
+        "required": [
+          "code",
+          "severity",
+          "section",
+          "name",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
       "AdminLibraryView": {
         "required": [
           "id",
@@ -4927,6 +4983,47 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "AdminOverview": {
+        "required": [
+          "attention",
+          "people",
+          "storage",
+          "libraries",
+          "jobs",
+          "backup",
+          "integrity"
+        ],
+        "type": "object",
+        "properties": {
+          "attention": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAttention"
+            }
+          },
+          "people": {
+            "$ref": "#/components/schemas/OverviewPeople"
+          },
+          "storage": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OverviewLocation"
+            }
+          },
+          "libraries": {
+            "$ref": "#/components/schemas/OverviewLibraries"
+          },
+          "jobs": {
+            "$ref": "#/components/schemas/OverviewJobs"
+          },
+          "backup": {
+            "$ref": "#/components/schemas/OverviewBackup"
+          },
+          "integrity": {
+            "$ref": "#/components/schemas/OverviewIntegrity"
           }
         }
       },
@@ -6700,6 +6797,228 @@
           }
         }
       },
+      "OverviewBackup": {
+        "required": [
+          "count",
+          "lastAt",
+          "lastSize"
+        ],
+        "type": "object",
+        "properties": {
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "OverviewIntegrity": {
+        "required": [
+          "lastAt",
+          "problems",
+          "running"
+        ],
+        "type": "object",
+        "properties": {
+          "lastAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "problems": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "running": {
+            "type": "boolean"
+          }
+        }
+      },
+      "OverviewJobs": {
+        "required": [
+          "running",
+          "waiting",
+          "failedLastDay",
+          "paused",
+          "pausedUntil"
+        ],
+        "type": "object",
+        "properties": {
+          "running": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "waiting": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "failedLastDay": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "paused": {
+            "type": "boolean"
+          },
+          "pausedUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "OverviewLibraries": {
+        "required": [
+          "folders",
+          "offline",
+          "changesAllowed"
+        ],
+        "type": "object",
+        "properties": {
+          "folders": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "offline": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "changesAllowed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "OverviewLocation": {
+        "required": [
+          "id",
+          "name",
+          "state",
+          "lastCheckedAt",
+          "storedBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StorageLocationState"
+          },
+          "lastCheckedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "storedBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "OverviewPeople": {
+        "required": [
+          "total",
+          "admins",
+          "disabled",
+          "pendingDeletion"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "admins": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "disabled": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pendingDeletion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "PairingDetails": {
         "required": [
           "userCode",
@@ -8329,6 +8648,9 @@
       "name": "Files"
     },
     {
+      "name": "Administration"
+    },
+    {
       "name": "Photos"
     },
     {
@@ -8360,9 +8682,6 @@
     },
     {
       "name": "Uploads"
-    },
-    {
-      "name": "Administration"
     },
     {
       "name": "Albums"
