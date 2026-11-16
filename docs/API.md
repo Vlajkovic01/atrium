@@ -178,15 +178,16 @@ overwrites (DESIGN.md 4.2).
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/timeline/buckets` | Counts per month, so the client can lay out a scrollbar for a huge library |
-| GET | `/timeline?bucket=` | Items in a bucket |
+| GET | `/timeline/buckets` | Built in Phase 3. Counts per month, newest first, so the client can lay out a scrubber for a huge library. Optional `libraryId` |
+| GET | `/timeline` | Built in Phase 3. Photos and videos newest first, keyset `cursor`, `limit` up to 500, optional `from` and `to` (local time, D-034) and `libraryId`. Each item has its upright width and height and a signed thumbnail URL |
 | GET | `/nodes/{id}/thumbnail?size=` | Built in Phase 3. `small` (grid, 400 px) or `large` (viewer, 1,920 px), WebP without metadata, made on first request if needed. Bearer token or signed URL |
 | GET | `/nodes/{id}/preview` | Built in Phase 3. A video's four-second silent MP4 clip. Bearer token or signed URL |
 | GET | `/nodes/{id}/media-info` | Built in Phase 3. Size, duration, format, codecs, capture time and offset, camera, thumbnail state. No location (D-031) |
-| GET, POST | `/albums` | |
-| GET, PATCH, DELETE | `/albums/{id}` | |
-| POST, DELETE | `/albums/{id}/items` | Add, remove |
-| GET | `/search` | `q`, `type`, date range, library. No location (D-031) |
+| GET, POST | `/albums` | Built in Phase 3. The caller's albums with count, cover and date range; create with `name` and optional `nodeIds` |
+| GET, PATCH, DELETE | `/albums/{id}` | Rename or choose the cover (`If-Match`). Deleting removes the album only |
+| GET | `/albums/{id}/items` | The items the caller can still see, newest first |
+| POST | `/albums/{id}/items`, `/albums/{id}/items/remove` | Add or remove up to 1,000 `nodeIds`; only photos and videos the caller can read |
+| GET | `/search` | Built in Phase 3. `q` (words in the name, ignoring case and diacritics), `type` (`photo`, `video`, `document`, `folder`), `from`, `to`, `libraryId`, `cursor`. No location (D-031) |
 
 ## Playback (Phase 5)
 

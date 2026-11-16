@@ -60,6 +60,47 @@ public sealed class MediaApiTests : IDisposable
     }
 
     [Fact]
+    public async Task The_timeline_gives_signed_thumbnails_that_an_image_element_can_load()
+    {
+        var (token, photo) = await PhotoAsync("ana");
+
+        var buckets = await (await _client.SendAsync(HttpMethod.Get, "/api/v1/timeline/buckets", token)).ReadAsync<List<TimelineBucketView>>();
+        var page = await (await _client.SendAsync(HttpMethod.Get, "/api/v1/timeline?limit=50", token)).ReadAsync<PhotoPageView>();
+
+        Assert.Equal(1, Assert.Single(buckets).Count);
+        var item = Assert.Single(page.Items);
+        Assert.Equal(photo.Id, item.Id);
+
+        // No token: the signature is the access.
+        var image = await _client.GetAsync(item.ThumbnailUrl);
+        Assert.Equal(HttpStatusCode.OK, image.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await _client.GetAsync(item.ThumbnailUrl.Replace("size=small", "size=large", StringComparison.Ordinal))).StatusCode);
+    }
+
+    [Fact]
+    public async Task Albums_and_search_work_over_http()
+    {
+        var (token, photo) = await PhotoAsync("ana");
+
+        var created = await _client.SendAsync(HttpMethod.Post, "/api/v1/albums", token, new { name = "Dots", nodeIds = new[] { photo.Id } });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var album = await created.ReadAsync<AlbumView>();
+        Assert.Equal(1, album.ItemCount);
+        Assert.NotNull(album.CoverUrl);
+
+        var items = await (await _client.SendAsync(HttpMethod.Get, $"/api/v1/albums/{album.Id}/items", token)).ReadAsync<PhotoPageView>();
+        Assert.Single(items.Items);
+
+        var found = await (await _client.SendAsync(HttpMethod.Get, "/api/v1/search?q=DOT&type=photo", token)).ReadAsync<SearchPageView>();
+        Assert.Equal(photo.Id, Assert.Single(found.Items).Node.Id);
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.SendAsync(HttpMethod.Get, "/api/v1/search?type=spreadsheet", token)).StatusCode);
+
+        var renamed = await _client.SendAsync(HttpMethod.Patch, $"/api/v1/albums/{album.Id}", token, new { name = "Two dots" }, ifMatch: $"\"{album.Version}\"");
+        Assert.Equal("Two dots", (await renamed.ReadAsync<AlbumView>()).Name);
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.SendAsync(HttpMethod.Delete, $"/api/v1/albums/{album.Id}", token)).StatusCode);
+    }
+
+    [Fact]
     public async Task Media_info_reports_what_is_known_so_far()
     {
         var (token, photo) = await PhotoAsync("ana");
