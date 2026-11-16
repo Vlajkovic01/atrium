@@ -54,9 +54,11 @@ public static class PortableBackup
     /// backup copied next to the files should hold no session material.
     /// Accounts, password hashes and encrypted secrets stay: without them
     /// nobody could sign in after a restore.
+    /// The change feed is left out too (D-047): a restore turns the clock
+    /// back, and clients must read everything again, not continue.
     /// </summary>
     public static readonly IReadOnlySet<string> ExcludedTables =
-        new HashSet<string>(["Sessions", "RefreshTokens", "PairingRequests", "LinkCodes"], StringComparer.Ordinal);
+        new HashSet<string>(["Sessions", "RefreshTokens", "PairingRequests", "LinkCodes", "Changes"], StringComparer.Ordinal);
     public const string ManifestEntry = "manifest.json";
     private const string TablesFolder = "tables/";
     private const string BytesMarker = "$b";

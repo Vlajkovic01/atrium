@@ -38,6 +38,9 @@ public static class FileErrors
 
     /// <summary>The operation exists, but not for this kind of library (copying inside an external folder).</summary>
     public const string NotSupported = "node.not_supported";
+
+    /// <summary>The place in the change feed a client asked to continue from no longer exists; it reads everything again.</summary>
+    public const string CursorExpired = "changes.cursor_expired";
 }
 
 /// <summary>The outcome of a file operation: a value, or an error code with optional parameters.</summary>

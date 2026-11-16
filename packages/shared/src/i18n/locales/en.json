@@ -80,6 +80,9 @@
       "unknown_type": "This server does not know how to run this task. It may come from a newer version.",
       "lease_lost": "The task was interrupted and will be started again."
     },
+    "changes": {
+      "cursor_expired": "This device was away for too long to catch up. It reads everything again."
+    },
     "files": {
       "no_storage": "This server has no storage location yet. An admin has to add one before files can be stored.",
       "quota_exceeded": "There is not enough space left in your storage quota."

@@ -21,4 +21,10 @@ public sealed class FilesOptions
 
     /// <summary>How long after an admin deletes an account its files are removed; until then the deletion can be cancelled (D-025).</summary>
     public TimeSpan UserDeletionDelay { get; init; } = TimeSpan.FromDays(30);
+
+    /// <summary>
+    /// How long the change feed keeps its entries (D-047). A device that was
+    /// away for longer reads its folders again instead of catching up.
+    /// </summary>
+    public TimeSpan ChangeRetention { get; init; } = TimeSpan.FromDays(30);
 }

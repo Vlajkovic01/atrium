@@ -52,6 +52,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Without a cursor: no items and a cursor that means now. With one: the files and folders to look at again in the libraries the caller can read, each once, as they are now. A change to a folder (trashed, restored, removed) speaks for everything below it. 410 changes.cursor_expired: read everything again. */
+        get: operations["ListChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/usage": {
         parameters: {
             query?: never;
@@ -1596,6 +1613,20 @@ export interface components {
         BatchResponse: {
             items: components["schemas"]["BatchItemResult"][];
         };
+        ChangeInfo: {
+            /** Format: uuid */
+            nodeId: string;
+            /** Format: uuid */
+            libraryId: string;
+            removed: boolean;
+            inTrash: boolean;
+            node: null | components["schemas"]["NodeInfo"];
+        };
+        ChangePage: {
+            items: components["schemas"]["ChangeInfo"][];
+            cursor: string;
+            hasMore: boolean;
+        };
         ChangePasswordRequest: {
             currentPassword: string;
             newPassword: string;
@@ -2438,6 +2469,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthStatus"];
+                };
+            };
+        };
+    };
+    ListChanges: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number | string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangePage"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Gone */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
         };

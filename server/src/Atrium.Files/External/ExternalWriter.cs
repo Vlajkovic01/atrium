@@ -265,7 +265,10 @@ public sealed class ExternalWriter(AtriumDbContext db, ExternalLocks locks, Time
                 Directory.Delete(holder, recursive: true);
             }
 
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            await db.RecordChangesAsync(library.Id, [id], ct);
             removed += await db.Nodes.Where(n => n.Id == id).ExecuteDeleteAsync(ct);
+            await transaction.CommitAsync(ct);
         }
 
         return removed;

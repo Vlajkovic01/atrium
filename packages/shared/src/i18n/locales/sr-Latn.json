@@ -80,6 +80,9 @@
       "unknown_type": "Ovaj server ne zna da izvrši ovaj zadatak. Možda potiče iz novije verzije.",
       "lease_lost": "Zadatak je prekinut i biće ponovo pokrenut."
     },
+    "changes": {
+      "cursor_expired": "Ovaj uređaj je predugo bio odsutan da bi nadoknadio izmene. Čita sve iznova."
+    },
     "files": {
       "no_storage": "Ovaj server još nema lokaciju za skladištenje. Administrator mora da je doda pre nego što fajlovi mogu da se čuvaju.",
       "quota_exceeded": "U vašoj kvoti nema dovoljno slobodnog prostora."
