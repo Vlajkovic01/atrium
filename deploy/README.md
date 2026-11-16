@@ -165,6 +165,36 @@ docker compose up -d
 The server updates its database on start. Before it does, it takes a
 backup of the database into `/config/backups`.
 
+### Development builds
+
+Until the first release there is no `latest` image. Each change merged
+into Atrium is published as `edge`, on GitHub's registry and on Docker
+Hub. To try it, set the version before starting:
+
+```
+ATRIUM_VERSION=edge docker compose up -d
+```
+
+An `edge` build is for trying Atrium out. Until the first release a newer
+`edge` build may not be able to open the database of an older one; when
+that happens the server has to be set up again, so do not keep files you
+cannot lose on it.
+
+### Publishing to Docker Hub (for maintainers)
+
+The workflow `.github/workflows/release.yml` always publishes to GitHub's
+registry. It also publishes to Docker Hub as `<user>/atrium` once the
+GitHub repository has, under Settings, Secrets and variables, Actions:
+
+- a variable `DOCKERHUB_USERNAME`: the Docker Hub user name;
+- a secret `DOCKERHUB_TOKEN`: a Docker Hub access token with read and
+  write permission (Docker Hub, Account settings, Personal access
+  tokens), not the account password.
+
+A repository that does not exist yet on Docker Hub is created public by
+the first push. To keep it private, create it there first and set it to
+private.
+
 ## Stopping and removing
 
 ```
