@@ -1,14 +1,22 @@
 name: CI
 
+# One pipeline: the four checks run side by side, and the image is
+# published only after all of them passed (D-046).
+# - A pull request runs the checks; nothing is published.
+# - A merge to master publishes the image as "edge" and "sha-<commit>".
+# - A version tag such as v0.1.0 publishes 0.1.0, 0.1 and "latest".
 on:
   push:
     branches: [master]
+    tags: ["v*.*.*"]
   pull_request:
+  workflow_dispatch:
 
-# A newer push to the same branch makes the older run pointless.
+# A newer push to the same branch makes the older run pointless. A
+# version build is never cancelled.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 permissions:
   contents: read
@@ -298,3 +306,81 @@ jobs:
           docker compose ps --all
           docker inspect --format 'exit code {{.State.ExitCode}}, restarts {{.RestartCount}}, error "{{.State.Error}}"' atrium-atrium-1 || true
           docker compose logs
+
+  # Runs only when every check above passed, and never for a pull request.
+  # It goes to GitHub's registry always, and to Docker Hub once the
+  # repository has DOCKERHUB_USERNAME and the secret DOCKERHUB_TOKEN
+  # (deploy/README.md says how to set them).
+  publish:
+    name: Publish the image
+    needs: [server, clients, e2e, image]
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref_type == 'tag')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    env:
+      # The user name is not a secret, so a variable is the natural place;
+      # one saved as a secret works too. Conditions cannot read secrets
+      # directly, which is why it goes through the environment.
+      DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME || secrets.DOCKERHUB_USERNAME }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # Emulation is needed only to assemble the ARM image's final stage;
+      # the code itself is cross-compiled.
+      - uses: docker/setup-qemu-action@v4
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Sign in to GitHub's registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Docker Hub is optional, but leaving it out is said out loud: a
+      # green run must not look as if it published there.
+      - name: Docker Hub is not set up
+        if: env.DOCKERHUB_USERNAME == ''
+        run: |
+          echo "::warning::Not published to Docker Hub: DOCKERHUB_USERNAME is not set."
+          echo "Not published to Docker Hub: \`DOCKERHUB_USERNAME\` is not set." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Sign in to Docker Hub
+        if: env.DOCKERHUB_USERNAME != ''
+        uses: docker/login-action@v4
+        with:
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}
+            name=docker.io/${{ env.DOCKERHUB_USERNAME }}/atrium,enable=${{ env.DOCKERHUB_USERNAME != '' }}
+          # v1.2.3 is published as 1.2.3, 1.2 and latest; master as edge.
+          # There are no version tags before the first release, so
+          # "latest" does not exist until then.
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ github.ref_type == 'tag' }}
+            type=raw,value=edge,enable=${{ github.ref == 'refs/heads/master' }}
+            type=sha,enable=${{ github.ref == 'refs/heads/master' }}
+          flavor: |
+            latest=false
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

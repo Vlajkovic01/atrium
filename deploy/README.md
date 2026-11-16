@@ -182,14 +182,20 @@ cannot lose on it.
 
 ### Publishing to Docker Hub (for maintainers)
 
-The workflow `.github/workflows/release.yml` always publishes to GitHub's
-registry. It also publishes to Docker Hub as `<user>/atrium` once the
-GitHub repository has, under Settings, Secrets and variables, Actions:
+The image is published by the last job of `.github/workflows/ci.yml`,
+"Publish the image", which runs only after every check passed. It always
+publishes to GitHub's registry. It also publishes to Docker Hub as
+`<user>/atrium` once the GitHub repository has, under Settings, Secrets
+and variables, Actions:
 
-- a variable `DOCKERHUB_USERNAME`: the Docker Hub user name;
+- `DOCKERHUB_USERNAME`: the Docker Hub user name, as a variable (a
+  secret works too);
 - a secret `DOCKERHUB_TOKEN`: a Docker Hub access token with read and
   write permission (Docker Hub, Account settings, Personal access
   tokens), not the account password.
+
+Without the user name the job still succeeds, with a warning that says
+nothing went to Docker Hub.
 
 A repository that does not exist yet on Docker Hub is created public by
 the first push. To keep it private, create it there first and set it to
