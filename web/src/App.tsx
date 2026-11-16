@@ -11,6 +11,7 @@ import type { IconName } from "./components/Icon.tsx";
 import { Icon, isIconName } from "./components/Icon.tsx";
 import { Logo } from "./components/Logo.tsx";
 import { Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
+import { NotificationBell } from "./components/NotificationBell.tsx";
 import { UserMenu } from "./components/UserMenu.tsx";
 import { AdminLayout, useAdminOverview, warnings } from "./admin/AdminLayout.tsx";
 import { Backups } from "./admin/Backups.tsx";
@@ -186,6 +187,7 @@ function Shell() {
         <aside className="sidebar">
           <div className="sidebar-brand">
             <Logo size={30} />
+            <NotificationBell />
           </div>
           <nav className="nav" aria-label={t("nav.main")}>
             {items.filter((item) => !item.group).map((item) => navEntry(item))}

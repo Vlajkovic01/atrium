@@ -873,5 +873,22 @@
     "none": "Ova vrsta fajla ne može da se prikaže ovde. Preuzmite ga da biste ga otvorili na svom uređaju.",
     "office": "Word, Excel i PowerPoint fajlovi još ne mogu da se prikažu ovde. Preuzmite fajl da biste ga otvorili na svom uređaju.",
     "showInFolder": "Prikaži u folderu"
+  },
+  "notifications": {
+    "title": "Obaveštenja",
+    "open": "Obaveštenja",
+    "openUnread": "Obaveštenja, nepročitanih: {count}",
+    "markAllRead": "Označi sve kao pročitano",
+    "clear": "Obriši sve",
+    "remove": "Ukloni",
+    "empty": "Ništa novo.",
+    "kinds": {
+      "uploads_finished": "{count, plural, one {Otpremljen # fajl} few {Otpremljena # fajla} other {Otpremljeno # fajlova}}",
+      "uploads_failed": "{count, plural, one {# otpremanje nije uspelo} few {# otpremanja nisu uspela} other {# otpremanja nije uspelo}}",
+      "job_failed": "{work}: nije uspelo. Razlog je u Pozadinskim poslovima.",
+      "library_offline": "Folder {name} nije dostupan: nedostaje, prazan je ili se ne može čitati. Ništa iz njega nije uklonjeno.",
+      "integrity_problems": "Provera skladišta je našla {count, plural, one {# fajl koji nedostaje ili je oštećen} few {# fajla koja nedostaju ili su oštećena} other {# fajlova koji nedostaju ili su oštećeni}}.",
+      "other": "Nešto se desilo na serveru."
+    }
   }
 }

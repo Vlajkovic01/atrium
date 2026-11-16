@@ -114,6 +114,17 @@ default" undoes the arrangement; an admin can make theirs the default
 for everyone. Administration always stays visible to admins. On a phone
 the bottom bar shows the built-in entries only.
 
+### Notifications (Phase 3, D-045)
+
+A bell beside the logo counts unread notifications. Its list shows the
+newest first: uploads that finished or failed, and from the server work
+that failed, a folder gone offline, damage the storage check found.
+Opening one goes where it points and marks it read; "Mark all read",
+remove one, "Clear all". The list is the same on every device. The
+uploads panel closes by itself ten seconds after everything is done
+(not while the pointer is on it), and confirmations such as "Saved" go
+away after eight seconds; errors stay.
+
 ### Opening a file (Phase 3, D-044)
 
 Opening a file anywhere (Files, search, a view) shows it in a

@@ -7,7 +7,7 @@ import { api, call } from "../api.ts";
 import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Select } from "../components/Select.tsx";
-import { Avatar, Badge, Button, ErrorMessage, Field, Notice, PageHeader } from "../components/ui.tsx";
+import { Avatar, Badge, Button, ErrorMessage, Field, Flash, PageHeader } from "../components/ui.tsx";
 import { formatAgo, formatBytes, formatDateTime } from "../i18n.ts";
 import { useSession } from "../session.tsx";
 
@@ -106,7 +106,7 @@ export function People() {
           </Button>
         }
       />
-      {notice ? <Notice kind="ok">{notice}</Notice> : null}
+      <Flash message={notice} />
       {people.isError ? <ErrorMessage error={people.error} /> : null}
 
       <div className="filters" role="search">
@@ -274,7 +274,7 @@ function ManagePerson(props: {
         {t("people.since", { date: formatDateTime(person.createdAt) })}
       </p>
       <ErrorMessage error={error} />
-      {notice ? <Notice kind="ok">{notice}</Notice> : null}
+      <Flash message={notice} />
 
       <section className="manage-section" aria-labelledby="manage-role">
         <h3 id="manage-role">{t("people.role")}</h3>

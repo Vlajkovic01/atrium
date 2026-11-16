@@ -30,7 +30,8 @@ public sealed class LibraryScanHandler(
     IEnumerable<INodeContentObserver> observers,
     ExternalLocks locks,
     TimeProvider time,
-    ILogger<LibraryScanHandler> logger) : IJobHandler
+    ILogger<LibraryScanHandler> logger,
+    Atrium.Data.Notifications.NotificationStore notifications) : IJobHandler
 {
     public const string Type = "library.scan";
 
@@ -251,9 +252,17 @@ public sealed class LibraryScanHandler(
 
     private async Task GoOfflineAsync(Library library, string reason, CancellationToken ct)
     {
-        await db.Libraries.Where(l => l.Id == library.Id).ExecuteUpdateAsync(s => s
+        var updated = await db.Libraries.Where(l => l.Id == library.Id && l.State != LibraryState.Offline).ExecuteUpdateAsync(s => s
             .SetProperty(l => l.State, LibraryState.Offline)
             .SetProperty(l => l.StateReason, reason), ct);
+        await db.Libraries.Where(l => l.Id == library.Id).ExecuteUpdateAsync(s => s.SetProperty(l => l.StateReason, reason), ct);
+
+        // Told once, when it goes offline, not at every scan while it stays so (D-045).
+        if (updated > 0)
+        {
+            await notifications.AddForAdminsAsync(
+                "library.offline", new Dictionary<string, string> { ["name"] = library.Name }, "/admin/libraries", ct);
+        }
     }
 
     private sealed record ScanState(DateTimeOffset StartedAt, List<string> Pending, List<string> Unreadable, int Done);

@@ -6,7 +6,17 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 
 import { api, call } from "../api.ts";
-import { Badge, Button, Card, ErrorMessage, Field, LanguagePicker, Notice, PageHeader } from "../components/ui.tsx";
+import {
+  Badge,
+  Button,
+  Card,
+  ErrorMessage,
+  Field,
+  LanguagePicker,
+  Flash,
+  Notice,
+  PageHeader,
+} from "../components/ui.tsx";
 import { currentLocale, formatBytes } from "../i18n.ts";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -185,7 +195,7 @@ function TwoStep({ enabled }: { readonly enabled: boolean }) {
       }
     >
       <p className="card-lead">{enabled ? t("account.totp.on") : t("account.totp.off")}</p>
-      {notice ? <Notice kind="ok">{notice}</Notice> : null}
+      <Flash message={notice} />
       <ErrorMessage error={error} />
 
       {stage.kind === "idle" && !enabled ? (

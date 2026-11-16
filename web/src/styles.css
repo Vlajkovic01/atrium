@@ -1081,6 +1081,8 @@ a {
 .sidebar {
   position: sticky;
   top: 0;
+  /* Its menus and the notifications open over the page beside it. */
+  z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -3293,4 +3295,131 @@ a {
 .viewer-stage.is-text {
   align-items: stretch;
   padding-block: 1rem;
+}
+
+/* ---- Notifications (D-045) ------------------------------------------------ */
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.bell {
+  position: relative;
+}
+
+.bell-button {
+  position: relative;
+}
+
+.bell-button .count-badge {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.25rem;
+  margin: 0;
+}
+
+.bell-panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 30;
+  display: grid;
+  width: min(23rem, calc(100vw - 1rem));
+  max-height: min(32rem, 70vh);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+}
+
+.bell-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.bell-head h2 {
+  flex: 1;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.bell-head .link-button {
+  font-size: 0.85rem;
+}
+
+.bell-empty {
+  margin: 0;
+  padding: 1.25rem 1rem;
+}
+
+.bell-list {
+  margin: 0;
+  padding: 0.25rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.bell-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  border-radius: var(--radius-s);
+}
+
+.bell-item.is-unread {
+  background: var(--accent-wash);
+}
+
+.bell-open {
+  display: grid;
+  flex: 1;
+  gap: 0.15rem;
+  padding: 0.6rem 0.7rem;
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bell-item.is-unread .bell-text {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.bell-time {
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+}
+
+.alert-close {
+  margin-left: auto;
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.is-compact .sidebar-brand {
+  flex-direction: column;
+}
+
+@media (width <= 52rem) {
+  .bell {
+    margin-left: auto;
+    margin-right: 3.25rem;
+  }
+
+  .bell-panel {
+    position: fixed;
+    top: 3.9rem;
+    right: 0.5rem;
+    left: auto;
+  }
 }

@@ -1,5 +1,5 @@
 import { errorMessageKeys, localeNames, supportedLocales, type Locale } from "@atrium/shared";
-import { useId, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
+import { useEffect, useId, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import { ApiError } from "../api.ts";
@@ -24,13 +24,53 @@ type Tone = "ok" | "info" | "warning" | "error";
 const toneIcon: Record<Tone, IconName> = { ok: "checkCircle", info: "info", warning: "alert", error: "error" };
 
 /** A message with an icon. Errors interrupt screen readers; the rest are announced politely. */
-export function Notice({ kind, children }: { readonly kind: Tone; readonly children: ReactNode }) {
+export function Notice({
+  kind,
+  children,
+  onClose,
+}: {
+  readonly kind: Tone;
+  readonly children: ReactNode;
+  readonly onClose?: () => void;
+}) {
+  const { t } = useTranslation();
   return (
     <div className={`alert alert-${kind}`} role={kind === "error" ? "alert" : "status"}>
       <Icon name={toneIcon[kind]} />
       <div className="alert-text">{children}</div>
+      {onClose ? (
+        <button type="button" className="icon-button alert-close" aria-label={t("common.close")} onClick={onClose}>
+          <Icon name="close" size={16} />
+        </button>
+      ) : null}
     </div>
   );
+}
+
+/** How long a confirmation stays before it goes away by itself (D-045). */
+export const FLASH_MS = 8000;
+
+/**
+ * A confirmation that something was done, such as "Saved". It can be
+ * closed, and goes away by itself after a few seconds; a new message
+ * starts the time again. Errors never go away by themselves.
+ */
+export function Flash({ message }: { readonly message: string | null }) {
+  const [shown, setShown] = useState(message);
+  useEffect(() => {
+    setShown(message);
+    if (!message) {
+      return;
+    }
+
+    const timer = setTimeout(() => setShown(null), FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [message]);
+  return shown ? (
+    <Notice kind="ok" onClose={() => setShown(null)}>
+      {shown}
+    </Notice>
+  ) : null;
 }
 
 export function ErrorMessage({ error }: { readonly error: unknown }) {

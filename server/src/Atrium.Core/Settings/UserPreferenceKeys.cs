@@ -7,6 +7,8 @@ public static class UserPreferenceKeys
 
     public static string Views(Guid userId) => $"prefs.views:{userId:N}";
 
+    public static string Notifications(Guid userId) => $"notifications:{userId:N}";
+
     /// <summary>Every key of the person, removed with the account.</summary>
-    public static IReadOnlyList<string> All(Guid userId) => [Navigation(userId), Views(userId)];
+    public static IReadOnlyList<string> All(Guid userId) => [Navigation(userId), Views(userId), Notifications(userId)];
 }

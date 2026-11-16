@@ -5,7 +5,7 @@ import { NavLink } from "react-router";
 
 import { api, call } from "../api.ts";
 import { Icon } from "../components/Icon.tsx";
-import { Button, ErrorMessage, Notice, PageHeader } from "../components/ui.tsx";
+import { Button, ErrorMessage, Flash, PageHeader } from "../components/ui.tsx";
 import { batch, downloadArchive } from "../files/actions.ts";
 import { currentLocale } from "../i18n.ts";
 import { AddToAlbum } from "./AddToAlbum.tsx";
@@ -96,7 +96,7 @@ export function SelectionBar(props: {
 
   return (
     <>
-      {notice ? <Notice kind="ok">{notice}</Notice> : null}
+      <Flash message={notice} />
       <ErrorMessage error={error} />
       {ids.length > 0 ? (
         <div className="toolbar selection-bar" role="toolbar" aria-label={t("files.actions")}>

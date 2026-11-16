@@ -730,3 +730,32 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   about 300 MB in the Docker image). Alternatives considered: SheetJS and
   docx-preview in the browser (no PowerPoint, and each client would need
   its own).
+
+## D-045 Notifications kept on the server; confirmations go away by themselves (Owner, 2026-11-13)
+
+- Owner's request: messages such as the one about uploads should go
+  away by themselves when not closed, and a list of unread notifications
+  should be kept. Owner's choice: kept on the server, so every device
+  shows the same list.
+- Storage: one settings row per person (`notifications:<user>`), the
+  newest 200 for 90 days, removed with the account. No table of its own,
+  so no schema change and no new demo database; a table can come later
+  if notifications need querying across people. Writes for one person
+  are serialized in the process (single server process, D-009).
+- Who adds them. The server: a job a person started that failed for good
+  (to that person); a backup, storage check, folder scan or account
+  deletion that failed for good (to every active admin); a folder that
+  went offline (admins, once, not at every scan); damage found by the
+  storage check (admins). Work that fails file by file, such as reading
+  a photo's details, is left to Background work so one broken folder
+  cannot flood everyone. A client may add only what it saw itself:
+  uploads that finished or failed, with a link inside the app.
+- The web app: a bell beside the logo with the unread count; its list
+  marks one read when opened (and goes where it points), marks all read,
+  removes one or all. It is checked every minute.
+- Going away by themselves: the uploads panel closes ten seconds after
+  everything is done unless the pointer is on it, and confirmations such
+  as "Saved" after eight seconds; both can be closed at once. Errors stay
+  until closed or fixed.
+- Alternative considered: notifications in the browser's storage only
+  (simpler, but not on other devices and lost with the browser's data).
