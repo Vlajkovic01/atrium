@@ -143,6 +143,16 @@
       "invalid_metadata": "The upload is missing its folder or name."
     }
   },
+  "mobile": {
+    "welcome": {
+      "heading": "Your files, on your own server",
+      "body": "Atrium shows the files, photos and videos kept on a server you control. Nothing is stored anywhere else.",
+      "how": "To connect, you will scan the code shown in the Atrium web app under Devices, or type your server's address."
+    },
+    "about": {
+      "version": "Version {version}"
+    }
+  },
   "nav": {
     "devices": "Devices",
     "account": "Account",

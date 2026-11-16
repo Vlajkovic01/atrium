@@ -12,6 +12,11 @@ docs
 server/tests
 web/e2e
 
+# The image holds the server and the web app. Of the mobile app only the
+# manifest is needed, so the workspace's lockfile matches.
+mobile/*
+!mobile/package.json
+
 # Never part of an image: local runtime data, keys, databases, settings.
 **/.atrium
 **/*.db

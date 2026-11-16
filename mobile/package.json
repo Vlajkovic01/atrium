@@ -1,0 +1,41 @@
+{
+  "name": "@atrium/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "description": "The Atrium app for Android (and later iOS): React Native with Expo.",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "bundle": "expo export --platform android --output-dir dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@atrium/shared": "workspace:*",
+    "@expo/log-box": "^58.0.15",
+    "@expo/metro-runtime": "~58.0.17",
+    "@formatjs/intl-pluralrules": "^7.0.4",
+    "expo": "~58.0.25",
+    "expo-constants": "~58.0.16",
+    "expo-linking": "~58.0.17",
+    "expo-localization": "~58.0.5",
+    "expo-router": "~58.0.31",
+    "expo-status-bar": "~58.0.5",
+    "i18next": "^27.1.0",
+    "i18next-icu": "^2.7.0",
+    "intl-messageformat": "^12.1.5",
+    "react": "19.3.0",
+    "react-i18next": "^18.0.1",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-screens": "~4.30.1",
+    "react-native-svg": "15.16.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.1.0"
+  }
+}

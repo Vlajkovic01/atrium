@@ -153,6 +153,51 @@ jobs:
           path: web/test-results
           retention-days: 7
 
+  # The Android app, built the way a release is: the native project is
+  # generated from mobile/app.json and compiled with the JavaScript inside.
+  # Its type check and unit tests run with the other clients above. The
+  # image does not wait for this job: the server does not depend on it.
+  mobile:
+    name: Mobile app build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate the Android project
+        working-directory: mobile
+        run: pnpm exec expo prebuild --platform android --no-install
+
+      # One architecture, the one phones have, keeps the build and the
+      # file small. Signed with the debug key: installable for trying it
+      # out, not a store release.
+      - name: Build the APK
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --console=plain
+
+      - name: Keep the APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: atrium-android
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
   # Stage 2: the image, once the tests passed.
   image:
     name: Docker image and Compose
