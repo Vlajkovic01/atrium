@@ -96,7 +96,8 @@
       "unknown_user": "One of the chosen people no longer exists. Reload and try again.",
       "folder_unavailable": "The folder cannot be reached. If it is on a network share or an external disk, check that it is mounted.",
       "folder_empty": "The folder is suddenly empty. If it is on a network share or an external disk, check that it is mounted.",
-      "too_many_missing": "Most of the files disappeared at once, so nothing was removed from the library. Check that the folder is mounted, then scan again."
+      "too_many_missing": "Most of the files disappeared at once, so nothing was removed from the library. Check that the folder is mounted, then scan again.",
+      "folder_read_only": "Atrium cannot write to this folder. With Docker, remove :ro from the folder's mount and check its permissions."
     },
     "node": {
       "invalid_name": "That name cannot be used. Names cannot contain / or \\, end with a dot or a space, or be a reserved name such as CON.",
@@ -109,7 +110,8 @@
       "not_in_trash": "This item is not in the trash.",
       "is_root": "The top folder of a library cannot be changed.",
       "cross_library": "Items cannot be moved between libraries.",
-      "too_many_items": "This folder holds too many items to copy at once (more than {max})."
+      "too_many_items": "This folder holds too many items to copy at once (more than {max}).",
+      "not_supported": "This cannot be done in a library that shows an existing folder."
     },
     "upload": {
       "offset_mismatch": "The upload got out of step with the server. It continues from where the server stopped.",
@@ -139,6 +141,7 @@
   "files": {
     "title": "Files",
     "myFiles": "My files",
+    "libraries": "Libraries",
     "noLibrary": "There is nowhere to store files yet. An admin has to add a storage location first.",
     "location": "Location",
     "actions": "Actions",
@@ -484,7 +487,20 @@
     "accessTitle": "Who sees {name}",
     "removeTitle": "Remove {name}?",
     "removeBody": "Atrium forgets this library: its photos leave the timeline and every album. The folder and every file in it stay exactly as they are.",
-    "typeName": "Type {name} to confirm"
+    "typeName": "Type {name} to confirm",
+    "writesOn": "Changes allowed",
+    "allowChanges": "Allow changes",
+    "stopChanges": "Stop changes",
+    "whoChanges": "Who may change files",
+    "whoChangesOff": "Takes effect once changes are allowed for this library.",
+    "whoChangesOn": "These people can rename, move, delete and upload in this folder.",
+    "enableTitle": "Allow changes to {name}?",
+    "enableWarning": "Atrium will change the original files in {path}. Other programs that use this folder will see every change.",
+    "enableRename": "Renaming and moving here renames and moves the files in the folder.",
+    "enableDelete": "Deleting moves a file into the folder .atrium-trash inside this folder, and it is removed for good after 30 days.",
+    "enableUpload": "Uploads are written into the folder.",
+    "enableOff": "You can stop changes at any time; nothing is changed after that, not even the trash.",
+    "enableConfirm": "Allow changes"
   },
   "backgroundWork": {
     "heading": "Background work",

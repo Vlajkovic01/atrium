@@ -26,6 +26,7 @@ public sealed record AdminLibraryView(
     DateTimeOffset? LastScanAt,
     int FileCount,
     IReadOnlyList<Guid> UserIds,
+    IReadOnlyList<Guid> WriterIds,
     DateTimeOffset? WritesEnabledAt,
     JobInfoBrief? Scan,
     int Version);
@@ -41,7 +42,11 @@ public sealed record CheckPathResponse(bool Ok, string? ErrorCode, int? EntryCou
 
 public sealed record CreateExternalLibraryRequest(string Name, string Path, IReadOnlyList<Guid>? UserIds);
 
-public sealed record UpdateLibraryRequest(string? Name, IReadOnlyList<Guid>? UserIds);
+/// <param name="WriterIds">Of <paramref name="UserIds">, who may change files once writes are enabled. Sent together with UserIds.</param>
+public sealed record UpdateLibraryRequest(string? Name, IReadOnlyList<Guid>? UserIds, IReadOnlyList<Guid>? WriterIds);
+
+/// <param name="ConfirmName">The library's name, required to enable writes.</param>
+public sealed record SetLibraryWritesRequest(bool Enabled, string? ConfirmName);
 
 /// <summary>
 /// External libraries for admins (DESIGN.md 4.4). Personal libraries are
@@ -74,6 +79,11 @@ public static class AdminLibraryEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status412PreconditionFailed)
             .ProducesProblem(StatusCodes.Status428PreconditionRequired);
+        group.MapPut("/{id:guid}/writes", SetWritesAsync)
+            .WithName("SetLibraryWrites")
+            .WithDescription("Lets Atrium change the folder's files (rename, move, delete into the library's own trash, upload). Enabling needs confirmName, the library's name; disabling takes effect at once.")
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
         group.MapPost("/{id:guid}/scan", ScanAsync)
             .WithName("ScanLibrary")
             .ProducesProblem(StatusCodes.Status404NotFound);
@@ -124,8 +134,15 @@ public static class AdminLibraryEndpoints
             return ApiProblem.Create(StatusCodes.Status428PreconditionRequired, ApiProblem.PreconditionRequired);
         }
 
-        var updated = await service.UpdateAsync(id, version, request.Name, request.UserIds, ct);
+        var updated = await service.UpdateAsync(id, version, request.Name, request.UserIds, request.WriterIds, ct);
         return updated.Ok ? TypedResults.Ok(await ViewAsync(db, updated.Value!, ct)) : Problem(updated.Error!);
+    }
+
+    private static async Task<Results<Ok<AdminLibraryView>, ProblemHttpResult>> SetWritesAsync(
+        Guid id, SetLibraryWritesRequest request, HttpContext http, ExternalLibraryService service, AtriumDbContext db, CancellationToken ct)
+    {
+        var changed = await service.SetWritesAsync(http.User.UserId()!.Value, id, request.Enabled, request.ConfirmName, ct);
+        return changed.Ok ? TypedResults.Ok(await ViewAsync(db, changed.Value!, ct)) : Problem(changed.Error!);
     }
 
     private static async Task<Results<Accepted<JobStarted>, ProblemHttpResult>> ScanAsync(
@@ -158,9 +175,8 @@ public static class AdminLibraryEndpoints
     {
         var fileCount = await db.Nodes.CountAsync(
             n => n.LibraryId == library.Id && n.Kind == NodeKind.File && n.MissingSince == null && !n.InTrash, ct);
-        var userIds = await db.LibraryGrants.AsNoTracking()
+        var grants = await db.LibraryGrants.AsNoTracking()
             .Where(g => g.LibraryId == library.Id)
-            .Select(g => g.UserId)
             .ToListAsync(ct);
         var key = LibraryScanHandler.DedupeKeyFor(library.Id);
         var scan = await db.Jobs.AsNoTracking()
@@ -178,7 +194,8 @@ public static class AdminLibraryEndpoints
             library.StateReason,
             library.LastScanAt,
             fileCount,
-            userIds,
+            grants.Select(g => g.UserId).ToList(),
+            grants.Where(g => g.Access == LibraryAccess.Write).Select(g => g.UserId).ToList(),
             library.WritesEnabledAt,
             scan,
             library.Version);

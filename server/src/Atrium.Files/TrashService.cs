@@ -9,7 +9,7 @@ namespace Atrium.Files;
 /// rows only; content is deleted later by the blob collector, after its
 /// grace period, if nothing else uses it.
 /// </summary>
-public sealed class TrashService(AtriumDbContext db, NodeService nodes, TimeProvider time, FilesOptions options)
+public sealed class TrashService(AtriumDbContext db, NodeService nodes, External.ExternalWriter external, TimeProvider time, FilesOptions options)
 {
     /// <summary>Items the user moved to the trash, newest first, with what removing each would free.</summary>
     public async Task<List<TrashItem>> ListAsync(FileActor actor, CancellationToken ct)
@@ -64,6 +64,12 @@ public sealed class TrashService(AtriumDbContext db, NodeService nodes, TimeProv
             return FileResult<Node>.Fail(FileErrors.MoveIntoItself);
         }
 
+        if (parent.Value.Library.Mode == LibraryMode.External)
+        {
+            db.ChangeTracker.Clear();
+            return await external.RestoreAsync(parent.Value.Library, id, parent.Value.Node, policy, ct);
+        }
+
         var name = node.Name;
         var key = node.NameKey;
         if (await nodes.SiblingAsync(parentId, key, except: node.Id, ct) is { } existing)
@@ -115,6 +121,13 @@ public sealed class TrashService(AtriumDbContext db, NodeService nodes, TimeProv
             return FileResult<bool>.Fail(trashed.Error!);
         }
 
+        var library = await db.Libraries.AsNoTracking().SingleAsync(l => l.Id == trashed.Value!.LibraryId, ct);
+        if (library.Mode == LibraryMode.External)
+        {
+            await external.PurgeAsync(library, [id], ct);
+            return FileResult<bool>.Success(true);
+        }
+
         // The database removes the subtree and its versions (cascade).
         await db.Nodes.Where(n => n.Id == id && n.TrashedAt != null).ExecuteDeleteAsync(ct);
         return FileResult<bool>.Success(true);
@@ -128,18 +141,63 @@ public sealed class TrashService(AtriumDbContext db, NodeService nodes, TimeProv
             return FileResult<int>.Fail(FileErrors.ReadOnly);
         }
 
-        var libraries = await WritableLibrariesAsync(actor, ct);
-        var removed = await db.Nodes
-            .Where(n => libraries.Contains(n.LibraryId) && n.TrashedAt != null)
-            .ExecuteDeleteAsync(ct);
+        var removed = 0;
+        foreach (var library in await WritableLibrariesAsync(actor, ct))
+        {
+            if (library.Mode == LibraryMode.External)
+            {
+                var ids = await db.Nodes.Where(n => n.LibraryId == library.Id && n.TrashedAt != null).Select(n => n.Id).ToListAsync(ct);
+                removed += await external.PurgeAsync(library, ids, ct);
+            }
+            else
+            {
+                removed += await db.Nodes.Where(n => n.LibraryId == library.Id && n.TrashedAt != null).ExecuteDeleteAsync(ct);
+            }
+        }
+
         return FileResult<int>.Success(removed);
     }
 
-    /// <summary>Removes items whose retention ended, in every library. Run by the retention job.</summary>
+    /// <summary>
+    /// Removes items whose retention ended in managed libraries: rows only,
+    /// content follows through the blob collector. External libraries are
+    /// handled by <see cref="ExpireExternalAsync"/>.
+    /// </summary>
     public static Task<int> ExpireAsync(AtriumDbContext db, DateTimeOffset now, TimeSpan retention, CancellationToken ct)
     {
         var cutoff = now - retention;
-        return db.Nodes.Where(n => n.TrashedAt != null && n.TrashedAt < cutoff).ExecuteDeleteAsync(ct);
+        return db.Nodes
+            .Where(n => n.TrashedAt != null && n.TrashedAt < cutoff
+                && db.Libraries.Any(l => l.Id == n.LibraryId && l.Mode == LibraryMode.Managed))
+            .ExecuteDeleteAsync(ct);
+    }
+
+    /// <summary>
+    /// Deletes from disk what was in an external library's trash for its
+    /// whole retention, but only while the library still allows changes: an
+    /// admin who switched writes off stops every change, this one included.
+    /// </summary>
+    public static async Task<int> ExpireExternalAsync(
+        AtriumDbContext db, External.ExternalWriter external, DateTimeOffset now, TimeSpan retention, CancellationToken ct)
+    {
+        var cutoff = now - retention;
+        var libraries = await db.Libraries.AsNoTracking()
+            .Where(l => l.Mode == LibraryMode.External && !l.ReadOnly)
+            .ToListAsync(ct);
+        var removed = 0;
+        foreach (var library in libraries)
+        {
+            var ids = await db.Nodes
+                .Where(n => n.LibraryId == library.Id && n.TrashedAt != null && n.TrashedAt < cutoff)
+                .Select(n => n.Id)
+                .ToListAsync(ct);
+            if (ids.Count > 0)
+            {
+                removed += await external.PurgeAsync(library, ids, ct);
+            }
+        }
+
+        return removed;
     }
 
     private async Task<FileResult<Node>> TrashedNodeAsync(FileActor actor, Guid id, CancellationToken ct)
@@ -168,15 +226,28 @@ public sealed class TrashService(AtriumDbContext db, NodeService nodes, TimeProv
         return (below.Where(n => !n.IsFolder).Sum(n => n.Size), below.Count + 1);
     }
 
+    /// <summary>
+    /// The trash shows the user's personal library, and the external
+    /// libraries the user may change: what someone deleted there is in its
+    /// trash for everyone who can change it.
+    /// </summary>
     private async Task<List<Guid>> ReadableLibrariesAsync(FileActor actor, CancellationToken ct)
     {
-        var libraries = await db.Libraries.AsNoTracking().Where(l => l.OwnerUserId == actor.UserId).ToListAsync(ct);
-        return libraries.Where(l => NodeService.CanRead(actor, l)).Select(l => l.Id).ToList();
+        var personal = await db.Libraries.AsNoTracking().Where(l => l.OwnerUserId == actor.UserId).ToListAsync(ct);
+        var result = personal.Where(l => NodeService.CanRead(actor, l)).Select(l => l.Id).ToList();
+        result.AddRange((await WritableLibrariesAsync(actor, ct)).Where(l => l.Mode == LibraryMode.External).Select(l => l.Id));
+        return result;
     }
 
-    private async Task<List<Guid>> WritableLibrariesAsync(FileActor actor, CancellationToken ct)
+    private async Task<List<Library>> WritableLibrariesAsync(FileActor actor, CancellationToken ct)
     {
-        var libraries = await db.Libraries.AsNoTracking().Where(l => l.OwnerUserId == actor.UserId).ToListAsync(ct);
-        return libraries.Where(l => NodeService.CanWrite(actor, l)).Select(l => l.Id).ToList();
+        var personal = await db.Libraries.AsNoTracking().Where(l => l.OwnerUserId == actor.UserId).ToListAsync(ct);
+        var granted = await db.LibraryGrants.AsNoTracking()
+            .Where(g => g.UserId == actor.UserId)
+            .Join(db.Libraries.AsNoTracking(), g => g.LibraryId, l => l.Id, (g, l) => new { Grant = g, Library = l })
+            .ToListAsync(ct);
+        return personal.Where(l => NodeService.CanWrite(actor, l))
+            .Concat(granted.Where(x => NodeService.CanWrite(actor, x.Library, x.Grant)).Select(x => x.Library))
+            .ToList();
     }
 }

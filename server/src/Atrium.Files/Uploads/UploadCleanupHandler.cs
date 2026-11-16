@@ -83,6 +83,29 @@ public sealed class UploadCleanupHandler(
             }
         }
 
+        // Uploads into external libraries stage inside the library's own
+        // folder, where only Atrium writes, and only while writes are on.
+        var externals = await db.Libraries.AsNoTracking()
+            .Where(l => l.Mode == LibraryMode.External && !l.ReadOnly)
+            .ToListAsync(ct);
+        foreach (var library in externals)
+        {
+            if (!Directory.Exists(External.ExternalWriter.StagingRoot(library)))
+            {
+                continue;
+            }
+
+            var staging = External.ExternalWriter.StagingProvider(library);
+            await foreach (var staged in staging.ListAsync(BlobStore.StagingPrefix, ct))
+            {
+                if (staged.LastModified < stagedBefore)
+                {
+                    logger.LogInformation("Removing stale staged upload {Key} of library {Library}.", staged.Key, library.Id);
+                    await staging.DeleteAsync(staged.Key, ct);
+                }
+            }
+        }
+
         if (failures > 0)
         {
             throw new JobFailedException(StorageProviders.Unavailable, $"{failures} items could not be cleaned up; they are retried.");

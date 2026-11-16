@@ -371,7 +371,7 @@ namespace Atrium.Data.Postgres.Migrations
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     LibraryId = table.Column<Guid>(type: "uuid", nullable: false),
                     ParentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StorageLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    StorageLocationId = table.Column<Guid>(type: "uuid", nullable: true),
                     Name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     MediaType = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
                     Length = table.Column<long>(type: "bigint", nullable: false),

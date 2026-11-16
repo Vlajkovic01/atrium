@@ -26,6 +26,7 @@ export function Libraries() {
   const [error, setError] = useState<unknown>(null);
   const [removing, setRemoving] = useState<Library | null>(null);
   const [editing, setEditing] = useState<Library | null>(null);
+  const [enabling, setEnabling] = useState<Library | null>(null);
   const libraries = useQuery({
     queryKey,
     queryFn: () => call(api.GET("/api/v1/admin/libraries")),
@@ -43,6 +44,23 @@ export function Libraries() {
     setError(null);
     try {
       await call(api.POST("/api/v1/admin/libraries/{id}/scan", { params: { path: { id: library.id } } }));
+    } catch (e) {
+      setError(e);
+    } finally {
+      await refresh();
+    }
+  };
+
+  // Switching changes off is always safe, so it needs no confirmation.
+  const stopChanges = async (library: Library): Promise<void> => {
+    setError(null);
+    try {
+      await call(
+        api.PUT("/api/v1/admin/libraries/{id}/writes", {
+          params: { path: { id: library.id } },
+          body: { enabled: false, confirmName: null },
+        }),
+      );
     } catch (e) {
       setError(e);
     } finally {
@@ -73,7 +91,11 @@ export function Libraries() {
                     ) : (
                       <Badge tone="danger">{t("libraries.offline")}</Badge>
                     )}
-                    {library.readOnly ? <Badge tone="muted">{t("libraries.readOnly")}</Badge> : null}
+                    {library.readOnly ? (
+                      <Badge tone="muted">{t("libraries.readOnly")}</Badge>
+                    ) : (
+                      <Badge tone="gold">{t("libraries.writesOn")}</Badge>
+                    )}
                   </p>
                   <p className="row-meta">
                     <span className="path">{library.path}</span>
@@ -98,6 +120,15 @@ export function Libraries() {
                   <Button size="sm" icon="users" onClick={() => setEditing(library)}>
                     {t("libraries.access")}
                   </Button>
+                  {library.readOnly ? (
+                    <Button size="sm" icon="pencil" onClick={() => setEnabling(library)}>
+                      {t("libraries.allowChanges")}
+                    </Button>
+                  ) : (
+                    <Button size="sm" icon="lock" onClick={() => void stopChanges(library)}>
+                      {t("libraries.stopChanges")}
+                    </Button>
+                  )}
                   <Button size="sm" variant="ghost" icon="trash" onClick={() => setRemoving(library)}>
                     {t("libraries.remove")}
                   </Button>
@@ -124,6 +155,16 @@ export function Libraries() {
           onClose={() => setEditing(null)}
           onSaved={async () => {
             setEditing(null);
+            await refresh();
+          }}
+        />
+      ) : null}
+      {enabling ? (
+        <EnableWritesDialog
+          library={enabling}
+          onClose={() => setEnabling(null)}
+          onEnabled={async () => {
+            setEnabling(null);
             await refresh();
           }}
         />
@@ -270,6 +311,7 @@ function AccessDialog(props: {
 }) {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<Set<string>>(new Set(props.library.userIds));
+  const [writers, setWriters] = useState<Set<string>>(new Set(props.library.writerIds));
   const [error, setError] = useState<unknown>(null);
 
   const save = async (): Promise<void> => {
@@ -279,7 +321,7 @@ function AccessDialog(props: {
         api.PATCH("/api/v1/admin/libraries/{id}", {
           params: { path: { id: props.library.id } },
           headers: { "If-Match": `"${props.library.version}"` },
-          body: { name: null, userIds: [...selected] },
+          body: { name: null, userIds: [...selected], writerIds: [...writers].filter((id) => selected.has(id)) },
         }),
       );
       await props.onSaved();
@@ -303,6 +345,89 @@ function AccessDialog(props: {
     >
       <ErrorMessage error={error} />
       <PeopleChecks people={props.people} selected={selected} onChange={setSelected} />
+      <fieldset className="choices">
+        <legend>{t("libraries.whoChanges")}</legend>
+        <p className="muted">{props.library.readOnly ? t("libraries.whoChangesOff") : t("libraries.whoChangesOn")}</p>
+        {props.people
+          .filter((person) => selected.has(person.id))
+          .map((person) => (
+            <Check
+              key={person.id}
+              label={person.displayName === person.name ? person.name : `${person.displayName} (${person.name})`}
+              checked={writers.has(person.id)}
+              onChange={(event) => {
+                const next = new Set(writers);
+                if (event.target.checked) {
+                  next.add(person.id);
+                } else {
+                  next.delete(person.id);
+                }
+
+                setWriters(next);
+              }}
+            />
+          ))}
+      </fieldset>
+    </Dialog>
+  );
+}
+
+/**
+ * Letting Atrium change the files of someone's own folder is the one step
+ * here that can cost data, so it says plainly what changes and asks for
+ * the library's name before it happens.
+ */
+function EnableWritesDialog(props: {
+  readonly library: Library;
+  readonly onClose: () => void;
+  readonly onEnabled: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  const [typed, setTyped] = useState("");
+  const [error, setError] = useState<unknown>(null);
+
+  const enable = async (): Promise<void> => {
+    setError(null);
+    try {
+      await call(
+        api.PUT("/api/v1/admin/libraries/{id}/writes", {
+          params: { path: { id: props.library.id } },
+          body: { enabled: true, confirmName: typed },
+        }),
+      );
+      await props.onEnabled();
+    } catch (e) {
+      setError(e);
+    }
+  };
+
+  return (
+    <Dialog
+      title={t("libraries.enableTitle", { name: props.library.name })}
+      onClose={props.onClose}
+      actions={
+        <>
+          <Button onClick={props.onClose}>{t("common.cancel")}</Button>
+          <Button variant="danger" onClick={() => void enable()} disabled={typed !== props.library.name}>
+            {t("libraries.enableConfirm")}
+          </Button>
+        </>
+      }
+    >
+      <Notice kind="warning">{t("libraries.enableWarning", { path: props.library.path ?? "" })}</Notice>
+      <ul className="plain-list">
+        <li>{t("libraries.enableRename")}</li>
+        <li>{t("libraries.enableDelete")}</li>
+        <li>{t("libraries.enableUpload")}</li>
+        <li>{t("libraries.enableOff")}</li>
+      </ul>
+      <ErrorMessage error={error} />
+      <Field
+        label={t("libraries.typeName", { name: props.library.name })}
+        value={typed}
+        onChange={(e) => setTyped(e.target.value)}
+        autoComplete="off"
+      />
     </Dialog>
   );
 }

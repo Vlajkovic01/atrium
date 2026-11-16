@@ -43,6 +43,8 @@ public static class FilesSetup
         services.TryAddSingleton(new MediaTypeResolver(_ => "application/octet-stream"));
         services.TryAddSingleton(new ExternalLibraryOptions([]));
         services.AddScoped<ExternalLibraryService>();
+        services.AddSingleton<ExternalLocks>();
+        services.AddScoped<ExternalWriter>();
         services.AddScoped<NodeContent>();
         services.AddJobHandler<LibraryScanHandler>(LibraryScanHandler.Type);
         services.AddJobHandler<LibraryScanAllHandler>(LibraryScanAllHandler.Type);

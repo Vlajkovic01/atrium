@@ -113,6 +113,7 @@ approve pairings or create link codes.
 | POST | `/admin/libraries/check-path` | Try a folder before adding it. Reads only; always 200 with `ok`, `errorCode` and the number of entries |
 | PATCH, DELETE | `/admin/libraries/{id}` | Rename or replace `userIds` (`If-Match`). Delete needs `confirmName` and removes only Atrium's index, never a file |
 | POST | `/admin/libraries/{id}/scan` | Enqueue a scan job; returns 202 with the job |
+| PUT | `/admin/libraries/{id}/writes` | `enabled`, and `confirmName` (the library's name) to enable. Lets Atrium change the folder's files (D-036). Disabling takes effect at once. `PATCH` takes `writerIds`, those of `userIds` who may change files |
 
 ## Files and folders (Phase 2)
 

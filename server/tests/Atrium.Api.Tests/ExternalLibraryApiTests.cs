@@ -168,6 +168,33 @@ public sealed class ExternalLibraryApiTests : IDisposable
         Assert.True(File.Exists(Path.Combine(_folder, "2024", "beach.jpg")));
     }
 
+    [Fact]
+    public async Task Changes_need_the_name_typed_and_a_writer_and_can_be_stopped()
+    {
+        var (library, admin, ana) = await AddAsync();
+        var rootId = await RootAsync(ana, library.Id);
+        var writes = $"{Url}/{library.Id}/writes";
+
+        var refused = await _client.SendAsync(HttpMethod.Put, writes, admin, new { enabled = true, confirmName = "photos" });
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Equal(LibraryErrors.ConfirmationMismatch, await refused.ProblemCodeAsync());
+
+        var enabled = await (await _client.SendAsync(HttpMethod.Put, writes, admin, new { enabled = true, confirmName = "Photos" })).ReadAsync<AdminLibraryView>();
+        Assert.False(enabled.ReadOnly);
+
+        // Allowed changes, but Ana may only look until she is a writer.
+        Assert.Equal(HttpStatusCode.Forbidden, (await _client.SendAsync(HttpMethod.Post, "/api/v1/nodes", ana, new { parentId = rootId, name = "New" })).StatusCode);
+        var anaId = enabled.UserIds.Single();
+        await _client.SendAsync(
+            HttpMethod.Patch, $"{Url}/{library.Id}", admin, new { userIds = new[] { anaId }, writerIds = new[] { anaId } }, ifMatch: $"\"{enabled.Version}\"");
+        Assert.Equal(HttpStatusCode.Created, (await _client.SendAsync(HttpMethod.Post, "/api/v1/nodes", ana, new { parentId = rootId, name = "New" })).StatusCode);
+        Assert.True(Directory.Exists(Path.Combine(_folder, "New")));
+
+        await _client.SendAsync(HttpMethod.Put, writes, admin, new { enabled = false });
+        Assert.Equal(HttpStatusCode.Forbidden, (await _client.SendAsync(HttpMethod.Post, "/api/v1/nodes", ana, new { parentId = rootId, name = "Other" })).StatusCode);
+        Assert.False(Directory.Exists(Path.Combine(_folder, "Other")));
+    }
+
     private async Task<Guid> RootAsync(string token, Guid libraryId)
     {
         var libraries = await (await _client.SendAsync(HttpMethod.Get, "/api/v1/libraries", token)).ReadAsync<List<LibraryInfo>>();

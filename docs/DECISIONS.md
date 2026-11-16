@@ -481,3 +481,39 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - **Content is read from disk on every request**, with its current size,
   and the ETag is a hash of path, size and time, so a file changed after
   the last scan is never served with a stale length.
+
+## D-036 Changing the files of an external library (Owner request, details Proposed, Phase 3)
+
+- **Owner's requirement:** an admin may allow Atrium to rename, move,
+  delete and upload in an external library, only after a clear warning
+  and typing the library's name; deleting moves into a trash folder
+  inside the library with the normal trash retention; changes can be
+  switched off at any time.
+- **Who may change files** is a second, per-person grant ("can change")
+  on top of "can see". Allowing changes for a library does not by itself
+  let everyone who sees it delete from it.
+- **Enabling proves the folder is writable** by creating Atrium's own
+  `.atrium-trash/.uploads` folder in it; a folder mounted read-only is
+  refused with an explanation.
+- **Disk first, index second, under one lock per library**, shared with
+  the scan. A failed index update undoes the disk change. A crash between
+  the two leaves the file where the disk change put it, and the next scan
+  finds it there: the index can lose track of an album entry, never of a
+  file.
+- **Trash:** `.atrium-trash/<item id>/<name>` on the same disk, so a
+  delete is a rename. The scan neither indexes the trash nor calls trashed
+  items missing. A file is removed from disk only when its retention ends
+  or someone empties the trash, disk first and row second, and only while
+  changes are still allowed: switching changes off stops this too.
+- **Uploads** are assembled in `.atrium-trash/.uploads` with the same
+  resumable chunks as everywhere, verified, and moved into place.
+  "Replace" moves the existing file to the trash; external libraries
+  have no versions.
+- **Copying** inside an external folder is refused: it would duplicate
+  the user's files on their own disk, and it was not asked for.
+- **Names** chosen in Atrium follow the usual rules (D-011) and may not
+  match a sibling ignoring case; names found on disk are kept as they
+  are when an item only moves.
+- **Scan state** (online, last scan) is written without bumping the
+  library's version, so a scan finishing never makes an admin's edit
+  fail with a version conflict.
