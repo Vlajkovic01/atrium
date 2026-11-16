@@ -186,9 +186,27 @@ jobs:
       # One architecture, the one phones have, keeps the build and the
       # file small. Signed with the debug key: installable for trying it
       # out, not a store release.
+      # The build downloads several hundred megabytes of libraries from
+      # Maven. Kept between runs, they are downloaded once, not every time.
+      - uses: gradle/actions/setup-gradle@v4
+
+      # A download that stalls must not fail a pull request: the waits are
+      # longer than Gradle's default, and one failed build is tried again,
+      # which continues with what the first attempt already fetched. A real
+      # error fails both times and costs a few minutes more.
       - name: Build the APK
         working-directory: mobile/android
-        run: ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --console=plain
+        run: |
+          build() {
+            ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a --no-daemon --console=plain \
+              -Dorg.gradle.internal.http.socketTimeout=120000 \
+              -Dorg.gradle.internal.http.connectionTimeout=120000
+          }
+          if ! build; then
+            echo "::warning::The first build failed; trying once more."
+            sleep 20
+            build
+          fi
 
       - name: Keep the APK
         uses: actions/upload-artifact@v7
