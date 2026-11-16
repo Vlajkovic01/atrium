@@ -685,3 +685,22 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - Backups: the page explains that a backup holds the database, not the
   files, makes one on demand and follows its job, and says that restoring
   is a command-line step until Phase 11.
+
+## D-043 The person's own menu under their name, with Administration in it (Owner, 2026-11-13)
+
+- Owner's point: "Customize menu" as a small pencil was too hidden, and
+  Administration looked like any other entry. Owner's idea, adopted:
+  clicking one's name opens a menu. After trying a separate area for
+  Administration above the name (it then showed in two places), the
+  owner chose to keep it in that menu, beside Customize menu.
+- The name and avatar at the foot of the sidebar (top right on a phone)
+  open a menu: Account and settings, Customize menu, Administration for
+  admins (with the warning count), Sign out. It follows the menu button
+  pattern (arrows, Enter, Escape back to the name). The separate pencil
+  and sign-out buttons are gone; a red dot on the name shows warnings.
+- Only admins see Administration at all; the server refuses its pages to
+  everyone else. An admin who prefers it in the
+  main menu chooses "In the main menu" under Customize menu: it then
+  becomes the entry `admin`, placed by dragging, grouped, renamed and
+  given an icon like any other, but never hidden, and it is not repeated
+  under the name. The entry exists only for admins.

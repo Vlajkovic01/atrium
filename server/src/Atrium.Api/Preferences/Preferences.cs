@@ -23,7 +23,8 @@ public sealed record NavGroup(string Id, string Name, bool Collapsed = false);
 
 /// <summary>The order of the menu, what is hidden, renamed, grouped, and how the menu is shown.</summary>
 /// <param name="Density"><c>comfortable</c> (default) or <c>compact</c>, which shows icons only.</param>
-/// <param name="AdminPosition"><c>bottom</c> (default) or <c>top</c>: where Administration sits.</param>
+/// <param name="AdminPosition">Where Administration is, for an admin: <c>bottom</c> (default) in the menu under
+/// their name, or <c>top</c> as the entry <c>admin</c> of the main menu, placed and grouped like any other.</param>
 public sealed record NavigationLayout(
     IReadOnlyList<NavEntry> Entries, IReadOnlyList<NavGroup> Groups, string? Density = null, string? AdminPosition = null)
 {

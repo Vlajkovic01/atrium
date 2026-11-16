@@ -38,6 +38,7 @@ const REMOVABLE = new Set(["folder", "album", "separator"]);
 
 /** The icon an entry has when the person has not chosen one. */
 const USUAL_ICON: Record<string, IconName> = {
+  admin: "shield",
   files: "folder",
   photos: "image",
   trash: "trash",
@@ -295,11 +296,16 @@ export function MenuSettings() {
               {["library", "view", "folder", "album"].includes(entry.kind) ? (
                 <Badge tone="muted">{t(`menu.kinds.${entry.kind}`)}</Badge>
               ) : null}
-              <Check
-                label={t("menu.show")}
-                checked={!entry.hidden}
-                onChange={(e) => update(entry.key, { hidden: !e.target.checked })}
-              />
+              {/* Administration cannot be hidden: an admin must always reach it. */}
+              {entry.kind === "admin" ? (
+                <Badge tone="muted">{t("menu.alwaysShown")}</Badge>
+              ) : (
+                <Check
+                  label={t("menu.show")}
+                  checked={!entry.hidden}
+                  onChange={(e) => update(entry.key, { hidden: !e.target.checked })}
+                />
+              )}
             </>
           )}
           {groups.length > 0 ? (
@@ -469,7 +475,28 @@ export function MenuSettings() {
                 { value: "bottom", label: t("menu.adminBottom") },
                 { value: "top", label: t("menu.adminTop") },
               ]}
-              onChange={setAdminPosition}
+              onChange={(position: AdminPosition) => {
+                setAdminPosition(position);
+                // In the main menu it becomes an entry to drag into place, first to begin with.
+                setEntries((list) =>
+                  position === "top"
+                    ? list.some((e) => e.kind === "admin")
+                      ? list
+                      : [
+                          {
+                            key: "admin",
+                            kind: "admin",
+                            name: null,
+                            label: t("nav.admin"),
+                            hidden: false,
+                            group: "",
+                            icon: "",
+                          },
+                          ...list,
+                        ]
+                    : list.filter((e) => e.kind !== "admin"),
+                );
+              }}
             />
           ) : null}
         </div>

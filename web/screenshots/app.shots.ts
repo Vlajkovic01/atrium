@@ -162,7 +162,8 @@ test("screenshots of every screen", async ({ page, request, browser }) => {
   await shot(page, "storage");
 
   // --- Sign in, and an error ---
-  await page.getByRole("button", { name: "Sign out" }).first().click();
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await page.getByRole("heading", { name: "Sign in" }).waitFor();
   await shot(page, "sign-in");
   await page.getByLabel("Name").fill(OWNER);

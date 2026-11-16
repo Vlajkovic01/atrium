@@ -148,7 +148,8 @@
     "files": "Files",
     "trash": "Trash",
     "photos": "Photos",
-    "customize": "Customize menu"
+    "customize": "Customize menu",
+    "admin": "Administration"
   },
   "files": {
     "title": "Files",
@@ -698,8 +699,8 @@
     "densityComfortable": "Names and icons",
     "densityCompact": "Icons only",
     "adminPosition": "Administration",
-    "adminBottom": "At the bottom",
-    "adminTop": "At the top",
+    "adminBottom": "In the menu under your name",
+    "adminTop": "In the main menu, where you drag it",
     "icon": "Icon",
     "iconFor": "Icon for {name}",
     "usualIcon": "Usual",
@@ -719,7 +720,8 @@
     "saved": "Your menu was saved.",
     "groupName": "Group name",
     "removeGroup": "Remove group",
-    "addGroup": "Add group"
+    "addGroup": "Add group",
+    "alwaysShown": "Always shown"
   },
   "views": {
     "title": "Views",
@@ -860,5 +862,10 @@
       "uploads_cleanup": "Clearing unfinished uploads",
       "users_delete": "Deleting an account"
     }
+  },
+  "userMenu": {
+    "label": "Your menu",
+    "account": "Account and settings",
+    "open": "{name}: your menu"
   }
 }

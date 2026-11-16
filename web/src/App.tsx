@@ -10,7 +10,8 @@ import { AuthLayout } from "./components/AuthLayout.tsx";
 import type { IconName } from "./components/Icon.tsx";
 import { Icon, isIconName } from "./components/Icon.tsx";
 import { Logo } from "./components/Logo.tsx";
-import { Avatar, Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
+import { Button, ErrorMessage, InsecureBanner } from "./components/ui.tsx";
+import { UserMenu } from "./components/UserMenu.tsx";
 import { AdminLayout, useAdminOverview, warnings } from "./admin/AdminLayout.tsx";
 import { Backups } from "./admin/Backups.tsx";
 import { AdminOverviewPage } from "./admin/Overview.tsx";
@@ -76,7 +77,7 @@ type NavItemView = components["schemas"]["NavItemView"];
 
 function Shell() {
   const { t } = useTranslation();
-  const { user, signOut } = useSession();
+  const { user } = useSession();
   const location = useLocation();
   const isAdmin = user?.role === "admin";
 
@@ -125,6 +126,10 @@ function Shell() {
       return <hr key={item.key} className="nav-separator" />;
     }
 
+    if (item.kind === "admin") {
+      return administration(item);
+    }
+
     const target =
       item.kind === "library" || item.kind === "folder"
         ? { to: `/files/${item.targetId ?? ""}`, icon: (item.readOnly ? "lock" : "folder") as IconName }
@@ -152,8 +157,10 @@ function Shell() {
     );
   };
 
-  const administration = (
+  // Only when the admin placed Administration in the main menu (D-043).
+  const administration = (item: NavItemView) => (
     <NavLink
+      key={item.key}
       to="/admin"
       className="nav-link nav-admin"
       title={compact ? t("nav.administration") : undefined}
@@ -163,8 +170,8 @@ function Shell() {
           : undefined
       }
     >
-      <Icon name="shield" size={20} />
-      <span>{t("nav.administration")}</span>
+      <Icon name={isIconName(item.icon) ? item.icon : "shield"} size={20} />
+      <span>{item.label ?? t("nav.administration")}</span>
       {adminWarnings > 0 ? (
         <span className="count-badge" aria-hidden="true">
           {adminWarnings}
@@ -181,7 +188,6 @@ function Shell() {
             <Logo size={30} />
           </div>
           <nav className="nav" aria-label={t("nav.main")}>
-            {isAdmin && adminOnTop ? administration : null}
             {items.filter((item) => !item.group).map((item) => navEntry(item))}
             {groups.map((group) => {
               const members = items.filter((item) => item.group === group.id);
@@ -201,26 +207,8 @@ function Shell() {
                 </div>
               ) : null;
             })}
-            {isAdmin && !adminOnTop ? administration : null}
           </nav>
-          <div className="sidebar-user">
-            <Avatar name={user?.displayName ?? ""} />
-            <div className="user-text">
-              <span className="user-name">{user?.displayName}</span>
-              <span className="user-role">{user ? t(`roles.${user.role}`) : ""}</span>
-            </div>
-            <NavLink to="/menu" className="icon-button" aria-label={t("nav.customize")} title={t("nav.customize")}>
-              <Icon name="pencil" size={16} />
-            </NavLink>
-            <button
-              type="button"
-              className="icon-button"
-              aria-label={t("common.signOut")}
-              onClick={() => void signOut()}
-            >
-              <Icon name="logout" size={18} />
-            </button>
-          </div>
+          <UserMenu adminWarnings={isAdmin ? adminWarnings : 0} adminElsewhere={adminOnTop} />
         </aside>
 
         <div className="app-main">

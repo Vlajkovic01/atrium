@@ -118,7 +118,8 @@ test("a wrong password is refused with an explanation, and signing out ends the 
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("heading", { name: "My files" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Sign out" }).first().click();
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
@@ -263,7 +264,8 @@ test("two-step verification is turned on, used to sign in, and turned off", asyn
   await expect(page.getByText("On. Signing in also asks for a code")).toBeVisible();
 
   // Signing in now needs the second step; a recovery code works once.
-  await page.getByRole("button", { name: "Sign out" }).first().click();
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await signIn(page);
   await expect(page.getByRole("heading", { name: "Two-step verification" })).toBeVisible();
   await page.getByLabel("Code").fill(recovery);
@@ -320,7 +322,8 @@ test("on a phone the navigation is a bar at the bottom and everything stays reac
 
   await page.getByRole("link", { name: "Account" }).click();
   await expect(page.getByRole("heading", { name: "Account", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Sign out" }).first().click();
+  await page.getByRole("button", { name: /your menu$/ }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await context.close();
 });
