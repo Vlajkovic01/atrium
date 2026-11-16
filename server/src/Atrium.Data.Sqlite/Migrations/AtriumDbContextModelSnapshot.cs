@@ -195,6 +195,9 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("LastSeenAt")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("LibraryId")
                         .HasColumnType("TEXT");
 

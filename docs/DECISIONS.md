@@ -447,3 +447,37 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - Until metadata is read, the modification time in UTC is used, so a new
   photo appears on the timeline at once and moves to its exact place
   when its metadata job has run.
+
+## D-035 How an external folder is read (Proposed, Phase 3)
+
+- **Admins add it, grants decide who sees it.** Adding a library checks
+  the folder first: an absolute path that exists and can be listed, not
+  overlapping Atrium's config or cache directory, a local storage
+  location or another external library. A library inside a storage
+  location would show Atrium's own blobs, and once writes are possible
+  could delete them; two overlapping libraries would show files twice.
+  An admin sees a library's photos only by granting access to
+  themselves, like anyone else.
+- **Symbolic links are neither listed nor followed**, at any step of a
+  path, so nothing outside the folder can be reached through one.
+  Alternative: follow links that stay inside the folder, which needs the
+  same check at every request and gains little.
+- **Hidden entries and system folders are skipped**: names starting with
+  a dot, `@eaDir`, `#recycle`, `$RECYCLE.BIN`, `Thumbs.db` and similar,
+  and Atrium's own `.atrium-trash`.
+- **Names are kept exactly as on disk.** Siblings are kept apart by
+  their exact name, not the case-folded one, because a case-sensitive
+  disk can hold `a.jpg` and `A.jpg` side by side; neither is hidden.
+- **Changes are found by scanning**, every six hours and on demand, not
+  by watching the folder: change notifications are unreliable on
+  network shares and in containers. A scan keeps the folders still to
+  visit as its checkpoint and continues after a restart.
+- **Vanished files are kept as missing** for the trash retention, with
+  their albums, and come back as the same entry if the file returns.
+  Before marking anything missing, a scan refuses to trust a folder that
+  is gone, suddenly empty, or has lost more than half of its files (and
+  at least 50): the library is marked offline instead and nothing
+  changes.
+- **Content is read from disk on every request**, with its current size,
+  and the ETag is a hash of path, size and time, so a file changed after
+  the last scan is never served with a stale length.

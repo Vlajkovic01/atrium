@@ -87,6 +87,9 @@ public sealed class Node : IVersioned
     /// </summary>
     public DateTimeOffset? MissingSince { get; set; }
 
+    /// <summary>The start of the last scan that found this external entry. What a finished scan did not find is missing.</summary>
+    public DateTimeOffset? LastSeenAt { get; set; }
+
     /// <summary>Photo or video, from the media type; null for anything else. Set when the node is saved.</summary>
     public MediaKind? MediaKind { get; set; }
 

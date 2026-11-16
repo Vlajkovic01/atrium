@@ -53,6 +53,7 @@ COPY --from=server /app /app
 COPY --from=web /src/web/dist /app/wwwroot
 
 ENV ATRIUM_CONFIG_DIR=/config \
+    ATRIUM_CACHE_DIR=/cache \
     ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_CLI_TELEMETRY_OPTOUT=1
 

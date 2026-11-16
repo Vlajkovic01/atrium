@@ -19,32 +19,53 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
     public async Task<AccessibleNode?> FindAsync(FileActor actor, Guid id, CancellationToken ct)
     {
         var node = await db.Nodes.AsNoTracking().SingleOrDefaultAsync(n => n.Id == id, ct);
-        if (node is null)
+
+        // A file a scan no longer finds is kept for a while, but is not there for anyone.
+        if (node is null || node.MissingSince is not null)
         {
             return null;
         }
 
         var library = await db.Libraries.AsNoTracking().SingleAsync(l => l.Id == node.LibraryId, ct);
-        if (!CanRead(actor, library))
+        var grant = await GrantAsync(actor, library, ct);
+        if (!CanRead(actor, library, grant))
         {
             return null;
         }
 
         var inTrash = node.TrashedAt is not null
             || (await NodeTree.AncestorsAsync(db, node, ct)).Any(a => a.TrashedAt is not null);
-        return new AccessibleNode(node, library, CanWrite(actor, library), inTrash);
+        return new AccessibleNode(node, library, CanWrite(actor, library, grant), inTrash);
     }
 
-    public static bool CanRead(FileActor actor, Library library) => library.Kind switch
+    /// <summary>The actor's grant on a library that is not personal; null for personal libraries.</summary>
+    public Task<LibraryGrant?> GrantAsync(FileActor actor, Library library, CancellationToken ct) =>
+        library.Kind == LibraryKind.Personal
+            ? Task.FromResult<LibraryGrant?>(null)
+            : db.LibraryGrants.AsNoTracking().SingleOrDefaultAsync(g => g.LibraryId == library.Id && g.UserId == actor.UserId, ct);
+
+    /// <summary>
+    /// Personal libraries: the owner only, and not from a device approved
+    /// without access to them. Admins have no way in (D-004). Every other
+    /// library: whoever has a grant, admins included only through one.
+    /// </summary>
+    public static bool CanRead(FileActor actor, Library library, LibraryGrant? grant = null) => library.Kind switch
     {
-        // Personal libraries: the owner only, and not from a device approved
-        // without access to them. Admins have no way in (D-004).
         LibraryKind.Personal => library.OwnerUserId == actor.UserId && !actor.HidePersonal,
-        _ => false,
+        _ => grant is not null && grant.UserId == actor.UserId && grant.LibraryId == library.Id,
     };
 
-    public static bool CanWrite(FileActor actor, Library library) =>
-        CanRead(actor, library) && actor.CanWriteAnything && !library.ReadOnly && library.Mode == LibraryMode.Managed;
+    /// <summary>
+    /// Writing also needs a session that may write, a library that is not
+    /// read-only and, outside a personal library, a write grant. External
+    /// libraries are only read for now.
+    /// </summary>
+    public static bool CanWrite(FileActor actor, Library library, LibraryGrant? grant = null) =>
+        CanRead(actor, library, grant)
+        && actor.CanWriteAnything
+        && !library.ReadOnly
+        && library.Mode == LibraryMode.Managed
+        && (library.Kind == LibraryKind.Personal || grant?.Access == LibraryAccess.Write);
 
     /// <summary>The ancestors from the library root down to the node, the node excluded.</summary>
     public async Task<FileResult<List<Node>>> PathAsync(FileActor actor, Guid id, CancellationToken ct)
@@ -75,7 +96,7 @@ public sealed class NodeService(AtriumDbContext db, TimeProvider time, FilesOpti
 
         // Inside a trashed folder everything is in the trash too, so the
         // trashed flag of the children themselves only matters at the top.
-        var query = db.Nodes.AsNoTracking().Where(n => n.ParentId == folderId);
+        var query = db.Nodes.AsNoTracking().Where(n => n.ParentId == folderId && n.MissingSince == null);
         if (!found.InTrash)
         {
             query = query.Where(n => n.TrashedAt == null);

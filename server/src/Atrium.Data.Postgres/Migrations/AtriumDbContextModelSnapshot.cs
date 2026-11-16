@@ -200,6 +200,9 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<long?>("LastSeenAt")
+                        .HasColumnType("bigint");
+
                     b.Property<Guid>("LibraryId")
                         .HasColumnType("uuid");
 

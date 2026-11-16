@@ -51,8 +51,6 @@ public static class UploadEndpoints
     private const int ChecksumMismatchStatus = 460;
     private const int MaxHashesPerCheck = 1000;
 
-    private static readonly FileExtensionContentTypeProvider ContentTypes = new();
-
     public static IEndpointRouteBuilder MapUploadEndpoints(this IEndpointRouteBuilder routes)
     {
         var uploads = routes.MapGroup("/uploads").WithTags("Uploads");
@@ -303,8 +301,7 @@ public static class UploadEndpoints
     private static UploadInfo ToInfo(Upload u) =>
         new(u.Id, u.ParentId, u.Name, u.Length, u.Offset, u.ChunkSize, u.State, u.NodeId, u.ErrorCode, u.CreatedAt, u.ExpiresAt);
 
-    private static string? MediaTypeOf(string name) =>
-        ContentTypes.TryGetContentType(name, out var type) ? type : "application/octet-stream";
+    private static string? MediaTypeOf(string name) => MediaTypes.For(name);
 
     /// <summary>tus metadata: comma-separated pairs of a key and a Base64 value.</summary>
     internal static bool TryParseMetadata(string? header, out Dictionary<string, string> metadata)

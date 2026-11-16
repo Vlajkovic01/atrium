@@ -84,6 +84,20 @@
       "no_storage": "This server has no storage location yet. An admin has to add one before files can be stored.",
       "quota_exceeded": "There is not enough space left in your storage quota."
     },
+    "library": {
+      "invalid_name": "Give the library a name of at most 128 characters.",
+      "path_not_absolute": "Enter the full path of the folder on the server, for example /photos/screenshots.",
+      "path_missing": "There is no folder at this path on the server. With Docker, the folder has to be mounted into the container first.",
+      "path_unreadable": "The server cannot read this folder. Check its permissions.",
+      "path_protected": "This folder is, contains or lies inside Atrium's own data. Choose another folder.",
+      "path_overlaps": "This folder is, contains or lies inside another library's folder. A file can belong to only one library.",
+      "not_external": "Only a library that points at an existing folder can be removed this way.",
+      "confirmation_mismatch": "Type the library's name exactly as shown to confirm.",
+      "unknown_user": "One of the chosen people no longer exists. Reload and try again.",
+      "folder_unavailable": "The folder cannot be reached. If it is on a network share or an external disk, check that it is mounted.",
+      "folder_empty": "The folder is suddenly empty. If it is on a network share or an external disk, check that it is mounted.",
+      "too_many_missing": "Most of the files disappeared at once, so nothing was removed from the library. Check that the folder is mounted, then scan again."
+    },
     "node": {
       "invalid_name": "That name cannot be used. Names cannot contain / or \\, end with a dot or a space, or be a reserved name such as CON.",
       "name_conflict": "Something with that name is already in this folder.",
@@ -119,6 +133,7 @@
     "administration": "Administration",
     "files": "Files",
     "trash": "Trash",
+    "libraries": "Libraries",
     "backgroundWork": "Background work"
   },
   "files": {
@@ -442,6 +457,34 @@
     "healthyNoFree": "Working.",
     "addHeading": "Add a location",
     "added": "The location was added."
+  },
+  "libraries": {
+    "heading": "Libraries",
+    "body": "Existing folders shown in Atrium without copying them, such as a photo folder you already have.",
+    "empty": "No folders are added yet.",
+    "online": "Online",
+    "offline": "Offline",
+    "readOnly": "Read-only",
+    "files": "{count, plural, one {# file} other {# files}}",
+    "people": "{count, plural, =0 {nobody has access} one {# person has access} other {# people have access}}",
+    "lastScan": "scanned {when}",
+    "scan": "Scan now",
+    "scanning": "Scanning… {percent}%",
+    "access": "Access",
+    "remove": "Remove",
+    "addHeading": "Add an existing folder",
+    "addNote": "Atrium only reads this folder. It never creates, renames, changes or deletes anything in it. Photos appear in the timeline of the people you choose.",
+    "added": "The folder was added and is being scanned.",
+    "name": "Name",
+    "path": "Folder on the server",
+    "pathHelp": "The full path as the server sees it. With Docker, mount the folder into the container first, preferably read-only (:ro).",
+    "tryPath": "Check folder",
+    "pathOk": "The folder can be read. {count, plural, one {# item} other {# items}} directly inside it.",
+    "whoSees": "Who sees it",
+    "accessTitle": "Who sees {name}",
+    "removeTitle": "Remove {name}?",
+    "removeBody": "Atrium forgets this library: its photos leave the timeline and every album. The folder and every file in it stay exactly as they are.",
+    "typeName": "Type {name} to confirm"
   },
   "backgroundWork": {
     "heading": "Background work",

@@ -1,5 +1,5 @@
 using System.Globalization;
-using Atrium.Core.Files;
+using Atrium.Files;
 using Atrium.Storage;
 using Microsoft.Net.Http.Headers;
 
@@ -31,17 +31,17 @@ public static class FileContent
 
     public static async Task ServeAsync(
         HttpContext http,
-        IStorageProvider provider,
-        Blob blob,
+        ContentSource source,
         string fileName,
         string? mediaType,
-        DateTimeOffset modifiedAt,
         bool inline,
         CancellationToken ct)
     {
         var request = http.Request;
         var response = http.Response;
-        var etag = ETagFor(blob.Sha256);
+        var etag = $"\"{source.Key}\"";
+        var size = source.Size;
+        var modifiedAt = source.ModifiedAt;
         var type = mediaType ?? "application/octet-stream";
         var showInline = inline && InlineTypes.Contains(type);
 
@@ -60,23 +60,23 @@ public static class FileContent
             return;
         }
 
-        var range = ParseRange(request, blob.Size, etag);
+        var range = ParseRange(request, size, etag);
         if (range is { Satisfiable: false })
         {
             response.StatusCode = StatusCodes.Status416RangeNotSatisfiable;
-            response.Headers.ContentRange = $"bytes */{blob.Size.ToString(CultureInfo.InvariantCulture)}";
+            response.Headers.ContentRange = $"bytes */{size.ToString(CultureInfo.InvariantCulture)}";
             response.Headers.ContentDisposition = default;
             return;
         }
 
         long offset = 0;
-        var length = blob.Size;
+        var length = size;
         if (range is { } r)
         {
             offset = r.From;
             length = r.To - r.From + 1;
             response.StatusCode = StatusCodes.Status206PartialContent;
-            response.Headers.ContentRange = string.Create(CultureInfo.InvariantCulture, $"bytes {r.From}-{r.To}/{blob.Size}");
+            response.Headers.ContentRange = string.Create(CultureInfo.InvariantCulture, $"bytes {r.From}-{r.To}/{size}");
         }
 
         response.ContentLength = length;
@@ -85,8 +85,30 @@ public static class FileContent
             return;
         }
 
-        await using var stream = await provider.OpenReadAsync(blob.Key, range is null ? null : new ByteRange(offset, length), ct);
-        await stream.CopyToAsync(response.Body, 81920, ct);
+        await using var stream = await source.OpenAsync(range is null ? null : new ByteRange(offset, length), ct);
+        await CopyAsync(stream, response.Body, length, ct);
+    }
+
+    /// <summary>
+    /// Copies exactly <paramref name="length"/> bytes, or fewer if the source
+    /// ends early. A file in an external folder can be longer than when it
+    /// was measured; the response must still match its Content-Length.
+    /// </summary>
+    public static async Task CopyAsync(Stream source, Stream target, long length, CancellationToken ct)
+    {
+        var buffer = new byte[81920];
+        var left = length;
+        while (left > 0)
+        {
+            var read = await source.ReadAsync(buffer.AsMemory(0, (int)Math.Min(buffer.Length, left)), ct);
+            if (read == 0)
+            {
+                break;
+            }
+
+            await target.WriteAsync(buffer.AsMemory(0, read), ct);
+            left -= read;
+        }
     }
 
     /// <summary>attachment or inline, with an ASCII fallback name and the real name in UTF-8.</summary>
