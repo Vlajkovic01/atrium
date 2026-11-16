@@ -12,6 +12,13 @@ dist/
 playwright-report/
 test-results/
 
+# Mobile app: Expo's cache and the native projects it generates from
+# app.json (expo prebuild). They are built in CI, never edited by hand.
+.expo/
+expo-env.d.ts
+/mobile/android/
+/mobile/ios/
+
 # Editors and OS
 .vs/
 .idea/

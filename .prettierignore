@@ -12,3 +12,6 @@ LICENSE
 
 dist/
 .atrium/
+.expo/
+mobile/android/
+mobile/ios/

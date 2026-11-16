@@ -112,6 +112,26 @@ offering the matching source; the release must state where it is
 (Ubuntu's source packages for the pinned versions, or a copy published
 with the release). HEVC decoding (libde265, FFmpeg) falls under flag 2.
 
+## Approved for Phase 4 (mobile app)
+
+The owner delegated the choice on 2026-11-16: current packages that fit
+the stack and do not bloat the app. Each is listed when it enters the
+repository. None is GPL or AGPL (flag 3).
+
+| Component | Version | License | Use |
+|---|---|---|---|
+| Expo (expo, @expo/metro-runtime, @expo/log-box) | 58.0.25 | MIT | Build tooling and native module runtime for the React Native app; the app is a normal native build, not Expo Go |
+| React Native | 0.88.1 | MIT | Mobile interface; brings Hermes (MIT) |
+| React | 19.3.0 | MIT | The version React Native 0.88 is built against |
+| expo-router | 58.0.31 | MIT | Navigation and links into the app; built on React Navigation (MIT) |
+| react-native-screens, react-native-safe-area-context | 4.30.1, 5.11.1 | MIT | Native screens and safe areas, required by the navigation |
+| expo-linking, expo-constants, expo-status-bar | 58.x | MIT | `atrium://` links, app version, status bar |
+| expo-localization | 58.0.5 | MIT | The device's languages |
+| react-native-svg | 15.16.0 | MIT | The Atrium mark and line icons |
+| @formatjs/intl-pluralrules | 7.0.4 | MIT | Plural rules for the message format, which Hermes lacks |
+| i18next, react-i18next, i18next-icu, intl-messageformat | as on the web | MIT; BSD-3-Clause | Translations, same messages as the web app |
+| Android Gradle plugin, Gradle, Kotlin | by React Native | Apache-2.0 | Build only |
+
 ## Candidates, not yet approved
 
 Listed so the choices are visible early. Each will be proposed with

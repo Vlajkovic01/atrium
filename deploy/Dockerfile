@@ -14,7 +14,11 @@ RUN npm install --global pnpm@12.18.0
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/shared/package.json packages/shared/
 COPY web/package.json web/
-RUN pnpm install --frozen-lockfile
+# The mobile app is a member of the workspace, so its manifest must be
+# here for the lockfile to match; the filter keeps its packages (React
+# Native and the rest) out of this build.
+COPY mobile/package.json mobile/
+RUN pnpm install --frozen-lockfile --filter "@atrium/web..."
 
 COPY packages/shared packages/shared
 COPY web web

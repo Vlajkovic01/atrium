@@ -143,6 +143,16 @@
       "invalid_metadata": "Otpremanju nedostaje folder ili ime."
     }
   },
+  "mobile": {
+    "welcome": {
+      "heading": "Vaši fajlovi, na vašem serveru",
+      "body": "Atrium prikazuje fajlove, fotografije i video snimke koji se čuvaju na serveru koji vi kontrolišete. Ništa se ne čuva nigde drugde.",
+      "how": "Za povezivanje ćete skenirati kod prikazan u Atrium web aplikaciji pod Uređaji, ili upisati adresu svog servera."
+    },
+    "about": {
+      "version": "Verzija {version}"
+    }
+  },
   "nav": {
     "devices": "Uređaji",
     "account": "Nalog",

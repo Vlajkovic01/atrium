@@ -101,6 +101,31 @@ installed by setting `ATRIUM_BROWSER_CHANNEL` to `msedge` or `chrome`.
 `pnpm --filter @atrium/web run screenshots` walks through the same app
 and saves a picture of every screen into `screenshots/`.
 
+### Mobile app
+
+The Android app is in `mobile/`: React Native with Expo, sharing the API
+client, translations and upload logic with the web app through
+`packages/shared`. The native Android project is not in the repository;
+it is generated from `mobile/app.json`.
+
+```
+pnpm --filter @atrium/mobile run typecheck
+pnpm --filter @atrium/mobile run bundle
+```
+
+`bundle` builds the app's JavaScript, which needs neither Java nor the
+Android SDK. The installable APK is built by the "Mobile app build" job
+of CI and kept with each run as the artifact `atrium-android`. Building
+it yourself needs JDK 17 and the Android SDK:
+
+```
+cd mobile
+pnpm exec expo prebuild --platform android
+cd android && ./gradlew assembleRelease
+```
+
+iOS is not built yet (D-048).
+
 ## Contributing
 
 `master` is always releasable and changes only through pull requests that
