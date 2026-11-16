@@ -131,17 +131,7 @@ public static class PhotoEndpoints
         var page = await photos.SearchAsync(
             actor, new SearchRequest(q, searchType, Local(from), Local(to), libraryId, cursor, limit ?? 100), ct);
         var sessionId = http.User.SessionId()!.Value;
-        var items = page.Items.Select(i =>
-        {
-            var (width, height) = Upright(i.Info);
-            return new SearchResultView(
-                FileHttp.ToInfo(i.Node, canWrite: false),
-                i.Node.MediaKind,
-                i.Node.CapturedAt,
-                width,
-                height,
-                i.Node.MediaKind is null ? null : ThumbnailUrl(signer, i.Node.Id, sessionId));
-        }).ToList();
+        var items = page.Items.Select(i => ToResult(i, signer, sessionId)).ToList();
         return TypedResults.Ok(new SearchPageView(items, page.NextCursor));
     }
 
@@ -288,6 +278,19 @@ public static class PhotoEndpoints
                     ThumbnailUrl(signer, i.Node.Id, sessionId));
             }).ToList(),
             page.NextCursor);
+    }
+
+    /// <summary>A search or view result: the file, and for a photo or video its upright size and a signed thumbnail.</summary>
+    internal static SearchResultView ToResult(PhotoItem item, SignedUrls signer, Guid sessionId)
+    {
+        var (width, height) = Upright(item.Info);
+        return new SearchResultView(
+            FileHttp.ToInfo(item.Node, canWrite: false),
+            item.Node.MediaKind,
+            item.Node.CapturedAt,
+            width,
+            height,
+            item.Node.MediaKind is null ? null : ThumbnailUrl(signer, item.Node.Id, sessionId));
     }
 
     /// <summary>EXIF orientations 5 to 8 turn the picture a quarter: what is shown is the other way round.</summary>

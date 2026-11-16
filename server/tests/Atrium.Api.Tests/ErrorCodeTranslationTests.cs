@@ -32,6 +32,7 @@ public sealed partial class ErrorCodeTranslationTests
         typeof(Atrium.Files.External.LibraryErrors),
         typeof(Atrium.Media.MediaErrors),
         typeof(Atrium.Media.Photos.AlbumErrors),
+        typeof(NavigationEndpoints),
     ];
 
     public static TheoryData<string> Locales() => ["en", "sr-Latn"];

@@ -189,6 +189,9 @@ public sealed class UserDeletionHandler(
         await db.Nodes.Where(n => libraries.Contains(n.LibraryId) && n.ParentId == null).ExecuteDeleteAsync(ct);
         await db.Nodes.Where(n => libraries.Contains(n.LibraryId)).ExecuteDeleteAsync(ct);
         await db.Libraries.Where(l => libraries.Contains(l.Id)).ExecuteDeleteAsync(ct);
+        // The person's menu and saved views go with them.
+        var preferenceKeys = Atrium.Core.Settings.UserPreferenceKeys.All(userId).ToList();
+        await db.Settings.Where(s => preferenceKeys.Contains(s.Key)).ExecuteDeleteAsync(ct);
         await db.Users.Where(u => u.Id == userId).ExecuteDeleteAsync(ct);
         logger.LogWarning("User {UserId} and their personal library were deleted as scheduled.", userId);
     }

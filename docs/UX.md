@@ -93,6 +93,19 @@ Shared (Phase 8), Trash; a top bar with search, upload and job activity.
 The activity indicator opens a panel listing uploads and background jobs
 with progress, pause and cancel.
 
+### Menu (Phase 3, D-041)
+
+Each person arranges their own menu under "Customize menu", the last
+entry of the menu: entries move up and down, can be hidden and given
+their own names, and can be gathered under group headings. Folders
+shared with the person and their views are entries like any other. A
+view is made in a dialog with its rules and shows at once how many files
+match; its page shows photos and videos as a grid and other files as a
+list leading to their folders, with Change and Delete view. "Back to the
+default" undoes the arrangement; an admin can make theirs the default
+for everyone. Administration always stays visible to admins. On a phone
+the bottom bar shows the built-in entries only.
+
 ### Files (Phase 2)
 
 Built in Phase 2 as described below, with these details settled while

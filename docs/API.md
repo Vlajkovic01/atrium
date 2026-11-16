@@ -189,6 +189,17 @@ overwrites (DESIGN.md 4.2).
 | POST | `/albums/{id}/items`, `/albums/{id}/items/remove` | Add or remove up to 1,000 `nodeIds`; only photos and videos the caller can read |
 | GET | `/search` | Built in Phase 3. `q` (words in the name, ignoring case and diacritics), `type` (`photo`, `video`, `document`, `folder`), `from`, `to`, `libraryId`, `cursor`. No location (D-031) |
 
+## Menu and views (Phase 3, D-041)
+
+| Method | Path | Notes |
+|---|---|---|
+| GET, PUT, DELETE | `/me/navigation` | The person's menu: entries with order, hidden, own name and group, and the groups. `DELETE` goes back to the default. Unknown entries are dropped, new ones added in their usual place |
+| GET, PUT | `/admin/navigation-default` | The default arrangement for people who have none of their own |
+| GET, POST | `/me/views` | The person's saved views: a name and rules. At most 50 |
+| PUT, DELETE | `/me/views/{id}` | Change or delete a view; files are never touched |
+| GET | `/me/views/{id}/items` | The files the view shows, with the total, paged |
+| POST | `/me/views/preview` | What rules would show, without saving them |
+
 ## Playback (Phase 5)
 
 | Method | Path | Notes |

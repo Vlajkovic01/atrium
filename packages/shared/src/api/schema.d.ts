@@ -1286,6 +1286,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/navigation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetNavigation"];
+        /** @description Replaces the person's menu layout: order, hidden entries, own names and groups. */
+        put: operations["SaveNavigation"];
+        post?: never;
+        /** @description Back to the default menu. */
+        delete: operations["ResetNavigation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListViews"];
+        put?: never;
+        post: operations["CreateView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/views/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetViewItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/views/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description What a view with these rules would show, without saving it. */
+        post: operations["PreviewView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/views/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UpdateView"];
+        post?: never;
+        delete: operations["DeleteView"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/navigation-default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetDefaultNavigation"];
+        /** @description The menu new people start with, and everyone who has not arranged their own. */
+        put: operations["SaveDefaultNavigation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1661,6 +1761,36 @@ export interface components {
         };
         /** @enum {unknown} */
         MediaKind: "photo" | "video";
+        NavEntry: {
+            key: string;
+            hidden: boolean;
+            label: null | string;
+            group: null | string;
+        };
+        NavGroup: {
+            id: string;
+            name: string;
+        };
+        NavigationLayout: {
+            entries: components["schemas"]["NavEntry"][];
+            groups: components["schemas"]["NavGroup"][];
+        };
+        NavigationView: {
+            items: components["schemas"]["NavItemView"][];
+            groups: components["schemas"]["NavGroup"][];
+            custom: boolean;
+        };
+        NavItemView: {
+            key: string;
+            kind: string;
+            label: null | string;
+            name: null | string;
+            hidden: boolean;
+            group: null | string;
+            /** Format: uuid */
+            targetId: null | string;
+            readOnly: boolean;
+        };
         NodeInfo: {
             /** Format: uuid */
             id: string;
@@ -1778,6 +1908,16 @@ export interface components {
             forcePathStyle: boolean;
             keyPrefix: null | string;
         };
+        SavedView: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            rules: components["schemas"]["ViewRulesData"];
+        };
+        SaveViewRequest: {
+            name: string;
+            rules: components["schemas"]["ViewRulesData"];
+        };
         ScheduleDeletionRequest: {
             confirmName: string;
         };
@@ -1796,6 +1936,8 @@ export interface components {
             height: null | number | string;
             thumbnailUrl: null | string;
         };
+        /** @enum {unknown} */
+        SearchType: "photo" | "video" | "document" | "folder";
         SessionInfo: {
             /** Format: uuid */
             id: string;
@@ -2021,6 +2163,36 @@ export interface components {
             /** Format: date-time */
             replacedAt: string;
         };
+        ViewPageView: {
+            items: components["schemas"]["SearchResultView"][];
+            nextCursor: null | string;
+            /** Format: int32 */
+            total: number | string;
+        };
+        ViewPreviewRequest: {
+            rules: components["schemas"]["ViewRulesData"];
+            /** Format: int32 */
+            limit: null | number | string;
+        };
+        ViewRulesData: {
+            words: null | string;
+            types: null | components["schemas"]["SearchType"][];
+            extensions: null | string[];
+            libraryIds: null | string[];
+            /** Format: date-time */
+            from: null | string;
+            /** Format: date-time */
+            to: null | string;
+            /** Format: int32 */
+            lastDays: null | number | string;
+            /** Format: int64 */
+            minSize: null | number | string;
+            /** Format: int64 */
+            maxSize: null | number | string;
+            sort: null | components["schemas"]["ViewSort"];
+        };
+        /** @enum {unknown} */
+        ViewSort: "newest" | "oldest" | "name" | "largest" | null;
     };
     responses: never;
     parameters: never;
@@ -5488,6 +5660,325 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationView"];
+                };
+            };
+        };
+    };
+    SaveNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NavigationLayout"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ResetNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationView"];
+                };
+            };
+        };
+    };
+    ListViews: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedView"][];
+                };
+            };
+        };
+    };
+    CreateView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveViewRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetViewItems: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number | string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ViewPageView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PreviewView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ViewPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ViewPageView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UpdateView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveViewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    DeleteView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetDefaultNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationLayout"];
+                };
+            };
+        };
+    };
+    SaveDefaultNavigation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NavigationLayout"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NavigationLayout"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

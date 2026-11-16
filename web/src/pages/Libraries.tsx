@@ -45,6 +45,7 @@ export function Libraries() {
   const refresh = async (): Promise<void> => {
     await queryClient.invalidateQueries({ queryKey });
     await queryClient.invalidateQueries({ queryKey: ["libraries"] });
+    await queryClient.invalidateQueries({ queryKey: ["navigation"] });
   };
 
   const scan = async (library: Library): Promise<void> => {
