@@ -183,7 +183,8 @@ cannot lose on it.
 ### Publishing to Docker Hub (for maintainers)
 
 The image is published by the last job of `.github/workflows/ci.yml`,
-"Publish the image", which runs only after every check passed. It always
+"Publish the image", which runs only after the tests passed and the image
+was built and tried with Compose. It always
 publishes to GitHub's registry. It also publishes to Docker Hub as
 `<user>/atrium` once the GitHub repository has, under Settings, Secrets
 and variables, Actions:

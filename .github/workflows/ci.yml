@@ -1,8 +1,13 @@
 name: CI
 
-# One pipeline: the four checks run side by side, and the image is
-# published only after all of them passed (D-046).
-# - A pull request runs the checks; nothing is published.
+# One pipeline in three stages, each starting only when the one before
+# it passed (D-046):
+#
+#   1. Tests:   server, clients and end-to-end, side by side.
+#   2. Image:   the Docker image is built and tried with Compose.
+#   3. Publish: the image goes to the registries.
+#
+# - A pull request runs stages 1 and 2; nothing is published.
 # - A merge to master publishes the image as "edge" and "sha-<commit>".
 # - A version tag such as v0.1.0 publishes 0.1.0, 0.1 and "latest".
 on:
@@ -25,12 +30,18 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_NOLOGO: "1"
 
+# The job names below are the required checks of the "Protect master"
+# rule set. Renaming a job means updating the rule set too.
 jobs:
+  # Stage 1: tests.
   server:
     name: Server build and tests
     # Pinned so the runner image changes when we decide, not when the
     # ubuntu-latest label moves.
     runs-on: ubuntu-24.04
+    # Every job has a limit a few times its usual length, so a hung
+    # step fails soon instead of running for the default six hours.
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: server
@@ -60,6 +71,7 @@ jobs:
   clients:
     name: Clients build and tests
     runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
@@ -97,6 +109,7 @@ jobs:
   e2e:
     name: End-to-end tests
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
 
@@ -140,9 +153,12 @@ jobs:
           path: web/test-results
           retention-days: 7
 
+  # Stage 2: the image, once the tests passed.
   image:
     name: Docker image and Compose
+    needs: [server, clients, e2e]
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
@@ -307,15 +323,16 @@ jobs:
           docker inspect --format 'exit code {{.State.ExitCode}}, restarts {{.RestartCount}}, error "{{.State.Error}}"' atrium-atrium-1 || true
           docker compose logs
 
-  # Runs only when every check above passed, and never for a pull request.
-  # It goes to GitHub's registry always, and to Docker Hub once the
-  # repository has DOCKERHUB_USERNAME and the secret DOCKERHUB_TOKEN
-  # (deploy/README.md says how to set them).
+  # Stage 3: publish, once the image was built and tried; never for a
+  # pull request. It goes to GitHub's registry always, and to Docker Hub
+  # once the repository has DOCKERHUB_USERNAME and the secret
+  # DOCKERHUB_TOKEN (deploy/README.md says how to set them).
   publish:
     name: Publish the image
-    needs: [server, clients, e2e, image]
+    needs: image
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref_type == 'tag')
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write

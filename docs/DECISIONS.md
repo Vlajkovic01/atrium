@@ -788,9 +788,14 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   schema changed (D-026). An `edge` install is for trying Atrium, not
   for keeping files one cannot lose.
 - Amended 2026-11-16, owner's request: publishing is the last job of the
-  CI workflow instead of a workflow of its own. It needs the four checks
-  of the same run, so one graph shows the checks and then the publish,
-  and a commit whose checks fail on master is not published.
+  CI workflow instead of a workflow of its own, and the workflow runs in
+  three stages: the tests (server, clients, end-to-end) side by side,
+  then the Docker image and Compose check, then the publish. Each stage
+  needs the one before it, so one graph shows the whole way and a commit
+  that fails anywhere is not published. Cost: a pull request waits for
+  the tests before the image check starts, about a minute and a half
+  longer in all. The job names stay as they were, because the rule set
+  that protects master requires the checks by name.
 - Alternatives considered for when to publish: only
   by hand (nothing published unless asked), only on version tags
   (nothing until the release).
