@@ -418,6 +418,14 @@ open the app to continue"). Each platform limits background work
 differently; the app uses what the platform allows and never claims
 continuous backup where it cannot deliver it.
 
+Built so far (D-058): under Account, off until turned on, which asks for
+the photo and video permission. Photos, videos and device albums are
+chosen; conditions are Wi-Fi only (on by default) and only while
+charging. The status card says what is happening now, how many are on
+the server, what waits and its size, what failed and why, when a run
+last finished, and when access is limited to selected photos. For now it
+runs while the app is open; the background comes next.
+
 Backed-up items are identified by content hash so reinstalling the app
 does not upload everything again. The app never deletes from the device
 on its own. "Free up space" is a separate, explicit action that lists

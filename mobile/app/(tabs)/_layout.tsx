@@ -3,6 +3,7 @@ import { Tabs } from "expo-router/js-tabs";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { BackupProvider } from "../../src/backup/BackupProvider.tsx";
 import { Icon, type IconName } from "../../src/components/Icon.tsx";
 import { useNotifications } from "../../src/notifications.ts";
 import { OfflineProvider } from "../../src/offline/OfflineProvider.tsx";
@@ -29,7 +30,9 @@ export default function TabsLayout() {
     <UploadsProvider key={active.id}>
       <SyncProvider>
         <OfflineProvider>
-          <SignedInTabs />
+          <BackupProvider>
+            <SignedInTabs />
+          </BackupProvider>
         </OfflineProvider>
       </SyncProvider>
     </UploadsProvider>

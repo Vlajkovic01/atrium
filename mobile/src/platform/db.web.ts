@@ -1,3 +1,5 @@
+import type { BackupRecord } from "@atrium/shared";
+
 import type { LocalDb, OfflineFile, OfflineRoot } from "./db.ts";
 
 // Only for looking at the app's screens in a browser while developing
@@ -8,6 +10,7 @@ export type { LocalDb, OfflineFile, OfflineRoot } from "./db.ts";
 const cursors = new Map<string, string>();
 const roots = new Map<string, OfflineRoot[]>();
 const files = new Map<string, OfflineFile[]>();
+const backup = new Map<string, Map<string, BackupRecord>>();
 
 export const localDb: LocalDb = {
   cursor: (serverId) => Promise.resolve(cursors.get(serverId) ?? null),
@@ -51,7 +54,15 @@ export const localDb: LocalDb = {
     );
     return Promise.resolve();
   },
+  backupRecords: (serverId) => Promise.resolve([...(backup.get(serverId)?.values() ?? [])]),
+  putBackupRecord: (serverId, record) => {
+    const records = backup.get(serverId) ?? new Map<string, BackupRecord>();
+    records.set(record.assetId, record);
+    backup.set(serverId, records);
+    return Promise.resolve();
+  },
   forgetServer: (serverId) => {
+    backup.delete(serverId);
     cursors.delete(serverId);
     roots.delete(serverId);
     files.delete(serverId);

@@ -1,3 +1,4 @@
+import type { BackupRecord } from "@atrium/shared";
 import * as SQLite from "expo-sqlite";
 
 /** A file or folder the person keeps on the phone ("Available offline"). */
@@ -42,6 +43,9 @@ export interface LocalDb {
   files(serverId: string, rootId?: string): Promise<OfflineFile[]>;
   putFile(serverId: string, file: OfflineFile): Promise<void>;
   removeFile(serverId: string, rootId: string, nodeId: string): Promise<void>;
+  /** What camera backup knows about the phone's photos and videos, for one server. */
+  backupRecords(serverId: string): Promise<BackupRecord[]>;
+  putBackupRecord(serverId: string, record: BackupRecord): Promise<void>;
   /** Forgets everything about a server, when it is signed out of. */
   forgetServer(serverId: string): Promise<void>;
 }
@@ -74,6 +78,16 @@ const MIGRATIONS: readonly string[] = [
      path TEXT,
      error TEXT,
      PRIMARY KEY (server_id, root_id, node_id)
+   );`,
+  `CREATE TABLE backup_record (
+     server_id TEXT NOT NULL,
+     asset_id TEXT NOT NULL,
+     size INTEGER NOT NULL,
+     modified_at INTEGER NOT NULL,
+     sha256 TEXT,
+     done INTEGER NOT NULL,
+     error TEXT,
+     PRIMARY KEY (server_id, asset_id)
    );`,
 ];
 
@@ -208,9 +222,44 @@ export const localDb: LocalDb = {
       nodeId,
     );
   },
+  backupRecords: async (serverId) =>
+    (
+      await (
+        await database()
+      ).getAllAsync<{
+        asset_id: string;
+        size: number;
+        modified_at: number;
+        sha256: string | null;
+        done: number;
+        error: string | null;
+      }>("SELECT asset_id, size, modified_at, sha256, done, error FROM backup_record WHERE server_id = ?", serverId)
+    ).map((r) => ({
+      assetId: r.asset_id,
+      size: r.size,
+      modifiedAt: r.modified_at,
+      sha256: r.sha256,
+      done: r.done === 1,
+      error: r.error,
+    })),
+  putBackupRecord: async (serverId, r) => {
+    await (
+      await database()
+    ).runAsync(
+      "INSERT OR REPLACE INTO backup_record (server_id, asset_id, size, modified_at, sha256, done, error) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      serverId,
+      r.assetId,
+      r.size,
+      r.modifiedAt,
+      r.sha256,
+      r.done ? 1 : 0,
+      r.error,
+    );
+  },
   forgetServer: async (serverId) => {
     const db = await database();
     await db.withTransactionAsync(async () => {
+      await db.runAsync("DELETE FROM backup_record WHERE server_id = ?", serverId);
       await db.runAsync("DELETE FROM sync WHERE server_id = ?", serverId);
       await db.runAsync("DELETE FROM offline_file WHERE server_id = ?", serverId);
       await db.runAsync("DELETE FROM offline_root WHERE server_id = ?", serverId);

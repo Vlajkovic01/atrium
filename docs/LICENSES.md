@@ -142,6 +142,8 @@ repository. None is GPL or AGPL (flag 3).
 | expo-document-picker | 58.0.5 | MIT | Choosing files on the phone to upload, through the system's own chooser; nothing else is read |
 | expo-image-picker | 58.0.10 | MIT | Choosing photos and videos (the system's photo picker) and taking them with the system camera, to upload. Its microphone permission is turned off and its storage permissions are blocked |
 | expo-local-authentication | 58.0.3 | MIT | The optional lock: the phone's own fingerprint, face or screen-lock prompt; Atrium only learns whether it succeeded |
+| expo-media-library | 58.0.14 | MIT | Camera backup: finds the photos and videos the person chose. Reads with the photo and video permissions (Android 13+) or the old storage read (12 and older), and the media location permission so backups keep a picture whole; writes nothing |
+| expo-network, expo-battery | 58.0.5, 58.0.4 | MIT | Camera backup's conditions: only on Wi-Fi, only while charging |
 | react-native-web, react-dom | 0.21.4, 19.3.0 | MIT | Development only: shows the app's screens in a browser (`mobile/preview`). Not in the app |
 | Playwright | 1.65.0 | Apache-2.0 | Development only, as for the web app |
 

@@ -1118,3 +1118,33 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   lock covers the app when it opens and after time away, and the app looks
   in the list of open apps as any other. expo-screen-capture is gone again.
 
+## D-058 Camera backup (Owner on the background, Proposed for the rest, Phase 4)
+
+- **Owner's choice (2026-11-17): both kinds of background work.** A
+  periodic job (WorkManager) sends new photos when Android allows it, and
+  a foreground service with a notification carries the first large
+  backup and "Back up now" to the end. Built in two steps: this one runs
+  while the app is open; the background follows.
+- **Known by content.** Each photo or video is hashed (SHA-256, a part at a
+  time, never whole in memory) and the server is asked which contents the
+  person already has (`POST /uploads/check`). What is there, from this
+  phone, the web or another device, is never sent again, and a
+  reinstalled app does not start over. A photo edited since is new
+  content. A failure for good is not retried until the file changes.
+- **Where it goes**: "Camera backup / <this phone>" in the person's own
+  files, made when missing and then remembered, so changing the phone's
+  language never starts a second folder. A different picture with a taken
+  name keeps both.
+- **Never deletes from the phone.** Freeing space is a separate, explicit
+  action (UX.md), not built yet.
+- **Permissions**: the photo and video permissions (Android 13+), the old
+  storage read for Android 12 and older (blocked until now), and the media
+  location permission: without it Android removes where a photo was taken
+  from what the app reads, and the backup would not be the photo. Atrium
+  still reads no location (D-031). Writing to the gallery stays blocked.
+- **Conditions**: Wi-Fi only (on by default) and only while charging.
+  Hashing is local work and goes on regardless; sending waits.
+- **The status says what is true**: what is happening now, what is on the
+  server, what waits and why, what failed and why, when a run last
+  finished, and limited access when only selected photos were allowed.
+
