@@ -93,3 +93,5 @@ export type {
   Translate,
   UploadReport,
 } from "./notifications.ts";
+export { changeEffects, pullChanges } from "./sync/changes.ts";
+export type { ChangeEffects, ChangeInfo, ChangePull } from "./sync/changes.ts";
