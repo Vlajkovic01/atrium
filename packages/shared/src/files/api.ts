@@ -1,4 +1,4 @@
-import { call } from "../api/call.ts";
+import { ApiError, call } from "../api/call.ts";
 import type { ApiClient } from "../api/client.ts";
 import type { components } from "../api/schema.d.ts";
 
@@ -7,6 +7,7 @@ export type NodePage = components["schemas"]["NodePage"];
 export type LibraryInfo = components["schemas"]["LibraryInfo"];
 export type BatchItem = components["schemas"]["BatchItemResult"];
 export type SignedUrl = components["schemas"]["SignedUrlResponse"];
+export type TrashItem = components["schemas"]["TrashItemInfo"];
 
 /** What a folder's contents can be ordered by; the server does the ordering. */
 export const fileSorts = ["name", "modified", "size", "type"] as const;
@@ -45,6 +46,22 @@ export function homeLibrary(libraries: readonly LibraryInfo[]): LibraryInfo | un
   return libraries.find((l) => l.kind === "personal") ?? libraries[0];
 }
 
+/**
+ * The first item of a batch that did not go through, as the error to
+ * show; null when all did. The other items of the batch went through.
+ */
+export function batchFailure(results: readonly BatchItem[]): ApiError | null {
+  const failed = results.find((r) => !r.ok);
+  return failed ? new ApiError({ code: failed.code ?? "unknown", params: failed.params ?? {}, status: 0 }) : null;
+}
+
+/** What a list of trash items holds in all: items counted with everything inside folders, and bytes. */
+export function trashTotals(items: readonly TrashItem[]): { readonly count: number; readonly bytes: number } {
+  return {
+    count: items.reduce((n, i) => n + Number(i.itemCount), 0),
+    bytes: items.reduce((n, i) => n + Number(i.bytes), 0),
+  };
+}
 /**
  * The calls a file browser makes, the same for every client. Each throws
  * an `ApiError` with the server's code, or "network".
@@ -93,14 +110,43 @@ export function filesApi(api: ApiClient) {
       (await call(api.POST("/api/v1/nodes/batch", { body: { operation, ids: [...ids], parentId: parentId ?? null } })))
         .items,
 
-    /** Out of the trash, back where it was; under another name if that one is taken meanwhile. */
-    restore: async (id: string): Promise<void> => {
+    /**
+     * A new name for one item. The version the person was looking at goes
+     * along, so a change made elsewhere meanwhile is not overwritten.
+     */
+    rename: (node: Pick<NodeInfo, "id" | "version">, name: string): Promise<NodeInfo> =>
+      call(
+        api.PATCH("/api/v1/nodes/{id}", {
+          params: { path: { id: node.id }, header: { "If-Match": `"${node.version}"` } },
+          body: { name, parentId: null },
+        }),
+      ),
+
+    /** What is in the trash, with where each item was and when it goes for good. */
+    trash: (): Promise<TrashItem[]> => call(api.GET("/api/v1/trash")),
+
+    /**
+     * Out of the trash: back where it was, or into the given folder; under
+     * another name if that one is taken meanwhile. Fails with
+     * "node.in_trash" when the folder it was in is in the trash too.
+     */
+    restore: async (id: string, parentId: string | null = null): Promise<void> => {
       await call(
         api.POST("/api/v1/trash/{id}/restore", {
           params: { path: { id } },
-          body: { parentId: null, onConflict: "rename" },
+          body: { parentId, onConflict: "rename" },
         }),
       );
+    },
+
+    /** Removes one item of the trash for good. */
+    deleteForever: async (id: string): Promise<void> => {
+      await call(api.DELETE("/api/v1/trash/{id}", { params: { path: { id } } }));
+    },
+
+    /** Removes everything in the trash for good. */
+    emptyTrash: async (): Promise<void> => {
+      await call(api.DELETE("/api/v1/trash"));
     },
 
     /** A short-lived signed address of a file's content: to show it (`inline`) or to save it. */

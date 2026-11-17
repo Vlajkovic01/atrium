@@ -22,6 +22,7 @@ export type { ServerAddress } from "./connect/address.ts";
 export { buildPhoneLink, parsePairingLink, parsePhoneLink } from "./connect/codes.ts";
 export type { PairingLink, PhoneLink } from "./connect/codes.ts";
 export {
+  batchFailure,
   defaultFileOrder,
   fileOrderKey,
   fileOrderLabelKey,
@@ -29,6 +30,7 @@ export {
   filesApi,
   homeLibrary,
   parseFileOrder,
+  trashTotals,
 } from "./files/api.ts";
 export type {
   BatchItem,
@@ -39,6 +41,7 @@ export type {
   NodeInfo,
   NodePage,
   SignedUrl,
+  TrashItem,
 } from "./files/api.ts";
 export { daysUntil, formatBytes, formatDateTime, formatDay } from "./files/format.ts";
 export { TEXT_PREVIEW_LIMIT, fileCategory, fileExtension, previewKind } from "./files/kind.ts";

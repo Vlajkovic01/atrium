@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ApiError } from "../src/api/call.ts";
 import { createApiClient } from "../src/api/client.ts";
 import {
+  batchFailure,
   defaultFileOrder,
   fileOrderKey,
   fileOrderLabelKey,
@@ -10,6 +11,7 @@ import {
   filesApi,
   homeLibrary,
   parseFileOrder,
+  trashTotals,
   type LibraryInfo,
 } from "../src/files/api.ts";
 import { daysUntil, formatBytes, formatDateTime, formatDay } from "../src/files/format.ts";
@@ -156,6 +158,7 @@ describe("file calls", () => {
     readonly path: string;
     readonly query: Record<string, string>;
     readonly body: unknown;
+    readonly ifMatch?: string;
   }
 
   function server(answer: (seen: Seen) => Response) {
@@ -173,6 +176,7 @@ describe("file calls", () => {
         path: url.pathname,
         query,
         body: text ? JSON.parse(text) : null,
+        ...(request.headers.has("If-Match") ? { ifMatch: request.headers.get("If-Match")! } : {}),
       };
       requests.push(seen);
       return answer(seen);
@@ -263,6 +267,39 @@ describe("file calls", () => {
     });
   });
 
+  it("renames with the version the person was looking at", async () => {
+    const { files, requests } = server(() => json(200, { id: "a" }));
+
+    await files.rename({ id: "a", version: 7 }, "Invoices 2026");
+
+    expect(requests[0]).toMatchObject({
+      method: "PATCH",
+      path: "/api/v1/nodes/a",
+      body: { name: "Invoices 2026", parentId: null },
+      ifMatch: '"7"',
+    });
+  });
+
+  it("restores into another folder when asked", async () => {
+    const { files, requests } = server(() => json(200, {}));
+
+    await files.restore("a", "folder-2");
+
+    expect(requests[0]?.body).toEqual({ parentId: "folder-2", onConflict: "rename" });
+  });
+
+  it("removes one item of the trash, or all of it, for good", async () => {
+    const { files, requests } = server(() => new Response(null, { status: 204 }));
+
+    await files.deleteForever("a");
+    await files.emptyTrash();
+
+    expect(requests.map((r) => [r.method, r.path])).toEqual([
+      ["DELETE", "/api/v1/trash/a"],
+      ["DELETE", "/api/v1/trash"],
+    ]);
+  });
+
   it("throws the server's error code", async () => {
     const { files } = server(
       () =>
@@ -274,5 +311,31 @@ describe("file calls", () => {
 
     await expect(files.node("gone")).rejects.toBeInstanceOf(ApiError);
     await expect(files.node("gone")).rejects.toMatchObject({ problem: { code: "nodes.not_found" } });
+  });
+});
+
+describe("outcomes of several items at once", () => {
+  const item = (id: string, ok: boolean, code: string | null = null) => ({ id, ok, code, params: null, node: null });
+
+  it("is no error when every item went through", () => {
+    expect(batchFailure([item("a", true), item("b", true)])).toBeNull();
+    expect(batchFailure([])).toBeNull();
+  });
+
+  it("is the first item's error otherwise", () => {
+    const failure = batchFailure([
+      item("a", true),
+      item("b", false, "node.name_taken"),
+      item("c", false, "node.read_only"),
+    ]);
+    expect(failure?.problem).toEqual({ code: "node.name_taken", params: {}, status: 0 });
+    expect(batchFailure([item("a", false)])?.problem.code).toBe("unknown");
+  });
+
+  it("adds up what the trash holds, folders counted with their contents", () => {
+    const entry = (itemCount: number | string, bytes: number | string) =>
+      ({ itemCount, bytes }) as unknown as Parameters<typeof trashTotals>[0][number];
+    expect(trashTotals([entry(1, 10), entry("41", "5000")])).toEqual({ count: 42, bytes: 5010 });
+    expect(trashTotals([])).toEqual({ count: 0, bytes: 0 });
   });
 });
