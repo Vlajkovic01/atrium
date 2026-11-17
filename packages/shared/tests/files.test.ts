@@ -10,7 +10,9 @@ import {
   fileSorts,
   filesApi,
   homeLibrary,
+  libraryRootName,
   parseFileOrder,
+  trashLocation,
   trashTotals,
   type LibraryInfo,
 } from "../src/files/api.ts";
@@ -337,5 +339,68 @@ describe("outcomes of several items at once", () => {
       ({ itemCount, bytes }) as unknown as Parameters<typeof trashTotals>[0][number];
     expect(trashTotals([entry(1, 10), entry("41", "5000")])).toEqual({ count: 42, bytes: 5010 });
     expect(trashTotals([])).toEqual({ count: 0, bytes: 0 });
+  });
+});
+
+describe("where a trashed item was", () => {
+  const libraries: LibraryInfo[] = [
+    {
+      id: "own",
+      name: "Personal",
+      kind: "personal",
+      mode: "managed",
+      rootNodeId: "own-root",
+      readOnly: false,
+      state: "online",
+      changesAllowed: true,
+      firstReading: false,
+    },
+    {
+      id: "ext",
+      name: "Family archive",
+      kind: "folder",
+      mode: "external",
+      rootNodeId: "ext-root",
+      readOnly: false,
+      state: "online",
+      changesAllowed: true,
+      firstReading: false,
+    },
+  ];
+  const item = (libraryId: string, location: [string, string][]) =>
+    ({
+      node: { libraryId },
+      location: location.map(([id, name]) => ({ id, name, inTrash: false })),
+    }) as unknown as Parameters<typeof trashLocation>[0];
+
+  it("calls the person's own library by the words of their language", () => {
+    expect(
+      trashLocation(
+        item("own", [
+          ["own-root", "Personal"],
+          ["f1", "Taxes"],
+        ]),
+        libraries,
+        "Moji fajlovi",
+      ),
+    ).toEqual(["Moji fajlovi", "Taxes"]);
+  });
+
+  it("calls any other library by its name, never by the person's own", () => {
+    expect(
+      trashLocation(
+        item("ext", [
+          ["ext-root", "archive"],
+          ["f2", "Scans"],
+        ]),
+        libraries,
+        "My files",
+      ),
+    ).toEqual(["Family archive", "Scans"]);
+  });
+
+  it("keeps the stored names when the library is no longer known", () => {
+    expect(trashLocation(item("gone", [["r", "root"]]), libraries, "My files")).toEqual(["root"]);
+    expect(libraryRootName(libraries[1]!, "My files")).toBe("Family archive");
   });
 });

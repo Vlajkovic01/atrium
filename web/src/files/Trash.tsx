@@ -1,3 +1,4 @@
+import { trashLocation } from "@atrium/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -22,7 +23,11 @@ export function Trash() {
   const [placing, setPlacing] = useState<string | null>(null);
   const trash = useQuery({ queryKey: ["trash"], queryFn: () => call(api.GET("/api/v1/trash")) });
   const libraries = useQuery({ queryKey: ["libraries"], queryFn: () => call(api.GET("/api/v1/libraries")) });
-  const rootId = libraries.data?.[0]?.rootNodeId;
+  // A trashed item goes back into its own library; the server refuses any other.
+  const placingLibrary = libraries.data?.find(
+    (l) => l.id === trash.data?.find((i) => i.node.id === placing)?.node.libraryId,
+  );
+  const rootId = placingLibrary?.rootNodeId;
 
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["trash"] });
@@ -99,14 +104,16 @@ export function Trash() {
               <p className="row-meta trash-origin">
                 <span>{t("trash.from")}</span>
                 {item.location.map((folder, index) => {
-                  const label = index === 0 ? t("files.myFiles") : folder.name;
+                  // The top folder is called by its library, so an item from a shared folder never says "My files".
+                  const label = trashLocation(item, libraries.data ?? [], t("files.myFiles"))[index] ?? folder.name;
+                  const personalRoot = libraries.data?.some((l) => l.kind === "personal" && l.rootNodeId === folder.id);
                   return (
                     <span key={folder.id} className="crumb">
                       {index > 0 ? <Icon name="chevronRight" size={12} /> : null}
                       {folder.inTrash ? (
                         <span title={t("trash.folderInTrash")}>{label}</span>
                       ) : (
-                        <Link to={index === 0 ? "/files" : `/files/${folder.id}`}>{label}</Link>
+                        <Link to={personalRoot ? "/files" : `/files/${folder.id}`}>{label}</Link>
                       )}
                     </span>
                   );

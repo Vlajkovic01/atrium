@@ -29,7 +29,9 @@ export {
   fileSorts,
   filesApi,
   homeLibrary,
+  libraryRootName,
   parseFileOrder,
+  trashLocation,
   trashTotals,
 } from "./files/api.ts";
 export type {

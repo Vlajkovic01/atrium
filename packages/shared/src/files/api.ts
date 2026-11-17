@@ -55,6 +55,30 @@ export function batchFailure(results: readonly BatchItem[]): ApiError | null {
   return failed ? new ApiError({ code: failed.code ?? "unknown", params: failed.params ?? {}, status: 0 }) : null;
 }
 
+/**
+ * What to call a library's top folder: the person's own library is "My
+ * files" in their language (`myFiles`), any other is called by its name.
+ */
+export function libraryRootName(library: Pick<LibraryInfo, "kind" | "name">, myFiles: string): string {
+  return library.kind === "personal" ? myFiles : library.name;
+}
+
+/**
+ * Where a trashed item was, folder by folder from its library's top, with
+ * the top called as `libraryRootName` calls it. The stored name of a
+ * library's top folder is internal and never shown.
+ */
+export function trashLocation(
+  item: Pick<TrashItem, "node" | "location">,
+  libraries: readonly LibraryInfo[],
+  myFiles: string,
+): string[] {
+  const library = libraries.find((l) => l.id === item.node.libraryId);
+  return item.location.map((segment) =>
+    library && segment.id === library.rootNodeId ? libraryRootName(library, myFiles) : segment.name,
+  );
+}
+
 /** What a list of trash items holds in all: items counted with everything inside folders, and bytes. */
 export function trashTotals(items: readonly TrashItem[]): { readonly count: number; readonly bytes: number } {
   return {
