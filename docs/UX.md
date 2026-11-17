@@ -454,6 +454,13 @@ the app is closed are not part of this.
 Optional biometric lock on app open and after a timeout. App content is
 hidden in the app switcher when the lock is on.
 
+Built (D-057): under Account, off by default and offered only when the
+phone has a fingerprint, face or screen lock. Turning it on asks to
+unlock once. The app opens locked and locks again after a chosen time
+away (at once, 1, 5 or 15 minutes); the lock screen covers the app, which
+stays where it was beneath. While on, screenshots of Atrium are refused
+too, which the setting says.
+
 ### Approve a device
 
 Account, Devices, Scan: scan the TV's QR code, review, approve. Also

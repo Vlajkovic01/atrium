@@ -251,6 +251,19 @@
       "scanBody": "Usmerite kameru na kod koji prikazuje televizor.",
       "notACode": "To nije kod uređaja. Skenirajte kod koji televizor prikazuje kad traži prijavu.",
       "otherServer": "Taj kod je za drugi server. Ovaj telefon je prijavljen na {server}; odobrite uređaj iz aplikacije prijavljene na njegov server."
+    },
+    "lock": {
+      "title": "Zaključavanje",
+      "enable": "Zaključaj Atrium otiskom, licem ili zaključavanjem ekrana",
+      "explain": "Atrium traži otisak ili lice kad se otvori i posle vremena navedenog ispod. Dok je zaključavanje uključeno, njegovi ekrani su skriveni u listi otvorenih aplikacija i ne mogu se snimiti snimkom ekrana.",
+      "after": "Ponovo zaključaj posle",
+      "atOnce": "Odmah",
+      "minutes": "{count, plural, one {# minut} few {# minuta} other {# minuta}}",
+      "unavailable": "Na ovom telefonu nije podešen otisak, lice ni zaključavanje ekrana, pa Atrium ne može da se zaključa. Prvo ga podesite u podešavanjima telefona.",
+      "prompt": "Otključaj Atrium",
+      "locked": "Atrium je zaključan",
+      "lockedBody": "Otključajte otiskom, licem ili zaključavanjem ekrana telefona.",
+      "unlock": "Otključaj"
     }
   },
   "nav": {

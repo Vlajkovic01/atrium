@@ -9,7 +9,12 @@
     "icon": "./assets/icon.png",
     "android": {
       "package": "app.atrium.mobile",
-      "blockedPermissions": ["android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"],
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.DETECT_SCREEN_CAPTURE"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1c6b58"
@@ -62,6 +67,12 @@
           "photosPermission": "Atrium uploads the photos and videos you choose to your server.",
           "cameraPermission": "Atrium uses the camera to take a photo or video you upload to your server.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Atrium uses Face ID to unlock the app when you turn the lock on."
         }
       ]
     ],

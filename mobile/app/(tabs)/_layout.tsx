@@ -8,8 +8,8 @@ import { useNotifications } from "../../src/notifications.ts";
 import { OfflineProvider } from "../../src/offline/OfflineProvider.tsx";
 import { useServers } from "../../src/servers.tsx";
 import { SyncProvider } from "../../src/sync/SyncProvider.tsx";
-import { UploadsPanel } from "../../src/uploads/UploadsPanel.tsx";
-import { UploadsProvider } from "../../src/uploads/UploadsProvider.tsx";
+import { UPLOADS_BAR_ROOM, UploadsPanel } from "../../src/uploads/UploadsPanel.tsx";
+import { UploadsProvider, useUploads } from "../../src/uploads/UploadsProvider.tsx";
 import { space, useTheme } from "../../src/theme.ts";
 
 /**
@@ -42,6 +42,8 @@ function SignedInTabs() {
   const insets = useSafeAreaInsets();
 
   const unread = Number(useNotifications().data?.unread ?? 0);
+  // While uploads show above the tabs, the screens keep room for them at the bottom.
+  const uploadsShown = useUploads().items.length > 0;
 
   const icon =
     (name: IconName) =>
@@ -63,7 +65,7 @@ function SignedInTabs() {
             paddingBottom: insets.bottom + 6,
           },
           tabBarLabelStyle: { fontSize: 12, fontWeight: "600" },
-          sceneStyle: { backgroundColor: colors.paper },
+          sceneStyle: { backgroundColor: colors.paper, paddingBottom: uploadsShown ? UPLOADS_BAR_ROOM : 0 },
         }}
       >
         <Tabs.Screen name="photos" options={{ title: t("nav.photos"), tabBarIcon: icon("image") }} />

@@ -6,6 +6,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Body, Button, Heading, Notice, Screen, Title } from "../../../src/components/ui.tsx";
 import { displayAddress } from "../../../src/connect.ts";
 import { forgetLocalCopies } from "../../../src/files/local";
+import { LockSettings } from "../../../src/lock/LockSettings.tsx";
 import { forgetOffline } from "../../../src/offline/OfflineProvider.tsx";
 import { useNotifications } from "../../../src/notifications.ts";
 import { useServers } from "../../../src/servers.tsx";
@@ -79,6 +80,7 @@ export default function Account() {
       </Button>
       <Button onPress={() => router.push("/account/devices")}>{t("devices.heading")}</Button>
       <Button onPress={() => router.push("/account/downloads")}>{t("mobile.offline.title")}</Button>
+      <LockSettings />
       <Button onPress={() => router.push("/welcome")}>{t("mobile.home.addServer")}</Button>
       {confirming ? (
         <View style={card}>
