@@ -1,5 +1,5 @@
 import { errorMessageKeys, formatBytes, type QueuedUpload } from "@atrium/shared";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -12,6 +12,10 @@ import { radius, space, type, useTheme } from "../theme.ts";
 import { useUploads } from "./UploadsProvider.tsx";
 
 const ACTIVE = new Set(["queued", "uploading", "waiting", "paused"]);
+/** How long the line stays once all uploads are over. */
+const DONE_MS = 10_000;
+/** The room the line takes above the tabs, kept free at the bottom of every screen while it shows. */
+export const UPLOADS_BAR_ROOM = 72;
 
 function percentOf(item: QueuedUpload): number {
   const status = item.status;
@@ -31,6 +35,20 @@ export function UploadsPanel({ bottom }: { readonly bottom: number }) {
   const [open, setOpen] = useState(false);
   const locale = currentLocale();
   const active = uploads.items.filter((i) => ACTIVE.has(i.status.state));
+  const over = uploads.items.length > 0 && active.length === 0;
+  const clear = useRef(uploads.clearFinished);
+  clear.current = uploads.clearFinished;
+
+  // Once everything is over, the line goes away by itself after a while, as on the web (D-045);
+  // not while the list is open.
+  useEffect(() => {
+    if (!over || open) {
+      return;
+    }
+
+    const timer = setTimeout(() => clear.current(), DONE_MS);
+    return () => clearTimeout(timer);
+  }, [over, open]);
   const total = uploads.items.reduce((n, i) => n + i.size, 0);
   const sent = uploads.items.reduce((n, i) => n + (percentOf(i) / 100) * i.size, 0);
   const overall = total === 0 ? 100 : Math.floor((sent / total) * 100);
