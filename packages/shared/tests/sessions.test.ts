@@ -163,6 +163,23 @@ describe("a session", () => {
     expect([...secrets.values]).toEqual([["atrium.refresh.a", "refresh-ana-2"]]);
   });
 
+  it("calls fetch as a plain function, as a browser's own fetch demands", async () => {
+    const servers = fakeServers();
+    // A browser's fetch throws "Illegal invocation" when called as a method of another object.
+    const strict = function (this: unknown, ...args: Parameters<typeof globalThis.fetch>) {
+      if (this !== undefined && this !== globalThis) {
+        throw new TypeError("Illegal invocation");
+      }
+
+      return servers.fetch(...args);
+    } as typeof globalThis.fetch;
+    const session = new ServerSession({ serverId: "a", baseUrl: HOME, secrets: memory(), fetch: strict });
+    await session.adopt(servers.issue(HOME, "ana"));
+
+    expect(await session.refresh()).toBe("access-ana-2");
+    expect((await session.api.GET("/api/v1/sessions")).response.status).toBe(200);
+  });
+
   it("uses a refresh token once, however many requests need a new access token", async () => {
     const servers = fakeServers();
     const session = new ServerSession({ serverId: "a", baseUrl: HOME, secrets: memory(), fetch: servers.fetch });

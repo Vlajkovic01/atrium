@@ -37,7 +37,11 @@ export class ServerSession {
   constructor(options: ServerSessionOptions) {
     this.#options = options;
     this.baseUrl = options.baseUrl;
-    this.#fetch = options.fetch ?? globalThis.fetch;
+    // Called as a plain function, never as a method of this object: a
+    // browser's own fetch refuses to run with anything but the window as
+    // its `this`, and the refresh would fail as if the server were away.
+    const send = options.fetch ?? globalThis.fetch;
+    this.#fetch = (input, init) => send(input, init);
     this.api = createApiClient({
       baseUrl: options.baseUrl,
       fetch: this.#fetch,
