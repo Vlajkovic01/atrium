@@ -1,4 +1,9 @@
 import type { FilesApi, NodeInfo } from "@atrium/shared";
+
+/** What is needed of a file to fetch it: one in a folder, or a photo of the timeline. */
+export type Viewable = Pick<NodeInfo, "id" | "name" | "mediaType" | "size"> & {
+  readonly version?: NodeInfo["version"];
+};
 import { Directory, File, Paths } from "expo-file-system";
 
 /**
@@ -39,9 +44,9 @@ function safeName(name: string): string {
 export async function localCopy(
   files: FilesApi,
   server: { readonly id: string; readonly url: string },
-  node: NodeInfo,
+  node: Viewable,
 ): Promise<string> {
-  const folder = new Directory(serverFolder(server.id), `${node.id}-${node.version}`);
+  const folder = new Directory(serverFolder(server.id), `${node.id}-${node.version ?? 0}`);
   folder.create({ intermediates: true, idempotent: true });
   const file = new File(folder, safeName(node.name));
   if (file.exists && file.size === Number(node.size)) {
@@ -63,7 +68,7 @@ export type OpenElsewhere = "opened" | "noApp";
 export async function openElsewhere(
   files: FilesApi,
   server: { readonly id: string; readonly url: string },
-  node: NodeInfo,
+  node: Viewable,
 ): Promise<OpenElsewhere> {
   const file = new File(await localCopy(files, server, node));
   const options = { mimeType: node.mediaType ?? "application/octet-stream", title: node.name };

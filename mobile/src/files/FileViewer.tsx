@@ -1,4 +1,4 @@
-import { appViewKind, fileCategory, formatBytes, type NodeInfo } from "@atrium/shared";
+import { appViewKind, fileCategory, formatBytes } from "@atrium/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useEvent } from "expo";
 import { VideoView, useVideoPlayer } from "expo-video";
@@ -12,7 +12,7 @@ import { Icon } from "../components/Icon.tsx";
 import { Body, Button, ErrorMessage, Notice } from "../components/ui.tsx";
 import { currentLocale } from "../i18n.ts";
 import { radius, space, type, useTheme } from "../theme.ts";
-import { absoluteUrl, localCopy, openElsewhere } from "./local";
+import { absoluteUrl, localCopy, openElsewhere, type Viewable } from "./local";
 import { nodeIcon } from "./icons.ts";
 import { PdfView } from "./PdfView";
 
@@ -26,18 +26,18 @@ const ADDRESS_FRESH_MS = 10 * 60 * 1000;
  * to another app. The previous and next file of the folder are one touch
  * away; Back closes.
  */
-export function FileViewer({
+export function FileViewer<T extends Viewable>({
   files,
   index,
   onIndex,
   onClose,
   onDetails,
 }: {
-  readonly files: readonly NodeInfo[];
+  readonly files: readonly T[];
   readonly index: number;
   readonly onIndex: (index: number) => void;
   readonly onClose: () => void;
-  readonly onDetails: (node: NodeInfo) => void;
+  readonly onDetails: (node: T) => void;
 }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -89,7 +89,7 @@ export function FileViewer({
         {elsewhere.shown ? <View style={styles.barMessages}>{elsewhere.messages}</View> : null}
 
         {/* Keyed by the file, so nothing of the previous one (a playing video, an error) carries over. */}
-        <ViewerBody key={`${node.id}:${node.version}`} node={node} />
+        <ViewerBody key={`${node.id}:${node.version ?? 0}`} node={node} />
 
         {files.length > 1 ? (
           <View style={[styles.nav, { borderColor: colors.line }]}>
@@ -106,7 +106,7 @@ export function FileViewer({
   );
 }
 
-function ViewerBody({ node }: { readonly node: NodeInfo }) {
+function ViewerBody({ node }: { readonly node: Viewable }) {
   const kind = appViewKind(node);
   const [failed, setFailed] = useState(false);
   if (kind === "other" || failed) {
@@ -126,7 +126,7 @@ function Inline({
   kind,
   onError,
 }: {
-  readonly node: NodeInfo;
+  readonly node: Viewable;
   readonly kind: "image" | "video" | "audio" | "text";
   readonly onError: () => void;
 }) {
@@ -134,7 +134,7 @@ function Inline({
   const { colors } = useTheme();
   const { server, files } = useActiveServer();
   const address = useQuery({
-    queryKey: [server.id, "content-url", node.id, node.version],
+    queryKey: [server.id, "content-url", node.id, node.version ?? 0],
     queryFn: async () => absoluteUrl(server.url, (await files.contentUrl(node.id, { inline: true })).url),
     staleTime: ADDRESS_FRESH_MS,
   });
@@ -236,10 +236,10 @@ function TextBody({ uri, label }: { readonly uri: string; readonly label: string
   );
 }
 
-function PdfBody({ node, onError }: { readonly node: NodeInfo; readonly onError: () => void }) {
+function PdfBody({ node, onError }: { readonly node: Viewable; readonly onError: () => void }) {
   const { server, files } = useActiveServer();
   const copy = useQuery({
-    queryKey: [server.id, "local-copy", node.id, node.version],
+    queryKey: [server.id, "local-copy", node.id, node.version ?? 0],
     queryFn: () => localCopy(files, server, node),
     staleTime: Infinity,
   });
@@ -256,7 +256,7 @@ function PdfBody({ node, onError }: { readonly node: NodeInfo; readonly onError:
 }
 
 /** Hands a file to another app, saying when there is none or the file could not be fetched. */
-function useOpenElsewhere(node: NodeInfo) {
+function useOpenElsewhere(node: Viewable) {
   const { t } = useTranslation();
   const { server, files } = useActiveServer();
   const [busy, setBusy] = useState(false);
@@ -289,7 +289,7 @@ function useOpenElsewhere(node: NodeInfo) {
 }
 
 /** For what Atrium does not show itself, or could not show after all: hand it to another app. */
-function Elsewhere({ node, reason }: { readonly node: NodeInfo; readonly reason: "other" | "cannotShow" }) {
+function Elsewhere({ node, reason }: { readonly node: Viewable; readonly reason: "other" | "cannotShow" }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { open, busy, messages } = useOpenElsewhere(node);
@@ -297,7 +297,7 @@ function Elsewhere({ node, reason }: { readonly node: NodeInfo; readonly reason:
   return (
     <ScrollView contentContainerStyle={styles.center}>
       <View style={[styles.tile, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-        <Icon name={nodeIcon(node)} size={48} color={colors.inkSoft} />
+        <Icon name={nodeIcon({ ...node, kind: "file" })} size={48} color={colors.inkSoft} />
       </View>
       <Text style={[styles.kind, { color: colors.inkSoft }]}>{t(`mobile.files.kinds.${fileCategory(node)}`)}</Text>
       <Body>{t(reason === "other" ? "mobile.viewer.other" : "mobile.viewer.cannotShow")}</Body>

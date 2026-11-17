@@ -987,3 +987,25 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - The storage permissions expo-file-system declares for Android 12 and
   older are blocked: the app reads nothing outside its own folders. Camera
   backup will ask for what it needs, when it is built.
+
+## D-053 The photo timeline in the mobile app (Proposed, Phase 4)
+
+- **One layout for every client.** The justified rows, grouping by day
+  and the timeline calls moved from the web app into the shared package
+  with their tests; the mobile timeline uses them unchanged, so a day
+  looks the same on both.
+- **Sizes by pinch, without a gesture library.** Two fingers spreading or
+  closing step through three row heights; the same steps are two buttons
+  in the top bar, for one hand and for screen readers. The pinch is read
+  from the list's own touch events. Alternative: react-native-gesture-handler
+  with Reanimated, which also gives pinch-to-zoom in the viewer, at about
+  a megabyte and two native modules; it is reconsidered for zooming into
+  a single photo.
+- **The app opens on Photos** now that the timeline exists, as D-051
+  announced.
+- **A picture opens in the file viewer** (D-052), not in a viewer of its
+  own: one place for pictures, videos and the hand-off to other apps.
+  Swiping between pictures and zooming come with the decision above.
+- Not yet: albums and search (the next two pull requests), the badge on
+  items not backed up (camera backup).
+
