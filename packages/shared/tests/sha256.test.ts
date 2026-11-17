@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fingerprint, sha256 } from "../src/upload/sha256.ts";
+import { Sha256, fingerprint, sha256, toHex } from "../src/upload/sha256.ts";
 
 const hex = (bytes: Uint8Array) => [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
 
@@ -39,5 +39,30 @@ describe("fingerprint", () => {
     b[2_999_999] = 2;
     expect(await of(a)).not.toBe(await of(b));
     expect(await of(a)).toBe(await of(a.slice()));
+  });
+});
+
+describe("SHA-256 a part at a time", () => {
+  it("gives the same hash however the content is cut", () => {
+    const data = new Uint8Array(1000).map((_, i) => (i * 31) % 251);
+    const whole = toHex(sha256(data));
+    for (const cuts of [[1], [63], [64], [65], [128], [3, 61, 64, 200, 7]]) {
+      const hash = new Sha256();
+      let at = 0;
+      for (const cut of cuts) {
+        hash.update(data.subarray(at, at + cut));
+        at += cut;
+      }
+
+      hash.update(data.subarray(at));
+      expect(toHex(hash.digest())).toBe(whole);
+    }
+  });
+
+  it("matches the standard's vectors, also for empty content", () => {
+    expect(toHex(new Sha256().digest())).toBe("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    expect(
+      toHex(new Sha256().update(new TextEncoder().encode("ab")).update(new TextEncoder().encode("c")).digest()),
+    ).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
   });
 });

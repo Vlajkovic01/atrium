@@ -278,6 +278,15 @@ describe("file calls", () => {
     ]);
   });
 
+  it("asks which contents are already on the server, and asks nothing for none", async () => {
+    const { files, requests } = server(() => json(200, { owned: ["aa"] }));
+
+    expect([...(await files.ownedHashes(["aa", "bb"]))]).toEqual(["aa"]);
+    expect((await files.ownedHashes([])).size).toBe(0);
+
+    expect(requests.map((r) => [r.path, r.body])).toEqual([["/api/v1/uploads/check", { hashes: ["aa", "bb"] }]]);
+  });
+
   it("creates a folder", async () => {
     const { files, requests } = server(() => json(201, { id: "new" }));
 

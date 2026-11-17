@@ -16,81 +16,126 @@ const K = new Uint32Array([
   0xc67178f2,
 ]);
 
-export function sha256(data: Uint8Array): Uint8Array {
-  const h = new Uint32Array([
+/** One 64-byte block into the running hash. */
+function compress(h: Uint32Array, w: Uint32Array, block: DataView, offset: number): void {
+  for (let i = 0; i < 16; i++) {
+    w[i] = block.getUint32(offset + i * 4);
+  }
+
+  for (let i = 16; i < 64; i++) {
+    const a = w[i - 15]!;
+    const b = w[i - 2]!;
+    const s0 = ((a >>> 7) | (a << 25)) ^ ((a >>> 18) | (a << 14)) ^ (a >>> 3);
+    const s1 = ((b >>> 17) | (b << 15)) ^ ((b >>> 19) | (b << 13)) ^ (b >>> 10);
+    w[i] = (w[i - 16]! + s0 + w[i - 7]! + s1) | 0;
+  }
+
+  let a = h[0]!;
+  let b = h[1]!;
+  let c = h[2]!;
+  let d = h[3]!;
+  let e = h[4]!;
+  let f = h[5]!;
+  let g = h[6]!;
+  let k = h[7]!;
+  for (let i = 0; i < 64; i++) {
+    const s1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+    const choice = (e & f) ^ (~e & g);
+    const t1 = (k + s1 + choice + K[i]! + w[i]!) | 0;
+    const s0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+    const majority = (a & b) ^ (a & c) ^ (b & c);
+    const t2 = (s0 + majority) | 0;
+    k = g;
+    g = f;
+    f = e;
+    e = (d + t1) | 0;
+    d = c;
+    c = b;
+    b = a;
+    a = (t1 + t2) | 0;
+  }
+
+  h[0] = (h[0]! + a) | 0;
+  h[1] = (h[1]! + b) | 0;
+  h[2] = (h[2]! + c) | 0;
+  h[3] = (h[3]! + d) | 0;
+  h[4] = (h[4]! + e) | 0;
+  h[5] = (h[5]! + f) | 0;
+  h[6] = (h[6]! + g) | 0;
+  h[7] = (h[7]! + k) | 0;
+}
+
+/**
+ * SHA-256 of content fed a part at a time, so a large video is hashed
+ * without holding it in memory: `update` with each part in order, then
+ * `digest` once.
+ */
+export class Sha256 {
+  readonly #h = new Uint32Array([
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
   ]);
-  const w = new Uint32Array(64);
+  readonly #w = new Uint32Array(64);
+  readonly #buffer = new Uint8Array(64);
+  readonly #bufferView = new DataView(this.#buffer.buffer);
+  #buffered = 0;
+  #length = 0;
 
-  // The message, a 1 bit, zeros, and the length in bits as a 64-bit number.
-  const blocks = Math.ceil((data.length + 9) / 64);
-  const tail = new Uint8Array((blocks - Math.floor(data.length / 64)) * 64);
-  const rest = data.length % 64;
-  tail.set(data.subarray(data.length - rest));
-  tail[rest] = 0x80;
-  const bits = data.length * 8;
-  const view = new DataView(tail.buffer);
-  view.setUint32(tail.length - 8, Math.floor(bits / 0x1_0000_0000));
-  view.setUint32(tail.length - 4, bits >>> 0);
+  update(data: Uint8Array): this {
+    this.#length += data.length;
+    let at = 0;
+    if (this.#buffered > 0) {
+      const take = Math.min(64 - this.#buffered, data.length);
+      this.#buffer.set(data.subarray(0, take), this.#buffered);
+      this.#buffered += take;
+      at = take;
+      if (this.#buffered < 64) {
+        return this;
+      }
 
-  const full = data.length - rest;
-  const input = new DataView(data.buffer, data.byteOffset, data.byteLength);
-  for (let block = 0; block < blocks; block++) {
-    const offset = block * 64;
-    for (let i = 0; i < 16; i++) {
-      w[i] = offset < full ? input.getUint32(offset + i * 4) : view.getUint32(offset - full + i * 4);
+      compress(this.#h, this.#w, this.#bufferView, 0);
+      this.#buffered = 0;
     }
 
-    for (let i = 16; i < 64; i++) {
-      const a = w[i - 15]!;
-      const b = w[i - 2]!;
-      const s0 = ((a >>> 7) | (a << 25)) ^ ((a >>> 18) | (a << 14)) ^ (a >>> 3);
-      const s1 = ((b >>> 17) | (b << 15)) ^ ((b >>> 19) | (b << 13)) ^ (b >>> 10);
-      w[i] = (w[i - 16]! + s0 + w[i - 7]! + s1) | 0;
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    for (; at + 64 <= data.length; at += 64) {
+      compress(this.#h, this.#w, view, at);
     }
 
-    let a = h[0]!;
-    let b = h[1]!;
-    let c = h[2]!;
-    let d = h[3]!;
-    let e = h[4]!;
-    let f = h[5]!;
-    let g = h[6]!;
-    let k = h[7]!;
-    for (let i = 0; i < 64; i++) {
-      const s1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
-      const choice = (e & f) ^ (~e & g);
-      const t1 = (k + s1 + choice + K[i]! + w[i]!) | 0;
-      const s0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
-      const majority = (a & b) ^ (a & c) ^ (b & c);
-      const t2 = (s0 + majority) | 0;
-      k = g;
-      g = f;
-      f = e;
-      e = (d + t1) | 0;
-      d = c;
-      c = b;
-      b = a;
-      a = (t1 + t2) | 0;
-    }
-
-    h[0] = (h[0]! + a) | 0;
-    h[1] = (h[1]! + b) | 0;
-    h[2] = (h[2]! + c) | 0;
-    h[3] = (h[3]! + d) | 0;
-    h[4] = (h[4]! + e) | 0;
-    h[5] = (h[5]! + f) | 0;
-    h[6] = (h[6]! + g) | 0;
-    h[7] = (h[7]! + k) | 0;
+    this.#buffer.set(data.subarray(at));
+    this.#buffered = data.length - at;
+    return this;
   }
 
-  const out = new Uint8Array(32);
-  const result = new DataView(out.buffer);
-  for (let i = 0; i < 8; i++) {
-    result.setUint32(i * 4, h[i]!);
-  }
+  digest(): Uint8Array {
+    // A 1 bit, zeros, and the length in bits as a 64-bit number.
+    const bits = this.#length * 8;
+    const tail = new Uint8Array(this.#buffered + 9 > 64 ? 128 : 64);
+    tail.set(this.#buffer.subarray(0, this.#buffered));
+    tail[this.#buffered] = 0x80;
+    const view = new DataView(tail.buffer);
+    view.setUint32(tail.length - 8, Math.floor(bits / 0x1_0000_0000));
+    view.setUint32(tail.length - 4, bits >>> 0);
+    for (let offset = 0; offset < tail.length; offset += 64) {
+      compress(this.#h, this.#w, view, offset);
+    }
 
-  return out;
+    const out = new Uint8Array(32);
+    const result = new DataView(out.buffer);
+    for (let i = 0; i < 8; i++) {
+      result.setUint32(i * 4, this.#h[i]!);
+    }
+
+    return out;
+  }
+}
+
+export function sha256(data: Uint8Array): Uint8Array {
+  return new Sha256().update(data).digest();
+}
+
+/** A hash as the server writes it: lower-case hex. */
+export function toHex(bytes: Uint8Array): string {
+  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**

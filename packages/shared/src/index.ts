@@ -51,7 +51,7 @@ export type { AppViewKind, FileCategory, PreviewKind } from "./files/kind.ts";
 export { TusUpload, encodeMetadata } from "./upload/tus.ts";
 export type { ConflictPolicy, TusTransport, UploadRequest, UploadSource, UploadStatus } from "./upload/tus.ts";
 export { UploadQueue } from "./upload/queue.ts";
-export { fingerprint, sha256 } from "./upload/sha256.ts";
+export { Sha256, fingerprint, sha256, toHex } from "./upload/sha256.ts";
 export type {
   ConflictAnswer,
   ConflictChoice,
@@ -99,3 +99,5 @@ export { nextRange, offlineTotals, planOffline } from "./offline/plan.ts";
 export type { KeptFile, OfflinePlan } from "./offline/plan.ts";
 export { devicesApi, normalizePairingCode } from "./connect/devices.ts";
 export type { DevicesApi, PairingApproval, PairingDetails, SessionInfo } from "./connect/devices.ts";
+export { backupCounts, backupFolderNames, isChosen, planBackup } from "./backup/plan.ts";
+export type { BackupChoice, BackupCounts, BackupPlan, BackupRecord, DeviceAsset } from "./backup/plan.ts";
