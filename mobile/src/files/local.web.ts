@@ -25,7 +25,13 @@ export async function openElsewhere(
   files: FilesApi,
   server: { readonly id: string; readonly url: string },
   node: Viewable,
+  kept: string | null = null,
 ): Promise<OpenElsewhere> {
+  if (kept) {
+    window.open(kept, "_blank", "noopener");
+    return "opened";
+  }
+
   const signed = await files.contentUrl(node.id, { inline: false });
   window.open(absoluteUrl(server.url, signed.url), "_blank", "noopener");
   return "opened";

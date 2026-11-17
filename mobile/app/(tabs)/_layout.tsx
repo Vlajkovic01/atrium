@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "../../src/components/Icon.tsx";
 import { useNotifications } from "../../src/notifications.ts";
+import { OfflineProvider } from "../../src/offline/OfflineProvider.tsx";
 import { useServers } from "../../src/servers.tsx";
 import { SyncProvider } from "../../src/sync/SyncProvider.tsx";
 import { UploadsPanel } from "../../src/uploads/UploadsPanel.tsx";
@@ -27,7 +28,9 @@ export default function TabsLayout() {
   return (
     <UploadsProvider key={active.id}>
       <SyncProvider>
-        <SignedInTabs />
+        <OfflineProvider>
+          <SignedInTabs />
+        </OfflineProvider>
       </SyncProvider>
     </UploadsProvider>
   );

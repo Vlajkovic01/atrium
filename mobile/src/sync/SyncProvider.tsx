@@ -5,6 +5,7 @@ import { AppState } from "react-native";
 
 import { useActiveServer } from "../api.ts";
 import { localDb } from "../platform/db";
+import { emitSync } from "./events.ts";
 
 /** How often the change feed is read while the app is open and in front. */
 const EVERY_MS = 30_000;
@@ -45,8 +46,11 @@ export function SyncProvider({ children }: { readonly children: ReactNode }) {
           if (cursor !== null) {
             await queryClient.invalidateQueries({ queryKey: [server.id] });
           }
+
+          emitSync({ serverId: server.id, kind: "reset" });
         } else if (pull.items.length > 0) {
           const effects = changeEffects(pull.items);
+          emitSync({ serverId: server.id, kind: "changes", effects });
           await Promise.all([
             ...[...effects.folders].map((id) =>
               queryClient.invalidateQueries({ queryKey: [server.id, "children", id] }),

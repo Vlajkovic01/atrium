@@ -3,13 +3,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
-import { Body, Button, Heading, Notice, Screen, Title } from "../../src/components/ui.tsx";
-import { displayAddress } from "../../src/connect.ts";
-import { forgetLocalCopies } from "../../src/files/local";
-import { localDb } from "../../src/platform/db";
-import { useNotifications } from "../../src/notifications.ts";
-import { useServers } from "../../src/servers.tsx";
-import { radius, space, type, useTheme } from "../../src/theme.ts";
+import { Body, Button, Heading, Notice, Screen, Title } from "../../../src/components/ui.tsx";
+import { displayAddress } from "../../../src/connect.ts";
+import { forgetLocalCopies } from "../../../src/files/local";
+import { forgetOffline } from "../../../src/offline/OfflineProvider.tsx";
+import { useNotifications } from "../../../src/notifications.ts";
+import { useServers } from "../../../src/servers.tsx";
+import { radius, space, type, useTheme } from "../../../src/theme.ts";
 
 /**
  * Who is signed in where, the other servers the app knows, and signing
@@ -36,7 +36,7 @@ export default function Account() {
       await registry.remove(active.id);
       // What was opened from that server goes with it.
       forgetLocalCopies(active.id);
-      await localDb.forgetServer(active.id).catch(() => undefined);
+      await forgetOffline(active.id).catch(() => undefined);
     } finally {
       setBusy(false);
       setConfirming(false);
@@ -77,6 +77,7 @@ export default function Account() {
       <Button onPress={() => router.push("/notifications")}>
         {unread > 0 ? t("notifications.openUnread", { count: unread }) : t("notifications.open")}
       </Button>
+      <Button onPress={() => router.push("/account/downloads")}>{t("mobile.offline.title")}</Button>
       <Button onPress={() => router.push("/welcome")}>{t("mobile.home.addServer")}</Button>
       {confirming ? (
         <View style={card}>

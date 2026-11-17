@@ -69,8 +69,10 @@ export async function openElsewhere(
   files: FilesApi,
   server: { readonly id: string; readonly url: string },
   node: Viewable,
+  /** A whole copy already on the phone (an offline copy), handed over instead of fetching again. */
+  kept: string | null = null,
 ): Promise<OpenElsewhere> {
-  const file = new File(await localCopy(files, server, node));
+  const file = new File(kept ?? (await localCopy(files, server, node)));
   const options = { mimeType: node.mediaType ?? "application/octet-stream", title: node.name };
   if (!(await file.canPreview(options))) {
     return "noApp";
