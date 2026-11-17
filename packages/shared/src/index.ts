@@ -59,8 +59,20 @@ export type {
   QueuedUpload,
   UploadQueueOptions,
 } from "./upload/queue.ts";
-export { albumsApi, photosApi } from "./photos/api.ts";
-export type { AlbumView, AlbumsApi, MediaInfo, PhotoItem, PhotoPage, PhotosApi, TimelineBucket } from "./photos/api.ts";
+export { albumsApi, photosApi, searchApi, searchResultAsPhoto, searchTypes } from "./photos/api.ts";
+export type {
+  AlbumView,
+  AlbumsApi,
+  MediaInfo,
+  PhotoItem,
+  PhotoPage,
+  PhotosApi,
+  SearchApi,
+  SearchPage,
+  SearchResult,
+  SearchType,
+  TimelineBucket,
+} from "./photos/api.ts";
 export {
   bucketRange,
   dayOf,

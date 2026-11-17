@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createApiClient } from "../src/api/client.ts";
-import { albumsApi } from "../src/photos/api.ts";
+import { albumsApi, searchApi, searchResultAsPhoto, searchTypes } from "../src/photos/api.ts";
 import {
   bucketRange,
   formatDuration,
@@ -188,5 +188,67 @@ describe("album calls", () => {
     await albums.items("a", { limit: 150, cursor: "next" });
 
     expect(requests.map((r) => r.query)).toEqual(["?limit=150", "?limit=150&cursor=next"]);
+  });
+});
+
+describe("search", () => {
+  const node = {
+    id: "n1",
+    libraryId: "l1",
+    parentId: "p1",
+    name: "beach.jpg",
+    kind: "file" as const,
+    size: 1200,
+    mediaType: "image/jpeg",
+    modifiedAt: "2026-10-14T10:00:00Z",
+    createdAt: "2026-10-14T10:00:00Z",
+    updatedAt: "2026-10-14T10:00:00Z",
+    trashedAt: null,
+    version: 1,
+    canWrite: true,
+  };
+
+  it("turns a photo found into what the photo grid shows", () => {
+    const photo = searchResultAsPhoto({
+      node,
+      kind: "photo",
+      capturedAt: "2026-10-14T10:00:00Z",
+      width: 640,
+      height: 480,
+      thumbnailUrl: "/thumb",
+    });
+    expect(photo).toMatchObject({ id: "n1", name: "beach.jpg", kind: "photo", width: 640, thumbnailUrl: "/thumb" });
+  });
+
+  it("leaves out what is not a photo or video, or has no thumbnail yet", () => {
+    const base = { node, kind: null, capturedAt: null, width: null, height: null, thumbnailUrl: null };
+    expect(searchResultAsPhoto(base)).toBeNull();
+    expect(searchResultAsPhoto({ ...base, kind: "photo", capturedAt: "2026-10-14T10:00:00Z" })).toBeNull();
+  });
+
+  it("asks for the words, the kind and the dates", async () => {
+    const seen: string[] = [];
+    const api = createApiClient({
+      baseUrl: "http://atrium.test",
+      fetch: async (input, init) => {
+        seen.push(new URL(new Request(input, init).url).search);
+        return new Response(JSON.stringify({ items: [], nextCursor: null }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+      getAccessToken: () => "token",
+      refresh: () => Promise.resolve(null),
+    });
+    const { search } = searchApi(api);
+    const parsed = parseSearch("beach May 2024", "en");
+
+    await search({ words: parsed.words, range: parsed.range, type: "photo", limit: 100 });
+    await search({ type: "folder", cursor: "next" });
+
+    expect(seen).toEqual([
+      "?limit=100&q=beach&type=photo&from=2024-05-01T00%3A00%3A00Z&to=2024-06-01T00%3A00%3A00Z",
+      "?type=folder&cursor=next",
+    ]);
+    expect(searchTypes).toEqual(["photo", "video", "document", "folder"]);
   });
 });

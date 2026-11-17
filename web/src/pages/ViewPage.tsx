@@ -1,3 +1,4 @@
+import { searchResultAsPhoto, type PhotoItem } from "@atrium/shared";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,7 +10,7 @@ import { Icon } from "../components/Icon.tsx";
 import { Button, ErrorMessage, PageHeader } from "../components/ui.tsx";
 import { LoadMore, SelectionBar } from "../photos/Photos.tsx";
 import { PhotoGrid } from "../photos/PhotoGrid.tsx";
-import { asPhoto, OtherResults } from "../photos/Search.tsx";
+import { OtherResults } from "../photos/Search.tsx";
 import { Viewer } from "../photos/Viewer.tsx";
 import { ViewEditor } from "./ViewEditor.tsx";
 
@@ -43,7 +44,7 @@ export function ViewPage() {
     getNextPageParam: (page) => page.nextCursor ?? null,
   });
   const all = useMemo(() => pages.data?.pages.flatMap((p) => p.items) ?? [], [pages.data]);
-  const photos = useMemo(() => all.filter((r) => r.kind && r.thumbnailUrl && r.capturedAt).map(asPhoto), [all]);
+  const photos = useMemo(() => all.map(searchResultAsPhoto).filter((p): p is PhotoItem => p !== null), [all]);
   const others = all.filter((r) => !r.kind);
   const total = pages.data?.pages[0]?.total;
 
