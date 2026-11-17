@@ -3,7 +3,9 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 
-import { api, call } from "../api.ts";
+import { albumsApi } from "@atrium/shared";
+
+import { api } from "../api.ts";
 import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Button, ErrorMessage, Field, PageHeader } from "../components/ui.tsx";
@@ -11,6 +13,8 @@ import { usePin } from "../navigation.ts";
 import { LoadMore, PhotoTabs, SelectionBar } from "./Photos.tsx";
 import { formatDay, PhotoGrid, type PhotoItem } from "./PhotoGrid.tsx";
 import { Viewer } from "./Viewer.tsx";
+
+const albums = albumsApi(api);
 
 /** "May 2023 – June 2024", or one month, for an album's dates. */
 function span(newest?: string | null, oldest?: string | null): string {
@@ -31,12 +35,12 @@ export function Albums() {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState<unknown>(null);
-  const albums = useQuery({ queryKey: ["albums"], queryFn: () => call(api.GET("/api/v1/albums")) });
+  const list = useQuery({ queryKey: ["albums"], queryFn: albums.list });
 
   const create = async (): Promise<void> => {
     setError(null);
     try {
-      const album = await call(api.POST("/api/v1/albums", { body: { name, nodeIds: [] } }));
+      const album = await albums.create(name);
       await queryClient.invalidateQueries({ queryKey: ["albums"] });
       void navigate(`/photos/albums/${album.id}`);
     } catch (e) {
@@ -55,16 +59,16 @@ export function Albums() {
         }
       />
       <PhotoTabs />
-      <ErrorMessage error={albums.error} />
-      {albums.isPending ? <p className="muted">{t("common.loading")}</p> : null}
-      {albums.data?.length === 0 ? (
+      <ErrorMessage error={list.error} />
+      {list.isPending ? <p className="muted">{t("common.loading")}</p> : null}
+      {list.data?.length === 0 ? (
         <div className="empty">
           <Icon name="album" size={40} />
           <p>{t("albums.empty")}</p>
         </div>
       ) : null}
       <ul className="album-grid">
-        {albums.data?.map((album) => (
+        {list.data?.map((album) => (
           <li key={album.id}>
             <Link to={`/photos/albums/${album.id}`} className="album-card">
               <span className="album-cover">
@@ -119,17 +123,12 @@ export function AlbumPage() {
 
   const album = useQuery({
     queryKey: ["album", albumId],
-    queryFn: () => call(api.GET("/api/v1/albums/{id}", { params: { path: { id: albumId } } })),
+    queryFn: () => albums.get(albumId),
   });
   const pages = useInfiniteQuery({
     queryKey: ["album", albumId, "items"],
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam }) =>
-      call(
-        api.GET("/api/v1/albums/{id}/items", {
-          params: { path: { id: albumId }, query: { limit: 150, ...(pageParam ? { cursor: pageParam } : {}) } },
-        }),
-      ),
+    queryFn: ({ pageParam }) => albums.items(albumId, { limit: 150, cursor: pageParam }),
     getNextPageParam: (page) => page.nextCursor ?? null,
   });
   const items: PhotoItem[] = useMemo(() => pages.data?.pages.flatMap((p) => p.items) ?? [], [pages.data]);
@@ -149,27 +148,13 @@ export function AlbumPage() {
     }
   };
 
-  const ifMatch = { "If-Match": `"${album.data?.version ?? 0}"` };
+  const current = { id: albumId, version: album.data?.version ?? 0 };
   const removeSelected = (): Promise<void> =>
     run(async () => {
-      await call(
-        api.POST("/api/v1/albums/{id}/items/remove", {
-          params: { path: { id: albumId } },
-          body: { nodeIds: [...selected] },
-        }),
-      );
+      await albums.remove(albumId, [...selected]);
       setSelected(new Set());
     });
-  const setCover = (id: string): Promise<void> =>
-    run(() =>
-      call(
-        api.PATCH("/api/v1/albums/{id}", {
-          params: { path: { id: albumId } },
-          headers: ifMatch,
-          body: { name: null, coverNodeId: id },
-        }),
-      ),
-    );
+  const setCover = (id: string): Promise<void> => run(() => albums.setCover(current, id));
 
   return (
     <div className="photos">
@@ -253,13 +238,7 @@ export function AlbumPage() {
                 disabled={name.trim() === ""}
                 onClick={() =>
                   void run(async () => {
-                    await call(
-                      api.PATCH("/api/v1/albums/{id}", {
-                        params: { path: { id: albumId } },
-                        headers: ifMatch,
-                        body: { name, coverNodeId: null },
-                      }),
-                    );
+                    await albums.rename(current, name);
                     setDialog(null);
                   })
                 }
@@ -290,7 +269,7 @@ export function AlbumPage() {
                 variant="danger"
                 onClick={() =>
                   void run(async () => {
-                    await call(api.DELETE("/api/v1/albums/{id}", { params: { path: { id: albumId } } }));
+                    await albums.delete(albumId);
                     await queryClient.invalidateQueries({ queryKey: ["albums"] });
                     void navigate("/photos/albums");
                   })
