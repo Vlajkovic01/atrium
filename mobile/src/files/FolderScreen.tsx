@@ -7,7 +7,6 @@ import {
   formatDateTime,
   homeLibrary,
   libraryRootName,
-  type FileCategory,
   type FileOrder,
   type LibraryInfo,
   type NodeInfo,
@@ -35,22 +34,13 @@ import { Body, Button, ErrorMessage, Notice } from "../components/ui.tsx";
 import { currentLocale } from "../i18n.ts";
 import { radius, space, type, useTheme } from "../theme.ts";
 import { useFileActions } from "./actions.tsx";
+import { nodeIcon } from "./icons.ts";
+import { FileViewer } from "./FileViewer.tsx";
 import { setFileOrder, useFileOrder } from "./order.ts";
 
 const PAGE = 200;
 /** While a folder just added to the server is read for the first time, its files appear as they are found. */
 const READING_POLL = 3000;
-
-const categoryIcons: Record<FileCategory, IconName> = {
-  image: "image",
-  video: "video",
-  audio: "music",
-  pdf: "book",
-  text: "text",
-  document: "text",
-  archive: "archive",
-  other: "file",
-};
 
 const orders: readonly FileOrder[] = fileSorts.flatMap((sort) => [
   { sort, descending: false },
@@ -72,6 +62,7 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
   const order = useFileOrder();
   const [sorting, setSorting] = useState(false);
   const [details, setDetails] = useState<NodeInfo | null>(null);
+  const [viewing, setViewing] = useState<string | null>(null);
 
   const libraries = useQuery({
     queryKey: [server.id, "libraries"],
@@ -114,6 +105,9 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
   const above = (path.data ?? []).filter((node) => node.id !== folderId);
 
   const canWrite = folder.data?.canWrite ?? false;
+  // Opening a file shows it; the previous and next are the folder's other files, in the same order.
+  const fileItems = items.filter((item) => item.kind === "file");
+  const viewingIndex = viewing === null ? -1 : fileItems.findIndex((item) => item.id === viewing);
   const actions = useFileActions({
     folder: folder.data,
     rootName: library ? rootName(library) : t("files.title"),
@@ -385,7 +379,7 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
               }
               selected={selecting ? actions.selected.has(item.id) : undefined}
               onPress={() =>
-                selecting ? actions.select(item) : item.kind === "folder" ? openFolder(item.id) : setDetails(item)
+                selecting ? actions.select(item) : item.kind === "folder" ? openFolder(item.id) : setViewing(item.id)
               }
               // Choosing starts with a long press, where something can be done with the choice.
               onLongPress={canWrite ? () => actions.select(item) : undefined}
@@ -407,6 +401,16 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
       ) : null}
 
       {actions.overlays}
+
+      {viewingIndex >= 0 ? (
+        <FileViewer
+          files={fileItems}
+          index={viewingIndex}
+          onIndex={(index) => setViewing(fileItems[index]?.id ?? null)}
+          onClose={() => setViewing(null)}
+          onDetails={setDetails}
+        />
+      ) : null}
 
       {sorting ? (
         <Sheet title={t("files.sortBy")} onClose={() => setSorting(false)}>
@@ -474,10 +478,7 @@ function Row({
             { backgroundColor: isFolder ? colors.accentWash : colors.surface, borderColor: colors.line },
           ]}
         >
-          <Icon
-            name={isFolder ? "folder" : categoryIcons[fileCategory(node)]}
-            color={isFolder ? colors.accentWashInk : colors.inkSoft}
-          />
+          <Icon name={nodeIcon(node)} color={isFolder ? colors.accentWashInk : colors.inkSoft} />
         </View>
         <View style={styles.rowText}>
           <Text numberOfLines={2} style={[styles.name, { color: colors.ink }]}>

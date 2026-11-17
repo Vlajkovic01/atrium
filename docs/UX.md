@@ -360,8 +360,11 @@ top. Each row shows what the item is, its size and when it changed; long
 names take two lines. The order (name, date, size, type, either way) is
 chosen from a panel and remembered on the device. Pulling down reads the
 folder again; long folders arrive page by page while scrolling. A folder
-that cannot be changed carries a lock and says why. Touching a file shows
-its details until opening files is built.
+that cannot be changed carries a lock and says why. Touching a file opens
+it (D-052): pictures, video and sound in the phone's player, PDF and
+text inside the app; anything else, or what the phone cannot play, is
+offered to another app, as every file is from the viewer's top bar. The
+previous and next file of the folder are one touch away.
 
 Actions: each row has a menu (rename, move, copy, move to trash,
 details); a long press starts choosing several items, and the actions

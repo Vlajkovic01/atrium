@@ -9,6 +9,7 @@
     "icon": "./assets/icon.png",
     "android": {
       "package": "app.atrium.mobile",
+      "blockedPermissions": ["android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1c6b58"
@@ -46,6 +47,13 @@
           "android": {
             "usesCleartextTraffic": true
           }
+        }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
         }
       ]
     ],
