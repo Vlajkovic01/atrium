@@ -17,7 +17,7 @@ import {
   type LibraryInfo,
 } from "../src/files/api.ts";
 import { daysUntil, formatBytes, formatDateTime, formatDay } from "../src/files/format.ts";
-import { TEXT_PREVIEW_LIMIT, fileCategory, fileExtension, previewKind } from "../src/files/kind.ts";
+import { TEXT_PREVIEW_LIMIT, appViewKind, fileCategory, fileExtension, previewKind } from "../src/files/kind.ts";
 import { messages } from "../src/i18n/index.ts";
 
 const file = (name: string, mediaType: string | null = null, size = 100) => ({ name, mediaType, size });
@@ -63,6 +63,27 @@ describe("what a file is", () => {
     ["program.exe", null, "none"],
   ] as const)("a browser shows %s (%s) as %s", (name, type, expected) => {
     expect(previewKind(file(name, type))).toBe(expected);
+  });
+
+  it.each([
+    ["holiday.jpg", "image/jpeg", "image"],
+    // What a browser cannot play, the phone's player tries.
+    ["clip.mkv", "video/x-matroska", "video"],
+    ["clip.mp4", "video/mp4", "video"],
+    ["song.opus", "audio/opus", "audio"],
+    ["scan.pdf", null, "pdf"],
+    ["notes.md", null, "text"],
+    // Pictures every phone cannot draw, and Office files, open in another app.
+    ["raw.cr2", "image/x-canon-cr2", "other"],
+    ["budget.xlsx", null, "other"],
+    ["letter.rtf", "text/rtf", "other"],
+    ["program.exe", null, "other"],
+  ] as const)("an app shows %s (%s) as %s", (name, type, expected) => {
+    expect(appViewKind(file(name, type))).toBe(expected);
+  });
+
+  it("hands text that is too large to another app", () => {
+    expect(appViewKind(file("server.log", "text/plain", TEXT_PREVIEW_LIMIT + 1))).toBe("other");
   });
 
   it("does not show text that is too large", () => {

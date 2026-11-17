@@ -216,6 +216,14 @@
     },
     "about": {
       "version": "Verzija {version}"
+    },
+    "viewer": {
+      "openElsewhere": "Otvori u drugoj aplikaciji",
+      "other": "Atrium sam ne prikazuje ovu vrstu fajla. Može da ga otvori druga aplikacija na ovom telefonu.",
+      "cannotShow": "Ovaj fajl ne može da se prikaže ovde. Možda može da ga otvori druga aplikacija na ovom telefonu.",
+      "noApp": "Nijedna aplikacija na ovom telefonu ne otvara ovu vrstu fajla. Instalirajte neku koja to ume, pa pokušajte ponovo.",
+      "position": "{index} od {count}",
+      "text": "Sadržaj fajla"
     }
   },
   "nav": {
@@ -950,7 +958,9 @@
     "details": "Detalji",
     "none": "Ova vrsta fajla ne može da se prikaže ovde. Preuzmite ga da biste ga otvorili na svom uređaju.",
     "office": "Word, Excel i PowerPoint fajlovi još ne mogu da se prikažu ovde. Preuzmite fajl da biste ga otvorili na svom uređaju.",
-    "showInFolder": "Prikaži u folderu"
+    "showInFolder": "Prikaži u folderu",
+    "previous": "Prethodni fajl",
+    "next": "Sledeći fajl"
   },
   "notifications": {
     "title": "Obaveštenja",

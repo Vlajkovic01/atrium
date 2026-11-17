@@ -138,3 +138,38 @@ export function fileCategory(node: Described): FileCategory {
 
   return isText(type, ext) ? "text" : "other";
 }
+
+/** What an app on a device (phone, TV) shows by itself; anything else is handed to another app. */
+export type AppViewKind = "image" | "video" | "audio" | "pdf" | "text" | "other";
+
+/**
+ * How an app on a device shows a file (D-048). Unlike a browser, the
+ * device's own player tries any video or sound and says so when it
+ * cannot play one; pictures are limited to what every phone decodes.
+ * Office files and everything else open in another app.
+ */
+export function appViewKind(node: Pick<NodeInfo, "name" | "mediaType" | "size">): AppViewKind {
+  const type = (node.mediaType ?? "").toLowerCase();
+  const ext = fileExtension(node.name);
+  if (IMAGE_TYPES.has(type)) {
+    return "image";
+  }
+
+  if (type.startsWith("video/")) {
+    return "video";
+  }
+
+  if (type.startsWith("audio/")) {
+    return "audio";
+  }
+
+  if (type === "application/pdf" || ext === "pdf") {
+    return "pdf";
+  }
+
+  if (!OFFICE_EXTENSIONS.has(ext) && isText(type, ext) && Number(node.size) <= TEXT_PREVIEW_LIMIT) {
+    return "text";
+  }
+
+  return "other";
+}
