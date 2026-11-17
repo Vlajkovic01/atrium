@@ -459,6 +459,15 @@ hidden in the app switcher when the lock is on.
 Account, Devices, Scan: scan the TV's QR code, review, approve. Also
 reachable from the system camera through the QR's link.
 
+Built so far: Account, Devices lists every signed-in device (kind,
+platform, last used, read-only) and signs any other one out after asking;
+this phone signs out from Account. "Approve a device" scans the TV's code,
+or takes it typed, then shows which device asks, from where, and the
+code, with "read-only" and "hide my personal files" before Approve or
+Deny. A code for another server is refused with the reason. Opening the
+QR's link from the system camera leads to the web app for now: the
+phone app does not claim https links.
+
 ### Player
 
 Platform player with the same controls as the web, plus gestures (double
