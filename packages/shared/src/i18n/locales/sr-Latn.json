@@ -189,16 +189,29 @@
     "signIn": {
       "server": "Prijava na {server}"
     },
+    "photos": {
+      "soon": "Vaše fotografije će se ovde prikazivati u sledećoj verziji aplikacije."
+    },
+    "files": {
+      "kinds": {
+        "image": "Slika",
+        "video": "Video",
+        "audio": "Zvuk",
+        "pdf": "PDF dokument",
+        "text": "Tekst",
+        "document": "Dokument",
+        "archive": "Arhiva",
+        "other": "Fajl"
+      }
+    },
     "home": {
-      "heading": "Povezano",
       "signedInAs": "{name} na {server}",
       "servers": "Serveri",
       "current": "U upotrebi",
       "use": "Koristi ovaj server",
       "addServer": "Dodaj još jedan server",
       "signOut": "Odjavi se sa ovog servera",
-      "signOutBody": "Ovaj telefon će zaboraviti {server}. Fajlovi na serveru se ne diraju.",
-      "soon": "Fajlovi i fotografije stižu sa sledećim verzijama aplikacije."
+      "signOutBody": "Ovaj telefon će zaboraviti {server}. Fajlovi na serveru se ne diraju."
     },
     "about": {
       "version": "Verzija {version}"

@@ -189,16 +189,29 @@
     "signIn": {
       "server": "Signing in to {server}"
     },
+    "photos": {
+      "soon": "Your photos will be shown here in the next version of the app."
+    },
+    "files": {
+      "kinds": {
+        "image": "Picture",
+        "video": "Video",
+        "audio": "Sound",
+        "pdf": "PDF document",
+        "text": "Text",
+        "document": "Document",
+        "archive": "Archive",
+        "other": "File"
+      }
+    },
     "home": {
-      "heading": "Connected",
       "signedInAs": "{name} on {server}",
       "servers": "Servers",
       "current": "In use",
       "use": "Use this server",
       "addServer": "Add another server",
       "signOut": "Sign out of this server",
-      "signOutBody": "This phone will forget {server}. Files on the server are not touched.",
-      "soon": "Files and photos arrive with the next versions of the app."
+      "signOutBody": "This phone will forget {server}. Files on the server are not touched."
     },
     "about": {
       "version": "Version {version}"

@@ -916,3 +916,33 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   the Keystore or background work, which are tried on the owner's phone
   with the APK from CI. An emulator in CI can be added when the app has
   enough to test there.
+
+## D-051 Files in the mobile app: shared calls, folders as screens (Proposed, Phase 4)
+
+- **One set of file calls for every client.** `packages/shared/src/files`
+  holds the calls a file browser makes (`filesApi`), what a file is
+  (`fileCategory`, and `previewKind` for what a browser shows), the orders
+  of a folder and the formatting of sizes and dates. The web app's own
+  copies were moved there, not duplicated; the TV app gets the same.
+  Sizes fall back to plain letters ("1.5 MB") on an engine that cannot
+  format units, which older Android versions cannot.
+- **Bottom tabs: Photos, Files, Account.** Watch joins in Phase 7. The app
+  opens on Files until the photo timeline exists. The tabs exist only
+  while a server is in front and start over when another server comes to
+  the front; everything read is kept under the server's id, so two
+  servers never show each other's files.
+- **A folder is a screen.** Opening a folder puts a screen over the
+  current one, so the system's back button goes up one folder, as people
+  expect on a phone. The path above the folder is shown and closes as
+  many screens as it goes up. Alternative: one screen that swaps its
+  contents, which needs its own handling of the back button and loses the
+  scroll position of the folder one returns to.
+- **One order for all folders, remembered on the device.** The server
+  orders (folders first), the app only chooses. Alternative: an order per
+  folder, which surprises more than it helps and has to be stored for
+  folders that may no longer exist.
+- **Why a folder cannot be changed is said in the folder** (D-040), with
+  the same words as the web app. The mobile app has no administration, so
+  it does not link to one.
+- Built in three pull requests: browsing; actions and the trash; opening
+  files, with PDF inside the app and "Open in another app" (D-048).

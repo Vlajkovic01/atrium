@@ -1,0 +1,108 @@
+import type { ReactNode } from "react";
+import Svg, { Circle, Path, Rect } from "react-native-svg";
+
+import { useTheme } from "../theme.ts";
+
+/**
+ * Atrium's own line icons on a 24 by 24 grid, the same drawings as the
+ * web app's (web/src/components/Icon.tsx), so the app carries no icon
+ * font and no third-party art. Icons are decorative; the text beside
+ * them, or the button's label, carries the meaning.
+ */
+const shapes = {
+  folder: <Path d="M3 7.5A2 2 0 0 1 5 5.5h4.200l2 2.300H19a2 2 0 0 1 2 2v7.700a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
+  file: (
+    <>
+      <Path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z" />
+      <Path d="M14 3.5v5h5" />
+    </>
+  ),
+  text: (
+    <>
+      <Path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z" />
+      <Path d="M14 3.5v5h5M8.500 13h7M8.500 16.500h4.500" />
+    </>
+  ),
+  image: (
+    <>
+      <Rect x={3.5} y={4.5} width={17} height={15} rx={2.2} />
+      <Circle cx={9} cy={10} r={1.7} />
+      <Path d="m4.500 18 5-5 3.500 3.500 2.500-2.500 4 4" />
+    </>
+  ),
+  video: (
+    <>
+      <Rect x={3} y={6} width={13} height={12} rx={2} />
+      <Path d="m16 10.500 5-3v9l-5-3z" />
+    </>
+  ),
+  music: (
+    <>
+      <Path d="M9 17.500V6l10-2v11.500" />
+      <Circle cx={6.5} cy={17.5} r={2.5} />
+      <Circle cx={16.5} cy={15.5} r={2.5} />
+    </>
+  ),
+  book: (
+    <Path d="M5 4.500A1.500 1.500 0 0 1 6.500 3H19v15H6.500A1.500 1.500 0 0 0 5 19.500zM5 19.500A1.500 1.500 0 0 0 6.500 21H19v-3" />
+  ),
+  archive: (
+    <>
+      <Rect x={3.5} y={4} width={17} height={5} rx={1.5} />
+      <Path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4" />
+    </>
+  ),
+  user: (
+    <>
+      <Circle cx={12} cy={8.2} r={3.7} />
+      <Path d="M4.800 20c.900-3.600 3.700-5.600 7.200-5.600s6.300 2 7.200 5.600" />
+    </>
+  ),
+  lock: (
+    <>
+      <Rect x={5} y={10.5} width={14} height={10} rx={2.2} />
+      <Path d="M8.200 10.500V7.800a3.800 3.800 0 0 1 7.600 0v2.700" />
+    </>
+  ),
+  info: (
+    <>
+      <Circle cx={12} cy={12} r={9} />
+      <Path d="M12 11v5.200M12 7.800h.01" />
+    </>
+  ),
+  sort: <Path d="M7 5v14m0 0-3.500-3.500M7 19l3.500-3.500M17 19V5m0 0-3.500 3.500M17 5l3.500 3.500" />,
+  check: <Path d="m5 12.500 4.500 4.500L19 7.500" />,
+  close: <Path d="m6 6 12 12M18 6 6 18" />,
+  chevronRight: <Path d="m9.500 6 6 6-6 6" />,
+  chevronLeft: <Path d="m14.500 6-6 6 6 6" />,
+} satisfies Record<string, ReactNode>;
+
+export type IconName = keyof typeof shapes;
+
+export function Icon({
+  name,
+  size = 24,
+  color,
+}: {
+  readonly name: IconName;
+  readonly size?: number;
+  /** The ink colour when not given. */
+  readonly color?: string;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color ?? colors.ink}
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      accessible={false}
+    >
+      {shapes[name]}
+    </Svg>
+  );
+}

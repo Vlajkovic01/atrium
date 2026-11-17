@@ -102,13 +102,16 @@ for (const [language, locale, scheme] of [
 
       await page.getByLabel(text("Password", "Lozinka")).fill(PASSWORD);
       await page.getByRole("button", { name: text("Sign in", "Prijavi se") }).click();
-      await expect(page.getByText(text("Connected", "Povezano"))).toBeVisible();
+      // The app opens on Files; who is signed in where is under Account.
+      await expect(page.getByRole("heading", { name: text("My files", "Moji fajlovi") })).toBeVisible();
+      await page.getByRole("tab", { name: text("Account", "Nalog") }).click();
       await expect(page.getByText(text("This connection is not encrypted", "Ova veza nije šifrovana"))).toBeVisible();
-      await shot(page, `${language}-08-home`);
+      await shot(page, `${language}-08-account`);
 
       // The session survives a restart of the app.
-      await page.reload();
-      await expect(page.getByText(text("Connected", "Povezano"))).toBeVisible();
+      await page.goto("/");
+      await expect(page.getByRole("heading", { name: text("My files", "Moji fajlovi") })).toBeVisible();
+      await page.getByRole("tab", { name: text("Account", "Nalog") }).click();
 
       await page.getByRole("button", { name: text("Sign out of this server", "Odjavi se sa ovog servera") }).click();
       await shot(page, `${language}-09-sign-out`);
