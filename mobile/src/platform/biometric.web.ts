@@ -10,7 +10,3 @@ export function canLock(): Promise<boolean> {
 export function unlock(): Promise<boolean> {
   return new Promise((resolve) => setTimeout(() => resolve(true), 1500));
 }
-
-export function hideFromSwitcher(): Promise<void> {
-  return Promise.resolve();
-}

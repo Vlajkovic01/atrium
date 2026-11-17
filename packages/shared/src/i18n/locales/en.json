@@ -255,7 +255,7 @@
     "lock": {
       "title": "Lock",
       "enable": "Lock Atrium with fingerprint, face or screen lock",
-      "explain": "Atrium asks for your fingerprint or face when it opens and after the time below away. While the lock is on, its screens are hidden in the list of open apps and cannot be captured in screenshots.",
+      "explain": "Atrium asks for your fingerprint or face when it opens and after the time below away.",
       "after": "Lock again after",
       "atOnce": "At once",
       "minutes": "{count, plural, one {# minute} other {# minutes}}",

@@ -1098,7 +1098,7 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - Fetching runs while the app is open, one file at a time. In the
   background it belongs to camera backup's decision.
 
-## D-057 The lock on the phone (Proposed, Phase 4)
+## D-057 The lock on the phone (Proposed, Phase 4; owner on screenshots)
 
 - **The phone's own prompt** (expo-local-authentication): fingerprint or
   face, with the phone's PIN, pattern or password when those fail. Atrium
@@ -1111,11 +1111,10 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   was. It is a lock on the app's screens, not encryption: the refresh
   token is already in the Keystore (D-050), offline copies are in the
   app's private folder.
-- **Hidden in the list of open apps by FLAG_SECURE** (expo-screen-capture),
-  on while the lock is on. It also refuses screenshots and screen
-  recording of Atrium, which the setting says. Alternative: covering the
-  app when it goes to the background, which Android may snapshot before
-  the cover is drawn.
-- The permissions expo-screen-capture declares for watching screenshots
-  are blocked; Atrium does not watch them.
+- **Not hidden in the list of open apps, screenshots allowed** (owner,
+  2026-11-17: "I want screenshots of Atrium, and the app to be visible").
+  The first version hid the app with FLAG_SECURE while the lock was on,
+  which also refused every screenshot; the owner chose screenshots. So the
+  lock covers the app when it opens and after time away, and the app looks
+  in the list of open apps as any other. expo-screen-capture is gone again.
 

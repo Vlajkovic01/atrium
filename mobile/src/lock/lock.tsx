@@ -4,7 +4,7 @@ import { AppState, StyleSheet, View } from "react-native";
 
 import { LogoMark } from "../components/Logo.tsx";
 import { Body, Button, Title } from "../components/ui.tsx";
-import { canLock, hideFromSwitcher, unlock } from "../platform/biometric";
+import { canLock, unlock } from "../platform/biometric";
 import { settings } from "../platform/storage";
 import { space, useTheme } from "../theme.ts";
 
@@ -39,9 +39,9 @@ export function useLock(): LockValue {
 /**
  * The optional lock (docs/UX.md, Mobile, Security): off by default. When
  * on, the app opens locked and locks again after the chosen time in the
- * background; while locked, the lock screen covers all of it. Its content is also
- * kept out of the list of open apps and out of screenshots. The phone's
- * own prompt does the checking.
+ * background; while locked, the lock screen covers all of it. Screenshots
+ * and the list of open apps stay as the phone has them (owner, D-057). The
+ * phone's own prompt does the checking.
  */
 export function LockProvider({ children }: { readonly children: ReactNode }) {
   const { t } = useTranslation();
@@ -74,7 +74,6 @@ export function LockProvider({ children }: { readonly children: ReactNode }) {
       setAvailable(await canLock().catch(() => false));
       setEnabledState(on);
       setLocked(on);
-      await hideFromSwitcher(on).catch(() => undefined);
       setReady(true);
     })();
   }, []);
@@ -114,7 +113,6 @@ export function LockProvider({ children }: { readonly children: ReactNode }) {
 
       setEnabledState(on);
       await settings.set(ENABLED, on ? "1" : "0").catch(() => undefined);
-      await hideFromSwitcher(on).catch(() => undefined);
     },
     setAfter: (minutes) => {
       setAfterState(minutes);
