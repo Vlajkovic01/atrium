@@ -1041,6 +1041,10 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   Pictures are sent as they are: no editing, no recompression.
 - **Uploads run while the app is open.** Going on in the background is
   part of camera backup, where the platform's limits are decided.
-- Not yet: notifications for finished or failed uploads (the next pull
-  request), sharing into Atrium from other apps.
+- **Notifications are read while the app is open**, every minute, the
+  same list as the web. No push service: it would need Google's Firebase
+  (or Apple's) to carry messages from the server, which a self-hosted
+  server should not depend on. A finished batch of uploads is reported
+  once, by the shared rule the web also uses.
+- Not yet: sharing into Atrium from other apps.
 

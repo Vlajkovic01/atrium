@@ -430,6 +430,15 @@ A Downloads screen shows progress and space used. Downloads resume after
 interruption. Offline items open without a connection; changes made on
 the server appear at next sync.
 
+### Notifications
+
+The same list as on the web (D-045), under Account, with the unread
+count on the Account tab; checked every minute while the app is open.
+Opening one marks it read and goes to its folder when it points at one;
+mark all read, remove one, clear all. Uploads from the phone are reported
+as on the web, once per batch. Notifications pushed to the phone while
+the app is closed are not part of this.
+
 ### Security
 
 Optional biometric lock on app open and after a timeout. App content is
