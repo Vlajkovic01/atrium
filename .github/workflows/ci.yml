@@ -52,9 +52,20 @@ jobs:
         with:
           global-json-file: server/global.json
 
+      # Downloaded packages are kept between runs (.github/actions/apt-cache).
+      - uses: ./.github/actions/apt-cache
+        with:
+          step: restore
+          name: server
+
       # The media tests run FFmpeg and ffprobe; libvips comes from NuGet.
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends ffmpeg
+
+      - uses: ./.github/actions/apt-cache
+        with:
+          step: save
+          name: server
 
       - name: Restore
         run: dotnet restore Atrium.slnx
@@ -133,6 +144,21 @@ jobs:
       - name: Build the server
         run: dotnet build server/src/Atrium.Api --configuration Release
 
+      # Downloaded packages and the browser are kept between runs: the
+      # runners' Ubuntu mirror is sometimes slow enough to take most of the
+      # job's time.
+      - uses: ./.github/actions/apt-cache
+        with:
+          step: restore
+          name: e2e
+
+      - name: Restore the browser
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: playwright-${{ runner.os }}-${{ runner.arch }}-
+
       # Thumbnails in the browser tests come from the distribution's libvips,
       # as in the image.
       - name: Install the media tools
@@ -140,6 +166,11 @@ jobs:
 
       - name: Install the browser
         run: pnpm --filter @atrium/web exec playwright install --with-deps chromium
+
+      - uses: ./.github/actions/apt-cache
+        with:
+          step: save
+          name: e2e
 
       # Starts the real server with the built web app and drives it in a browser.
       - name: Run

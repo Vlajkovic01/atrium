@@ -1,0 +1,66 @@
+name: Keep downloaded system packages
+description: >
+  Keeps the .deb files apt downloads between runs. The runners' Ubuntu
+  mirror is sometimes very slow (under 100 kB/s), and downloading FFmpeg,
+  libvips and the browser's libraries then takes longer than the tests.
+  Use "restore" before the apt-get installs of a job and "save" after
+  them. apt still checks what it installs against the signed package
+  lists it downloads each time; only the files are kept.
+
+inputs:
+  step:
+    description: '"restore" before installing, "save" after'
+    required: true
+  name:
+    description: A name for this job's set of packages
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Use a kept folder for apt's downloads
+      if: inputs.step == 'restore'
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "$HOME/apt-archives/partial"
+        printf '%s\n' \
+          "Dir::Cache::Archives \"$HOME/apt-archives\";" \
+          'APT::Keep-Downloaded-Packages "true";' \
+          'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
+          | sudo tee /etc/apt/apt.conf.d/90atrium-keep-downloads > /dev/null
+
+    - name: Restore the kept packages
+      id: restore
+      if: inputs.step == 'restore'
+      uses: actions/cache/restore@v6
+      with:
+        path: ~/apt-archives
+        key: apt-${{ inputs.name }}-${{ runner.os }}-${{ runner.arch }}-none
+        restore-keys: apt-${{ inputs.name }}-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Remember what was restored
+      if: inputs.step == 'restore'
+      shell: bash
+      run: echo "APT_CACHE_RESTORED=${{ steps.restore.outputs.cache-matched-key }}" >> "$GITHUB_ENV"
+
+    # Saved only when the set of packages changed, under a key made from
+    # their names and versions; outdated versions are dropped first.
+    - name: Name the packages
+      id: name
+      if: inputs.step == 'save'
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo apt-get autoclean --yes > /dev/null
+        sudo rm -rf "$HOME/apt-archives/partial" "$HOME/apt-archives/lock"
+        sudo chown -R "$(id -u):$(id -g)" "$HOME/apt-archives"
+        digest=$(ls "$HOME/apt-archives" | sort | sha256sum | cut -c1-16)
+        echo "key=apt-${{ inputs.name }}-${{ runner.os }}-${{ runner.arch }}-$digest" >> "$GITHUB_OUTPUT"
+
+    - name: Save the packages
+      if: inputs.step == 'save' && steps.name.outputs.key != env.APT_CACHE_RESTORED
+      uses: actions/cache/save@v6
+      with:
+        path: ~/apt-archives
+        key: ${{ steps.name.outputs.key }}
