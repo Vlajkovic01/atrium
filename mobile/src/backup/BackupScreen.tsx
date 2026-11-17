@@ -106,7 +106,9 @@ export function BackupScreen() {
             ) : null}
             {backup.lastRun ? (
               <Body faint>
-                {t("mobile.backup.lastRun", { when: formatDateTime(new Date(backup.lastRun).toISOString(), locale) })}
+                {t(backup.lastRun.background ? "mobile.backup.lastRunBackground" : "mobile.backup.lastRun", {
+                  when: formatDateTime(new Date(backup.lastRun.at).toISOString(), locale),
+                })}
               </Body>
             ) : null}
             {backup.access === "limited" ? <Notice kind="warning">{t("mobile.backup.limited")}</Notice> : null}
@@ -119,7 +121,7 @@ export function BackupScreen() {
                   .join(" ")}
               </Notice>
             ) : null}
-            <Body faint>{t("mobile.backup.whileOpen")}</Body>
+            <Body faint>{t("mobile.backup.background")}</Body>
             <Button variant="primary" onPress={backup.runNow}>
               {t("mobile.backup.now")}
             </Button>

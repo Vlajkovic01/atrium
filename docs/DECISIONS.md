@@ -1123,8 +1123,25 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - **Owner's choice (2026-11-17): both kinds of background work.** A
   periodic job (WorkManager) sends new photos when Android allows it, and
   a foreground service with a notification carries the first large
-  backup and "Back up now" to the end. Built in two steps: this one runs
-  while the app is open; the background follows.
+  backup and "Back up now" to the end. Built in two steps: the first ran
+  while the app is open; the second adds both kinds of background work.
+- **The background job** (expo-background-task, WorkManager): registered
+  while any server on the phone has camera backup on, at the shortest
+  interval Android allows (15 minutes; Android decides when). Each run
+  backs up every such server under the same conditions, and starts no new
+  file after 8 minutes, inside Android's ten. A file cut off is sent again
+  from its start next time (tus resumes only within one run); nothing is
+  ever sent twice once it is on the server.
+- **The foreground service** (a small Atrium module, type "data sync"):
+  started only by the app in front when a run has files to send, it
+  shows a notification with the files left and keeps the process alive if
+  the person leaves the app; it does no work of its own and stops with
+  the run, or when Android's daily limit for data-sync services (Android
+  15+) is reached; the job then continues later.
+- **One run at a time per server**, and one list of servers and sessions
+  shared by the screens and the job: two would each renew the same sign-in
+  and the server, which replaces a refresh token on use, would sign the
+  phone out.
 - **Known by content.** Each photo or video is hashed (SHA-256, a part at a
   time, never whole in memory) and the server is asked which contents the
   person already has (`POST /uploads/check`). What is there, from this

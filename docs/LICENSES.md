@@ -144,6 +144,7 @@ repository. None is GPL or AGPL (flag 3).
 | expo-local-authentication | 58.0.3 | MIT | The optional lock: the phone's own fingerprint, face or screen-lock prompt; Atrium only learns whether it succeeded |
 | expo-media-library | 58.0.14 | MIT | Camera backup: finds the photos and videos the person chose. Reads with the photo and video permissions (Android 13+) or the old storage read (12 and older), and the media location permission so backups keep a picture whole; writes nothing |
 | expo-network, expo-battery | 58.0.5, 58.0.4 | MIT | Camera backup's conditions: only on Wi-Fi, only while charging |
+| expo-background-task, expo-task-manager | 58.0.13, 58.0.14 | MIT | Camera backup in the background: Android's WorkManager runs it about every 15 minutes when allowed (D-058) |
 | react-native-web, react-dom | 0.21.4, 19.3.0 | MIT | Development only: shows the app's screens in a browser (`mobile/preview`). Not in the app |
 | Playwright | 1.65.0 | Apache-2.0 | Development only, as for the web app |
 
