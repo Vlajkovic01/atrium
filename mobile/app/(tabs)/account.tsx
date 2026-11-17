@@ -6,6 +6,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Body, Button, Heading, Notice, Screen, Title } from "../../src/components/ui.tsx";
 import { displayAddress } from "../../src/connect.ts";
 import { forgetLocalCopies } from "../../src/files/local";
+import { localDb } from "../../src/platform/db";
 import { useNotifications } from "../../src/notifications.ts";
 import { useServers } from "../../src/servers.tsx";
 import { radius, space, type, useTheme } from "../../src/theme.ts";
@@ -35,6 +36,7 @@ export default function Account() {
       await registry.remove(active.id);
       // What was opened from that server goes with it.
       forgetLocalCopies(active.id);
+      await localDb.forgetServer(active.id).catch(() => undefined);
     } finally {
       setBusy(false);
       setConfirming(false);
