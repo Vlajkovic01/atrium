@@ -252,3 +252,16 @@ describe("search", () => {
     expect(searchTypes).toEqual(["photo", "video", "document", "folder"]);
   });
 });
+
+describe("reading a search in Serbian", () => {
+  it("finds a month by its Serbian name, in any case, and keeps the other words as typed", () => {
+    expect(parseSearch("plaža MAJ 2024", "sr-Latn")).toEqual({
+      words: "plaža",
+      range: { from: "2024-05-01T00:00:00Z", to: "2024-06-01T00:00:00Z" },
+    });
+    expect(parseSearch("sep 2026", "sr-Latn").range).toEqual({
+      from: "2026-09-01T00:00:00Z",
+      to: "2026-10-01T00:00:00Z",
+    });
+  });
+});
