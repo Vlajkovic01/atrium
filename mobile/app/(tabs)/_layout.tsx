@@ -5,7 +5,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "../../src/components/Icon.tsx";
 import { useServers } from "../../src/servers.tsx";
-import { useTheme } from "../../src/theme.ts";
+import { UploadsPanel } from "../../src/uploads/UploadsPanel.tsx";
+import { UploadsProvider } from "../../src/uploads/UploadsProvider.tsx";
+import { space, useTheme } from "../../src/theme.ts";
 
 /**
  * The signed-in app: Photos, Files and Account along the bottom edge
@@ -28,27 +30,30 @@ export default function TabsLayout() {
     ({ color }: { readonly color: unknown }) => <Icon name={name} {...(typeof color === "string" ? { color } : {})} />;
 
   return (
-    <Tabs
-      key={active.id}
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.inkFaint,
-        // Room for the icon and a label that grows with the system's text size.
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.line,
-          height: 64 + insets.bottom,
-          paddingTop: 6,
-          paddingBottom: insets.bottom + 6,
-        },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: "600" },
-        sceneStyle: { backgroundColor: colors.paper },
-      }}
-    >
-      <Tabs.Screen name="photos" options={{ title: t("nav.photos"), tabBarIcon: icon("image") }} />
-      <Tabs.Screen name="files" options={{ title: t("nav.files"), tabBarIcon: icon("folder") }} />
-      <Tabs.Screen name="account" options={{ title: t("nav.account"), tabBarIcon: icon("user") }} />
-    </Tabs>
+    // Uploads belong to the server in front, and start over with another.
+    <UploadsProvider key={active.id}>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarActiveTintColor: colors.accent,
+          tabBarInactiveTintColor: colors.inkFaint,
+          // Room for the icon and a label that grows with the system's text size.
+          tabBarStyle: {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.line,
+            height: 64 + insets.bottom,
+            paddingTop: 6,
+            paddingBottom: insets.bottom + 6,
+          },
+          tabBarLabelStyle: { fontSize: 12, fontWeight: "600" },
+          sceneStyle: { backgroundColor: colors.paper },
+        }}
+      >
+        <Tabs.Screen name="photos" options={{ title: t("nav.photos"), tabBarIcon: icon("image") }} />
+        <Tabs.Screen name="files" options={{ title: t("nav.files"), tabBarIcon: icon("folder") }} />
+        <Tabs.Screen name="account" options={{ title: t("nav.account"), tabBarIcon: icon("user") }} />
+      </Tabs>
+      <UploadsPanel bottom={64 + insets.bottom + space.sm} />
+    </UploadsProvider>
   );
 }

@@ -35,6 +35,7 @@ import { currentLocale } from "../i18n.ts";
 import { radius, space, type, useTheme } from "../theme.ts";
 import { useFileActions } from "./actions.tsx";
 import { nodeIcon } from "./icons.ts";
+import { UploadSheet } from "../uploads/UploadSheet.tsx";
 import { FileViewer } from "./FileViewer.tsx";
 import { setFileOrder, useFileOrder } from "./order.ts";
 
@@ -63,6 +64,7 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
   const [sorting, setSorting] = useState(false);
   const [details, setDetails] = useState<NodeInfo | null>(null);
   const [viewing, setViewing] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const libraries = useQuery({
     queryKey: [server.id, "libraries"],
@@ -298,6 +300,16 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
           {canWrite ? (
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={t("files.upload")}
+              onPress={() => setUploading(true)}
+              style={styles.barButton}
+            >
+              <Icon name="upload" />
+            </Pressable>
+          ) : null}
+          {canWrite ? (
+            <Pressable
+              accessibilityRole="button"
               accessibilityLabel={t("files.newFolder")}
               onPress={actions.newFolder}
               style={styles.barButton}
@@ -411,6 +423,8 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
       ) : null}
 
       {actions.overlays}
+
+      {uploading && folderId ? <UploadSheet folderId={folderId} onClose={() => setUploading(false)} /> : null}
 
       {viewingIndex >= 0 ? (
         <FileViewer

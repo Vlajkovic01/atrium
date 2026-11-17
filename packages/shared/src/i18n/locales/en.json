@@ -225,6 +225,13 @@
       "noApp": "No app on this phone opens this kind of file. Install one that does, then try again.",
       "position": "{index} of {count}",
       "text": "Contents of the file"
+    },
+    "upload": {
+      "files": "Files on this phone",
+      "library": "Photos and videos",
+      "photo": "Take a photo",
+      "video": "Record a video",
+      "noCamera": "Atrium may not use the camera. Allow it in the phone's settings, under Apps, Atrium."
     }
   },
   "nav": {

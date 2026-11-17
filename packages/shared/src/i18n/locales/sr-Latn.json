@@ -225,6 +225,13 @@
       "noApp": "Nijedna aplikacija na ovom telefonu ne otvara ovu vrstu fajla. Instalirajte neku koja to ume, pa pokušajte ponovo.",
       "position": "{index} od {count}",
       "text": "Sadržaj fajla"
+    },
+    "upload": {
+      "files": "Fajlovi sa ovog telefona",
+      "library": "Fotografije i video snimci",
+      "photo": "Fotografiši",
+      "video": "Snimi video",
+      "noCamera": "Atrium ne sme da koristi kameru. Dozvolite je u podešavanjima telefona, pod Aplikacije, Atrium."
     }
   },
   "nav": {

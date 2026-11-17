@@ -139,6 +139,8 @@ repository. None is GPL or AGPL (flag 3).
 | expo-video | 58.0.14 | MIT | Plays video and sound inside the app with the phone's own player (Media3 on Android, Apache-2.0; AVPlayer on iOS). Background play and picture-in-picture are off until Phase 9 |
 | expo-file-system | 58.0.13 | MIT | Copies of opened files in the app's cache, and handing a file to another app (D-052). Its old storage permissions are blocked in `app.json` |
 | react-native-pdf-renderer | 2.3.0 | MIT | PDF inside the app, drawn by the system (Android PdfRenderer, iOS PDFKit), so no PDF engine is carried. Chosen over react-native-pdf (MIT), which bundles pdfium and several MB per processor type |
+| expo-document-picker | 58.0.5 | MIT | Choosing files on the phone to upload, through the system's own chooser; nothing else is read |
+| expo-image-picker | 58.0.10 | MIT | Choosing photos and videos (the system's photo picker) and taking them with the system camera, to upload. Its microphone permission is turned off and its storage permissions are blocked |
 | react-native-web, react-dom | 0.21.4, 19.3.0 | MIT | Development only: shows the app's screens in a browser (`mobile/preview`). Not in the app |
 | Playwright | 1.65.0 | Apache-2.0 | Development only, as for the web app |
 

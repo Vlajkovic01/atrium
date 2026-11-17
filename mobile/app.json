@@ -55,6 +55,14 @@
           "supportsBackgroundPlayback": false,
           "supportsPictureInPicture": false
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Atrium uploads the photos and videos you choose to your server.",
+          "cameraPermission": "Atrium uses the camera to take a photo or video you upload to your server.",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {
