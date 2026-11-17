@@ -1,6 +1,7 @@
 import { bucketRange, type PhotoItem } from "@atrium/shared";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -26,6 +27,7 @@ const PAGE = 200;
 export function Timeline({ switcher }: { readonly switcher: React.ReactElement }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const router = useRouter();
   const { server, photos } = useActiveServer();
   const [start, setStart] = useState<{ readonly year: number; readonly month: number } | null>(null);
   const [jumping, setJumping] = useState(false);
@@ -73,6 +75,14 @@ export function Timeline({ switcher }: { readonly switcher: React.ReactElement }
             {t("photos.title")}
           </Text>
           <SizeButtons />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("search.title")}
+            onPress={() => router.push("/search")}
+            style={photoStyles.barButton}
+          >
+            <Icon name="search" />
+          </Pressable>
           {years.length > 0 ? (
             <Pressable
               accessibilityRole="button"

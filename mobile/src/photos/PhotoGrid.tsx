@@ -64,8 +64,8 @@ export function PhotoGrid({
   readonly pending: boolean;
   readonly error: unknown;
   readonly loadingMore: boolean;
-  /** Said when there is nothing to show. */
-  readonly empty: string;
+  /** Said when there is nothing to show; null to say nothing. */
+  readonly empty: string | null;
   readonly header?: ReactElement | undefined;
   /** The chosen items; undefined while nothing is being chosen. */
   readonly selected?: ReadonlySet<string> | undefined;
@@ -165,10 +165,12 @@ export function PhotoGrid({
       onEndReached={onEndReached}
       ListHeaderComponent={header}
       ListEmptyComponent={
-        <View style={styles.empty}>
-          <Icon name="image" size={40} color={colors.inkFaint} />
-          <Body faint>{empty}</Body>
-        </View>
+        empty === null ? undefined : (
+          <View style={styles.empty}>
+            <Icon name="image" size={40} color={colors.inkFaint} />
+            <Body faint>{empty}</Body>
+          </View>
+        )
       }
       ListFooterComponent={
         loadingMore ? (

@@ -358,7 +358,12 @@ Albums sit beside the timeline (Timeline | Albums): covers, names, counts
 and dates. A long press on the timeline starts choosing pictures; "Add
 to album" puts them into an existing or a new album. In an album, chosen
 pictures can be taken out or one made the cover; the album can be renamed
-or deleted, which always says that the pictures stay where they are. The viewer
+or deleted, which always says that the pictures stay where they are.
+Search opens from the top bar of Photos and of where files start: one
+field for names, kinds and dates as on the web ("beach 2024", "May 2024",
+"maj 2024"), with the kinds as chips and the date range shown when one
+is read. Photos and videos found show as a grid; other files open in the
+viewer and folders in Files. The viewer
 supports swipe, pinch zoom, swipe down to close. Items not yet backed up
 carry a small badge.
 

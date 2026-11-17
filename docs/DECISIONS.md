@@ -1011,6 +1011,11 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   (a long press) only adds to or takes out of albums for now: moving
   photos to the trash from the timeline waits for a reason to have two
   ways of deleting files on a phone.
-- Not yet: search (the next pull request), the badge on items not backed
-  up (camera backup).
+- **One search for photos and files**, opened from both, over the tabs:
+  the server searches everything the person can read in one call, so
+  splitting it by tab would only hide results. Reading dates out of the
+  text is the web's, from the shared package; its diacritics are folded
+  by an explicit range instead of `\p{M}`, which not every JavaScript
+  engine reads.
+- Not yet: the badge on items not backed up (camera backup).
 

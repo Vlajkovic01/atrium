@@ -308,6 +308,16 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
           {given === undefined ? (
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={t("search.title")}
+              onPress={() => router.push("/search")}
+              style={styles.barButton}
+            >
+              <Icon name="search" />
+            </Pressable>
+          ) : null}
+          {given === undefined ? (
+            <Pressable
+              accessibilityRole="button"
               accessibilityLabel={t("trash.title")}
               onPress={() => router.push("/files/trash")}
               style={styles.barButton}
