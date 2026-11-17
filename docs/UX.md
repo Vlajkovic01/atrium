@@ -353,7 +353,12 @@ as the web; three sizes of pictures, changed by spreading or closing two
 fingers or by the two size buttons, remembered on the device; jump to a
 month and back to the newest; videos show their length. A picture opens
 in the file viewer, with what is known of it (when taken, camera, size)
-one touch away. The app opens on Photos. The viewer
+one touch away. The app opens on Photos.
+Albums sit beside the timeline (Timeline | Albums): covers, names, counts
+and dates. A long press on the timeline starts choosing pictures; "Add
+to album" puts them into an existing or a new album. In an album, chosen
+pictures can be taken out or one made the cover; the album can be renamed
+or deleted, which always says that the pictures stay where they are. The viewer
 supports swipe, pinch zoom, swipe down to close. Items not yet backed up
 carry a small badge.
 

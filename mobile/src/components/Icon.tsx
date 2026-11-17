@@ -111,6 +111,13 @@ const shapes = {
       <Rect x={13.5} y={13.5} width={6.5} height={6.5} rx={1.5} />
     </>
   ),
+  album: (
+    <>
+      <Rect x={6.5} y={6.5} width={14} height={13} rx={2} />
+      <Path d="M3.500 16.500V5.500a2 2 0 0 1 2-2h11" />
+      <Path d="m8 17.500 3.500-3.500 2.500 2.500 2-2 3 3" />
+    </>
+  ),
   calendar: (
     <>
       <Rect x={3.5} y={5} width={17} height={15.5} rx={2.2} />

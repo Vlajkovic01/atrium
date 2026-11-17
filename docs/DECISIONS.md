@@ -1006,6 +1006,11 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - **A picture opens in the file viewer** (D-052), not in a viewer of its
   own: one place for pictures, videos and the hand-off to other apps.
   Swiping between pictures and zooming come with the decision above.
-- Not yet: albums and search (the next two pull requests), the badge on
-  items not backed up (camera backup).
+- **Albums beside the timeline**, switched at the top of Photos rather
+  than a tab of their own; an album opens over them. Choosing pictures
+  (a long press) only adds to or takes out of albums for now: moving
+  photos to the trash from the timeline waits for a reason to have two
+  ways of deleting files on a phone.
+- Not yet: search (the next pull request), the badge on items not backed
+  up (camera backup).
 
