@@ -1,10 +1,10 @@
-import type { components } from "@atrium/shared";
+import { devicesApi, type components, type PairingDetails } from "@atrium/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
 
-import { api, ApiError, call } from "../api.ts";
+import { api, ApiError } from "../api.ts";
 import type { IconName } from "../components/Icon.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { PhoneLink } from "../components/PhoneLink.tsx";
@@ -12,8 +12,9 @@ import { Badge, Button, Card, Check, ErrorMessage, Field, Notice, PageHeader } f
 import { formatDateTime } from "../i18n.ts";
 import { useSession } from "../session.tsx";
 
-type PairingDetails = components["schemas"]["PairingDetails"];
 type DeviceKind = components["schemas"]["DeviceKind"];
+
+const devices = devicesApi(api);
 
 const kindIcon: Record<DeviceKind, IconName> = { web: "browser", mobile: "phone", tv: "tv", other: "device" };
 
@@ -44,7 +45,7 @@ function SessionList() {
   const [error, setError] = useState<unknown>(null);
   const sessions = useQuery({
     queryKey: ["sessions"],
-    queryFn: () => call(api.GET("/api/v1/sessions")),
+    queryFn: devices.sessions,
   });
 
   const revoke = async (id: string, name: string, current: boolean): Promise<void> => {
@@ -59,7 +60,7 @@ function SessionList() {
         return;
       }
 
-      await call(api.DELETE("/api/v1/sessions/{id}", { params: { path: { id } } }));
+      await devices.signOut(id);
       await queryClient.invalidateQueries({ queryKey: ["sessions"] });
     } catch (e) {
       setError(e);
@@ -156,9 +157,7 @@ function ApproveDevice() {
   const find = (event: FormEvent): void => {
     event.preventDefault();
     void run(async () => {
-      setDetails(
-        await call(api.GET("/api/v1/auth/pairing/{userCode}", { params: { path: { userCode: code.trim() } } })),
-      );
+      setDetails(await devices.pairing(code.trim()));
     });
   };
 
@@ -177,12 +176,7 @@ function ApproveDevice() {
     }
 
     void run(async () => {
-      await call(
-        api.POST("/api/v1/auth/pairing/{userCode}/approve", {
-          params: { path: { userCode: details.userCode } },
-          body: { readOnly, hidePersonalLibrary: hidePersonal },
-        }),
-      );
+      await devices.approve(details.userCode, { readOnly, hidePersonalLibrary: hidePersonal });
       finish("approved");
       await queryClient.invalidateQueries({ queryKey: ["sessions"] });
     });
@@ -194,9 +188,7 @@ function ApproveDevice() {
     }
 
     void run(async () => {
-      await call(
-        api.POST("/api/v1/auth/pairing/{userCode}/deny", { params: { path: { userCode: details.userCode } } }),
-      );
+      await devices.deny(details.userCode);
       finish("denied");
     });
   };
