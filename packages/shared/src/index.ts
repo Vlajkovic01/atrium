@@ -95,3 +95,5 @@ export type {
 } from "./notifications.ts";
 export { changeEffects, pullChanges } from "./sync/changes.ts";
 export type { ChangeEffects, ChangeInfo, ChangePull } from "./sync/changes.ts";
+export { nextRange, offlineTotals, planOffline } from "./offline/plan.ts";
+export type { KeptFile, OfflinePlan } from "./offline/plan.ts";
