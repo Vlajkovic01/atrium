@@ -21,6 +21,28 @@ export { isLocalHost, parseServerAddress } from "./connect/address.ts";
 export type { ServerAddress } from "./connect/address.ts";
 export { buildPhoneLink, parsePairingLink, parsePhoneLink } from "./connect/codes.ts";
 export type { PairingLink, PhoneLink } from "./connect/codes.ts";
+export {
+  defaultFileOrder,
+  fileOrderKey,
+  fileOrderLabelKey,
+  fileSorts,
+  filesApi,
+  homeLibrary,
+  parseFileOrder,
+} from "./files/api.ts";
+export type {
+  BatchItem,
+  FileOrder,
+  FileSort,
+  FilesApi,
+  LibraryInfo,
+  NodeInfo,
+  NodePage,
+  SignedUrl,
+} from "./files/api.ts";
+export { daysUntil, formatBytes, formatDateTime, formatDay } from "./files/format.ts";
+export { TEXT_PREVIEW_LIMIT, fileCategory, fileExtension, previewKind } from "./files/kind.ts";
+export type { FileCategory, PreviewKind } from "./files/kind.ts";
 export { TusUpload, encodeMetadata } from "./upload/tus.ts";
 export type { ConflictPolicy, TusTransport, UploadRequest, UploadSource, UploadStatus } from "./upload/tus.ts";
 export { UploadQueue } from "./upload/queue.ts";

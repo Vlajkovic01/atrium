@@ -1,4 +1,13 @@
-import { defaultLocale, isLocale, messages, pickLocale, supportedLocales, type Locale } from "@atrium/shared";
+import {
+  defaultLocale,
+  formatBytes as sharedFormatBytes,
+  formatDateTime as sharedFormatDateTime,
+  isLocale,
+  messages,
+  pickLocale,
+  supportedLocales,
+  type Locale,
+} from "@atrium/shared";
 import i18next from "i18next";
 import ICU from "i18next-icu";
 import { initReactI18next } from "react-i18next";
@@ -53,25 +62,12 @@ export async function initI18n(): Promise<void> {
 
 /** A size such as "12.4 GB", formatted for the current language. */
 export function formatBytes(bytes: number): string {
-  const units = ["byte", "kilobyte", "megabyte", "gigabyte", "terabyte"] as const;
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit++;
-  }
-
-  return new Intl.NumberFormat(currentLocale(), {
-    style: "unit",
-    unit: units[unit],
-    unitDisplay: "short",
-    maximumFractionDigits: value >= 100 || unit === 0 ? 0 : 1,
-  }).format(value);
+  return sharedFormatBytes(bytes, currentLocale());
 }
 
 /** A moment such as "10 Nov 2026, 14:32", formatted for the current language. */
 export function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat(currentLocale(), { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
+  return sharedFormatDateTime(iso, currentLocale());
 }
 
 /** How long ago, such as "2 days ago", in the current language. */
