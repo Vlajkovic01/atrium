@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { Icon } from "../components/Icon.tsx";
 import { currentLocale } from "../i18n.ts";
-import { groupByDay, justify } from "./layout.ts";
+import { groupByDay, justify } from "@atrium/shared";
 
 export type PhotoItem = components["schemas"]["PhotoItemView"];
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bucketRange, groupByDay, justify, parseSearch } from "./layout.ts";
+import { bucketRange, groupByDay, justify, parseSearch } from "../src/photos/layout.ts";
 
 describe("justify", () => {
   it("fills every row but the last to the container width", () => {
