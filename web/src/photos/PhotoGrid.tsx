@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { Icon } from "../components/Icon.tsx";
 import { currentLocale } from "../i18n.ts";
-import { groupByDay, justify } from "@atrium/shared";
+import { formatDuration, formatPhotoDay, groupByDay, justify } from "@atrium/shared";
 
 export type PhotoItem = components["schemas"]["PhotoItemView"];
 
@@ -13,19 +13,10 @@ const GAP = 4;
 
 /** "Thursday, 2 May 2024" for a day of local clock time (D-034). */
 export function formatDay(day: string): string {
-  return new Intl.DateTimeFormat(currentLocale(), { dateStyle: "full", timeZone: "UTC" }).format(
-    new Date(`${day}T12:00:00Z`),
-  );
+  return formatPhotoDay(day, currentLocale());
 }
 
-/** "0:42" or "1:02:03". */
-export function formatDuration(ms: number): string {
-  const total = Math.round(ms / 1000);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = String(total % 60).padStart(2, "0");
-  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
-}
+export { formatDuration } from "@atrium/shared";
 
 /**
  * The photo grid (UX.md Photos): days with justified rows of thumbnails.

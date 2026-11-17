@@ -190,7 +190,8 @@
       "server": "Prijava na {server}"
     },
     "photos": {
-      "soon": "Vaše fotografije će se ovde prikazivati u sledećoj verziji aplikacije."
+      "smaller": "Manje slike",
+      "larger": "Veće slike"
     },
     "files": {
       "selectAll": "Izaberi sve",

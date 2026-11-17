@@ -1,3 +1,4 @@
+import { formatTakenAt } from "@atrium/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,7 +7,7 @@ import { api, call, currentAccessToken, refreshAccessToken } from "../api.ts";
 import { Icon } from "../components/Icon.tsx";
 import { Button, ErrorMessage } from "../components/ui.tsx";
 import { downloadFile } from "../files/actions.ts";
-import { formatBytes, formatDateTime } from "../i18n.ts";
+import { currentLocale, formatBytes } from "../i18n.ts";
 import { formatDuration, type PhotoItem } from "./PhotoGrid.tsx";
 
 /**
@@ -158,7 +159,7 @@ export function Viewer(props: {
           <aside className="viewer-info" aria-label={t("photos.info")}>
             <dl>
               <dt>{t("photos.taken")}</dt>
-              <dd>{formatDateTime(item.capturedAt.replace(/Z$|[+-]\d\d:\d\d$/, ""))}</dd>
+              <dd>{formatTakenAt(item.capturedAt, currentLocale())}</dd>
               {details.data?.cameraMake || details.data?.cameraModel ? (
                 <>
                   <dt>{t("photos.camera")}</dt>

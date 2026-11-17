@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { bucketRange, groupByDay, justify, parseSearch } from "../src/photos/layout.ts";
+import {
+  bucketRange,
+  formatDuration,
+  formatPhotoDay,
+  formatTakenAt,
+  groupByDay,
+  justify,
+  parseSearch,
+} from "../src/photos/layout.ts";
 
 describe("justify", () => {
   it("fills every row but the last to the container width", () => {
@@ -77,5 +85,32 @@ describe("parseSearch", () => {
 describe("bucketRange", () => {
   it("ends at the start of the next month, across the year", () => {
     expect(bucketRange(2023, 12)).toEqual({ from: "2023-12-01T00:00:00Z", to: "2024-01-01T00:00:00Z" });
+  });
+});
+
+describe("photo dates and lengths", () => {
+  it("writes the day of a photo in full, in the language's own way", () => {
+    // The punctuation differs between versions of the language data; the parts do not.
+    expect(formatPhotoDay("2024-05-02", "en-GB")).toMatch(/^Thursday,? 2 May 2024$/);
+    expect(formatPhotoDay("2024-05-02", "sr-Latn")).toContain("2024");
+  });
+
+  it("keeps the day of local clock time, whatever the time zone", () => {
+    expect(formatPhotoDay("2024-12-31", "en-US")).toContain("December 31, 2024");
+  });
+
+  it("writes lengths as minutes and seconds, with hours when needed", () => {
+    expect(formatDuration(0)).toBe("0:00");
+    expect(formatDuration(42_400)).toBe("0:42");
+    expect(formatDuration(62_000)).toBe("1:02");
+    expect(formatDuration(3_723_000)).toBe("1:02:03");
+  });
+});
+
+describe("when a photo was taken", () => {
+  it("shows the clock of the capture time, whatever offset it carries", () => {
+    for (const captured of ["2026-10-15T09:00:00Z", "2026-10-15T09:00:00+00:00", "2026-10-15T09:00:00.000Z"]) {
+      expect(formatTakenAt(captured, "en-GB")).toMatch(/15 Oct 2026,? 09:00/);
+    }
   });
 });

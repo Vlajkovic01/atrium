@@ -61,5 +61,14 @@ export type {
 } from "./upload/queue.ts";
 export { photosApi } from "./photos/api.ts";
 export type { MediaInfo, PhotoItem, PhotoPage, PhotosApi, TimelineBucket } from "./photos/api.ts";
-export { bucketRange, dayOf, groupByDay, justify, parseSearch } from "./photos/layout.ts";
+export {
+  bucketRange,
+  dayOf,
+  formatDuration,
+  formatPhotoDay,
+  formatTakenAt,
+  groupByDay,
+  justify,
+  parseSearch,
+} from "./photos/layout.ts";
 export type { DateRange, Day, ParsedSearch, Placed, Sized } from "./photos/layout.ts";

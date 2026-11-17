@@ -190,7 +190,8 @@
       "server": "Signing in to {server}"
     },
     "photos": {
-      "soon": "Your photos will be shown here in the next version of the app."
+      "smaller": "Smaller pictures",
+      "larger": "Larger pictures"
     },
     "files": {
       "selectAll": "Select all",
