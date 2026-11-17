@@ -1,82 +1,18 @@
-import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
-import { createHash } from "node:crypto";
+import { expect, test, type APIRequestContext } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 
-// Runs after connect.shots.ts (file names are run in order), which sets
-// the server up and leaves the admin "ana" with an empty library.
-const SERVER = "http://127.0.0.1:5192";
-const OUT = resolve("../screenshots/mobile");
-const PASSWORD = "correct horse battery";
+import { SERVER, asAna, shot, signIn, signOut } from "./helpers";
 
-mkdirSync(OUT, { recursive: true });
-
-async function shot(page: Page, name: string): Promise<void> {
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: join(OUT, `${name}.png`) });
-}
-
-interface Node {
-  readonly id: string;
-}
+// Runs after 01-connect, which sets the server up and leaves the admin
+// "ana" with an empty library.
 
 /** Files of many kinds, nested folders, a folder with more than one page, and a folder of the server shown as it is. */
 async function seed(request: APIRequestContext): Promise<void> {
-  const login = await request.post(`${SERVER}/api/v1/auth/login`, {
-    data: {
-      name: "ana",
-      password: PASSWORD,
-      device: { name: "Preview seed", kind: "other", platform: null, appVersion: null },
-    },
-  });
-  const tokens = ((await login.json()) as { tokens: { accessToken: string; user: { id: string } } }).tokens;
-  const token = tokens.accessToken;
-  const headers = { Authorization: `Bearer ${token}` };
-
-  const libraries = (await (await request.get(`${SERVER}/api/v1/libraries`, { headers })).json()) as {
-    kind: string;
-    rootNodeId: string;
-  }[];
-  const root = libraries.find((l) => l.kind === "personal")!.rootNodeId;
-  const existing = (await (await request.get(`${SERVER}/api/v1/nodes/${root}/children`, { headers })).json()) as {
-    items: unknown[];
-  };
-  if (existing.items.length > 0) {
+  const { headers, userId, root, children, folder, upload } = await asAna(request);
+  if ((await children(root)).length > 0) {
     return;
   }
-
-  const folder = async (parentId: string, name: string): Promise<string> => {
-    const response = await request.post(`${SERVER}/api/v1/nodes`, { headers, data: { parentId, name } });
-    expect(response.ok(), await response.text()).toBe(true);
-    return ((await response.json()) as Node).id;
-  };
-
-  // The upload protocol by hand (tus): create, then send the content in the server's chunk size.
-  const upload = async (parentId: string, name: string, content: Buffer): Promise<void> => {
-    const tus = { ...headers, "Tus-Resumable": "1.0.0" };
-    const metadata = Object.entries({ parentId, name, onConflict: "fail" })
-      .map(([key, value]) => `${key} ${Buffer.from(value).toString("base64")}`)
-      .join(",");
-    const created = await request.post(`${SERVER}/api/v1/uploads`, {
-      headers: { ...tus, "Upload-Length": String(content.length), "Upload-Metadata": metadata },
-    });
-    expect(created.status(), `${name}: ${await created.text()}`).toBeLessThan(300);
-    const location = created.headers()["location"]!;
-    const chunkSize = Number(created.headers()["atrium-chunk-size"]) || content.length;
-    for (let offset = 0; offset < content.length; offset += chunkSize) {
-      const chunk = content.subarray(offset, offset + chunkSize);
-      const sent = await request.patch(location.startsWith("http") ? location : `${SERVER}${location}`, {
-        headers: {
-          ...tus,
-          "Content-Type": "application/offset+octet-stream",
-          "Upload-Offset": String(offset),
-          "Upload-Checksum": `sha256 ${createHash("sha256").update(chunk).digest("base64")}`,
-        },
-        data: chunk,
-      });
-      expect(sent.status(), `${name}: ${await sent.text()}`).toBeLessThan(300);
-    }
-  };
 
   const documents = await folder(root, "Documents");
   await folder(root, "Holiday pictures");
@@ -109,7 +45,7 @@ async function seed(request: APIRequestContext): Promise<void> {
   writeFileSync(join(shared, "readme.txt"), "hello");
   const library = await request.post(`${SERVER}/api/v1/admin/libraries`, {
     headers,
-    data: { name: "Family archive", path: shared, userIds: [tokens.user.id], showInTimeline: false },
+    data: { name: "Family archive", path: shared, userIds: [userId], showInTimeline: false },
   });
   expect(library.ok(), await library.text()).toBe(true);
 }
@@ -125,14 +61,7 @@ for (const [language, locale, scheme] of [
       await seed(request);
       const text = (en: string, sr: string) => (language === "en" ? en : sr);
 
-      // Sign in by typing the address.
-      await page.goto("/");
-      await page.getByRole("button", { name: text("Type the server's address", "Upiši adresu servera") }).click();
-      await page.getByLabel(text("Address", "Adresa")).fill(new URL(baseURL!).host);
-      await page.getByRole("button", { name: text("Continue", "Nastavi") }).click();
-      await page.getByLabel(text("Name", "Ime")).fill("ana");
-      await page.getByLabel(text("Password", "Lozinka")).fill(PASSWORD);
-      await page.getByRole("button", { name: text("Sign in", "Prijavi se") }).click();
+      await signIn(page, baseURL!, text);
 
       // The app opens on Files, at the person's own files.
       await expect(page.getByRole("heading", { name: text("My files", "Moji fajlovi") })).toBeVisible();
@@ -182,7 +111,7 @@ for (const [language, locale, scheme] of [
 
       // Up by the back button.
       await page
-        .getByRole("button", { name: text("Back", "Nazad") })
+        .getByRole("button", { name: text("Back", "Nazad"), exact: true })
         .filter({ visible: true })
         .click();
       await expect(
@@ -194,7 +123,7 @@ for (const [language, locale, scheme] of [
       await expect(page.getByText(text("This folder is empty.", "Ovaj folder je prazan."))).toBeVisible();
       await shot(page, `${language}-25-empty`);
       await page
-        .getByRole("button", { name: text("Back", "Nazad") })
+        .getByRole("button", { name: text("Back", "Nazad"), exact: true })
         .filter({ visible: true })
         .click();
 
@@ -216,7 +145,7 @@ for (const [language, locale, scheme] of [
       await expect(page.getByText(text("230 items", "230 stavki"))).toBeVisible();
       await shot(page, `${language}-26-many-end`);
       await page
-        .getByRole("button", { name: text("Back", "Nazad") })
+        .getByRole("button", { name: text("Back", "Nazad"), exact: true })
         .filter({ visible: true })
         .click();
 
@@ -250,13 +179,7 @@ for (const [language, locale, scheme] of [
       await page.getByRole("button", { name: text("Try again", "Pokušaj ponovo") }).click();
       await expect(page.getByText("Taxes", { exact: true }).filter({ visible: true })).toHaveCount(1);
 
-      // Leave the server as the next run expects it.
-      await page.getByRole("tab", { name: text("Account", "Nalog") }).click();
-      await page.getByRole("button", { name: text("Sign out of this server", "Odjavi se sa ovog servera") }).click();
-      await page.getByRole("button", { name: text("Sign out of this server", "Odjavi se sa ovog servera") }).click();
-      await expect(
-        page.getByText(text("Your files, on your own server", "Vaši fajlovi, na vašem serveru")),
-      ).toBeVisible();
+      await signOut(page, text);
     });
   });
 }

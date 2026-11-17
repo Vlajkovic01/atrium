@@ -944,5 +944,14 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - **Why a folder cannot be changed is said in the folder** (D-040), with
   the same words as the web app. The mobile app has no administration, so
   it does not link to one.
+- **Actions without a confirmation, deletes with one.** Moving to the
+  trash happens at once and offers Undo, as on the web: nothing is lost
+  and the trash keeps it 30 days. Deleting for good always asks and
+  counts what goes, folders with their contents. Choosing several items
+  starts with a long press, the platform's habit; the system's back
+  button ends the choosing before it leaves the folder.
+- **The trash is reached from where files start**, not from a tab of its
+  own: it is visited rarely, and four tabs (with Watch in Phase 7) are
+  the most a phone's bottom edge holds comfortably.
 - Built in three pull requests: browsing; actions and the trash; opening
   files, with PDF inside the app and "Open in another app" (D-048).
