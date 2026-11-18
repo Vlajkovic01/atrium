@@ -7,6 +7,7 @@ import { View } from "react-native";
 import { forgetLocalCopies } from "../src/files/local";
 import { loadFileOrder } from "../src/files/order.ts";
 import { initI18n } from "../src/i18n.ts";
+import { LockProvider } from "../src/lock/lock.tsx";
 import { loadDensity } from "../src/photos/density.ts";
 import { ServersProvider } from "../src/servers.tsx";
 import { useTheme } from "../src/theme.ts";
@@ -41,7 +42,9 @@ export default function RootLayout() {
     <QueryClientProvider client={queries}>
       <ServersProvider>
         <StatusBar style={isDark ? "light" : "dark"} />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }} />
+        <LockProvider>
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }} />
+        </LockProvider>
       </ServersProvider>
     </QueryClientProvider>
   );

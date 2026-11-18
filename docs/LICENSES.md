@@ -141,6 +141,7 @@ repository. None is GPL or AGPL (flag 3).
 | react-native-pdf-renderer | 2.3.0 | MIT | PDF inside the app, drawn by the system (Android PdfRenderer, iOS PDFKit), so no PDF engine is carried. Chosen over react-native-pdf (MIT), which bundles pdfium and several MB per processor type |
 | expo-document-picker | 58.0.5 | MIT | Choosing files on the phone to upload, through the system's own chooser; nothing else is read |
 | expo-image-picker | 58.0.10 | MIT | Choosing photos and videos (the system's photo picker) and taking them with the system camera, to upload. Its microphone permission is turned off and its storage permissions are blocked |
+| expo-local-authentication | 58.0.3 | MIT | The optional lock: the phone's own fingerprint, face or screen-lock prompt; Atrium only learns whether it succeeded |
 | react-native-web, react-dom | 0.21.4, 19.3.0 | MIT | Development only: shows the app's screens in a browser (`mobile/preview`). Not in the app |
 | Playwright | 1.65.0 | Apache-2.0 | Development only, as for the web app |
 

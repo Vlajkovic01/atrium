@@ -63,6 +63,12 @@
           "cameraPermission": "Atrium uses the camera to take a photo or video you upload to your server.",
           "microphonePermission": false
         }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Atrium uses Face ID to unlock the app when you turn the lock on."
+        }
       ]
     ],
     "experiments": {

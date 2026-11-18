@@ -451,8 +451,14 @@ the app is closed are not part of this.
 
 ### Security
 
-Optional biometric lock on app open and after a timeout. App content is
-hidden in the app switcher when the lock is on.
+Optional biometric lock on app open and after a timeout. The app stays
+visible in the app switcher and screenshots stay allowed (owner, D-057).
+
+Built (D-057): under Account, off by default and offered only when the
+phone has a fingerprint, face or screen lock. Turning it on asks to
+unlock once. The app opens locked and locks again after a chosen time
+away (at once, 1, 5 or 15 minutes); the lock screen covers the app, which
+stays where it was beneath.
 
 ### Approve a device
 
