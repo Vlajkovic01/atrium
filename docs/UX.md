@@ -344,6 +344,8 @@ the active one; each has its own session, settings and offline files.
 Bottom tabs: Photos, Files, Watch (Phase 7), Account. The app opens on
 Photos. Search and notifications open above the tabs. The switcher between servers,
 adding a server and signing out are under Account.
+While the server in front is reached over plain HTTP, a strip above the
+tabs says "Not encrypted" and opens the explanation when tapped (D-049).
 
 ### Photos
 

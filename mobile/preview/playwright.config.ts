@@ -31,6 +31,9 @@ export default defineConfig({
     viewport: { width: 412, height: 915 },
     deviceScaleFactor: 2,
     hasTouch: true,
+    // A name without a dot that reaches this machine, for an address that is
+    // local but not loopback (15-insecure).
+    launchOptions: { args: ["--host-resolver-rules=MAP atrium-home 127.0.0.1"] },
   },
   webServer: [
     {

@@ -30,7 +30,8 @@ Publishing anywhere is the owner's decision.
 - **Type the address**, then sign in. The app asks the server who it is
   before a password is typed.
 - Plain HTTP is accepted only to a local address (D-049). The phone must
-  reach the server: same Wi-Fi, a VPN, or a public HTTPS address.
+  reach the server: same Wi-Fi, a VPN, or a public HTTPS address. While
+  connected over plain HTTP the app shows "Not encrypted" above the tabs.
 - Several servers can be added; Account switches between them. Each has
   its own session, settings, offline files and camera backup.
 
@@ -122,5 +123,3 @@ separately. The usual ones:
   from its start the next time.
 - Freeing space on the phone after backup is not built.
 - No emulator tests in CI yet; the phone checks are manual.
-- A server on plain HTTP in the local network is not yet marked as
-  insecure inside the app (DESIGN 12, risk 6).

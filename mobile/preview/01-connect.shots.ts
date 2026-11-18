@@ -105,7 +105,10 @@ for (const [language, locale, scheme] of [
       // The app opens on Photos; who is signed in where is under Account.
       await expect(page.getByRole("heading", { name: text("Photos", "Fotografije") })).toBeVisible();
       await page.getByRole("tab", { name: text("Account", "Nalog") }).click();
-      await expect(page.getByText(text("This connection is not encrypted", "Ova veza nije šifrovana"))).toBeVisible();
+      await expect(page.getByText(text("Sign out of this server", "Odjavi se sa ovog servera"))).toBeVisible();
+      // Loopback never leaves the device, so it is not marked unencrypted;
+      // 15-insecure covers an address that is.
+      await expect(page.getByText(text("This connection is not encrypted", "Ova veza nije šifrovana"))).toHaveCount(0);
       await shot(page, `${language}-08-account`);
 
       // The session survives a restart of the app.

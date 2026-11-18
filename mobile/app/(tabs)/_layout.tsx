@@ -1,10 +1,13 @@
 import { Redirect } from "expo-router";
-import { Tabs } from "expo-router/js-tabs";
+import { BottomTabBar, Tabs } from "expo-router/js-tabs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BackupProvider } from "../../src/backup/BackupProvider.tsx";
 import { Icon, type IconName } from "../../src/components/Icon.tsx";
+import { InsecureStrip } from "../../src/components/InsecureStrip.tsx";
 import { useNotifications } from "../../src/notifications.ts";
 import { OfflineProvider } from "../../src/offline/OfflineProvider.tsx";
 import { useServers } from "../../src/servers.tsx";
@@ -41,6 +44,9 @@ export default function TabsLayout() {
 
 function SignedInTabs() {
   const { t } = useTranslation();
+  const { active } = useServers();
+  // The strip over the tabs, when shown, pushes the uploads panel up by its height.
+  const [stripHeight, setStripHeight] = useState(0);
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -55,6 +61,14 @@ function SignedInTabs() {
   return (
     <>
       <Tabs
+        tabBar={(props) => (
+          <>
+            <View onLayout={(event) => setStripHeight(event.nativeEvent.layout.height)}>
+              {active ? <InsecureStrip url={active.url} /> : null}
+            </View>
+            <BottomTabBar {...props} />
+          </>
+        )}
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: colors.accent,
@@ -82,7 +96,7 @@ function SignedInTabs() {
           }}
         />
       </Tabs>
-      <UploadsPanel bottom={64 + insets.bottom + space.sm} />
+      <UploadsPanel bottom={64 + insets.bottom + stripHeight + space.sm} />
     </>
   );
 }
