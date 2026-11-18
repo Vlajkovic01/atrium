@@ -69,44 +69,14 @@ public static class PlaybackEndpoints
     private static async Task<Results<Ok<PlaybackView>, ProblemHttpResult>> DecideAsync(
         Guid id, PlaybackRequest request, HttpContext http, NodeService nodes, AtriumDbContext db, SignedUrls signer, CancellationToken ct)
     {
-        if (!Valid(request.Profile))
+        var (decided, problem) = await DecideForAsync(id, request.Profile, request.AudioStream, http, nodes, db, ct);
+        if (decided is not { } d)
         {
-            return ApiProblem.Invalid();
+            return problem!;
         }
 
-        if (await nodes.FindAsync(http.User.Actor(), id, ct) is not { } found || found.Node.Kind != NodeKind.File)
-        {
-            return ApiProblem.Missing();
-        }
-
+        var (found, info, container, decision) = d;
         var node = found.Node;
-        if (node.MediaKind != MediaKind.Video)
-        {
-            return ApiProblem.Create(StatusCodes.Status400BadRequest, NotVideo);
-        }
-
-        var info = node.BlobId is { } blobId
-            ? await db.MediaInfos.AsNoTracking().SingleOrDefaultAsync(m => m.BlobId == blobId, ct)
-            : await db.MediaInfos.AsNoTracking().SingleOrDefaultAsync(m => m.NodeId == node.Id, ct);
-
-        // Facts read by an earlier version lack the streams; the media job reads them again.
-        if (info is null || info.ExtractorVersion < MediaInfo.CurrentExtractorVersion)
-        {
-            return ApiProblem.Create(StatusCodes.Status409Conflict, NotReady);
-        }
-
-        var container = PlaybackDecider.Container(info.Format, node.Name, info.Streams);
-        if (PlaybackDecider.Decide(request.Profile, container, info.Streams, info.BitRate, request.AudioStream) is not { } decision)
-        {
-            return ApiProblem.Create(StatusCodes.Status422UnprocessableEntity, Unreadable);
-        }
-
-        if (decision.Method != PlaybackMethod.DirectPlay && !request.Profile.Hls)
-        {
-            return ApiProblem.Create(
-                StatusCodes.Status422UnprocessableEntity, CannotStream, new() { ["reasons"] = decision.Reasons });
-        }
-
         SignedUrlResponse? original = null;
         if (decision.Method == PlaybackMethod.DirectPlay)
         {
@@ -120,6 +90,53 @@ public static class PlaybackEndpoints
 
         return TypedResults.Ok(new PlaybackView(
             decision.Method, decision.Reasons, container, info.DurationMs, decision.VideoStream, decision.AudioStream, info.Streams, original));
+    }
+
+    /// <summary>A video's facts and the decision for a client, as the decision and a stream both need them.</summary>
+    internal sealed record Decided(AccessibleNode Found, MediaInfo Info, string Container, PlaybackDecision Decision);
+
+    internal static async Task<(Decided? Decided, ProblemHttpResult? Problem)> DecideForAsync(
+        Guid id, ClientProfile profile, int? audioStream, HttpContext http, NodeService nodes, AtriumDbContext db, CancellationToken ct)
+    {
+        if (!Valid(profile))
+        {
+            return (null, ApiProblem.Invalid());
+        }
+
+        if (await nodes.FindAsync(http.User.Actor(), id, ct) is not { } found || found.Node.Kind != NodeKind.File)
+        {
+            return (null, ApiProblem.Missing());
+        }
+
+        var node = found.Node;
+        if (node.MediaKind != MediaKind.Video)
+        {
+            return (null, ApiProblem.Create(StatusCodes.Status400BadRequest, NotVideo));
+        }
+
+        var info = node.BlobId is { } blobId
+            ? await db.MediaInfos.AsNoTracking().SingleOrDefaultAsync(m => m.BlobId == blobId, ct)
+            : await db.MediaInfos.AsNoTracking().SingleOrDefaultAsync(m => m.NodeId == node.Id, ct);
+
+        // Facts read by an earlier version lack the streams; the media job reads them again.
+        if (info is null || info.ExtractorVersion < MediaInfo.CurrentExtractorVersion)
+        {
+            return (null, ApiProblem.Create(StatusCodes.Status409Conflict, NotReady));
+        }
+
+        var container = PlaybackDecider.Container(info.Format, node.Name, info.Streams);
+        if (PlaybackDecider.Decide(profile, container, info.Streams, info.BitRate, audioStream) is not { } decision)
+        {
+            return (null, ApiProblem.Create(StatusCodes.Status422UnprocessableEntity, Unreadable));
+        }
+
+        if (decision.Method != PlaybackMethod.DirectPlay && !profile.Hls)
+        {
+            return (null, ApiProblem.Create(
+                StatusCodes.Status422UnprocessableEntity, CannotStream, new() { ["reasons"] = decision.Reasons }));
+        }
+
+        return (new Decided(found, info, container, decision), null);
     }
 
     private static bool Valid(ClientProfile? profile) =>

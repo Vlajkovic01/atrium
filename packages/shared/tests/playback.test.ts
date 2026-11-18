@@ -95,6 +95,7 @@ describe("playback texts", () => {
     "audio_channels",
     "audio_not_streamable",
     "bit_rate",
+    "keyframes_unknown",
   ];
 
   const lookup = (messages: unknown, key: string) =>

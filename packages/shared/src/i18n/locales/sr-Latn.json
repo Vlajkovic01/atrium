@@ -146,7 +146,12 @@
       "not_video": "Mogu da se puste samo video snimci.",
       "not_ready": "Atrium još čita ovaj video. Pokušajte ponovo za trenutak.",
       "unreadable": "Ovaj fajl nema video koji može da se pusti.",
-      "client_cannot_stream": "Ovaj video mora da se strimuje, a ova aplikacija ili pregledač to ne mogu."
+      "client_cannot_stream": "Ovaj video mora da se strimuje, a ova aplikacija ili pregledač to ne mogu.",
+      "direct_play": "Ovaj video se pušta takav kakav je; ne treba ga strimovati.",
+      "busy": "Server već pretvara onoliko videa koliko može. Pokušajte ponovo za nekoliko minuta.",
+      "too_many_streams": "Već gledate onoliko videa koliko jedna osoba može odjednom. Zatvorite jedan i pokušajte ponovo.",
+      "remote_storage": "Strimovanje sa ove lokacije za skladištenje još nije dostupno. Video snimci koji se puštaju takvi kakvi jesu i dalje rade.",
+      "stream_failed": "Ovaj deo videa nije mogao da se pretvori. Pokušajte ponovo ili izaberite drugi kvalitet."
     }
   },
   "mobile": {
@@ -1084,7 +1089,8 @@
       "audio_channels": "Zvuk ima više kanala nego što ovaj uređaj pušta.",
       "audio_not_streamable": "Format zvuka ne može da se strimuje takav kakav je.",
       "bit_rate": "Video traži bržu vezu nego što izabrani kvalitet dozvoljava.",
-      "other": "Server je naveo razlog koji ova aplikacija još ne poznaje."
+      "other": "Server je naveo razlog koji ova aplikacija još ne poznaje.",
+      "keyframes_unknown": "Ključni kadrovi videa nisu pronađeni, pa se video pretvara umesto da se kopira."
     }
   }
 }

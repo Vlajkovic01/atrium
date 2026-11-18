@@ -861,7 +861,10 @@ Rules, in order (D-059):
   derived data in the cache location. FFmpeg is told the exact cut
   times, so a restart after a seek keeps every boundary of the playlist.
 - A seek outside what has been produced restarts FFmpeg at the requested
-  segment. This is what makes seeking fast.
+  segment. This is what makes seeking fast. FFmpeg writes each segment as
+  a file of its own starting at zero; the server serves one init segment
+  and moves each segment's decode times to its place in the playlist
+  (D-062), so segments of different runs join without a seam.
 - FFmpeg is paused when it is far ahead of the playback position and
   stopped when the session goes idle.
 - Segments are written to the cache and reused by later sessions with the

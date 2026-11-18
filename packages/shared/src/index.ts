@@ -104,4 +104,4 @@ export type { BackupChoice, BackupCounts, BackupPlan, BackupRecord, DeviceAsset 
 export { browserMediaProbe, browserProfile } from "./playback/profile.ts";
 export type { AudioCodecSupport, ClientProfile, HdrFormat, MediaProbe, VideoCodecSupport } from "./playback/profile.ts";
 export { playbackApi, playbackMethodKey, playbackReasonKeys } from "./playback/decision.ts";
-export type { MediaStream, PlaybackMethod, PlaybackView } from "./playback/decision.ts";
+export type { MediaStream, PlaybackMethod, PlaybackView, StreamView } from "./playback/decision.ts";

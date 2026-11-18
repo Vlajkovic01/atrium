@@ -146,7 +146,12 @@
       "not_video": "Only videos can be played.",
       "not_ready": "Atrium is still reading this video. Try again in a moment.",
       "unreadable": "This file has no video that can be played.",
-      "client_cannot_stream": "This video needs streaming, which this app or browser cannot play."
+      "client_cannot_stream": "This video needs streaming, which this app or browser cannot play.",
+      "direct_play": "This video plays as it is; it needs no streaming.",
+      "busy": "The server is already converting as many videos as it can. Try again in a few minutes.",
+      "too_many_streams": "You are already watching as many videos as one person can at once. Close one and try again.",
+      "remote_storage": "Streaming from this storage location is not available yet. Videos that play as they are still work.",
+      "stream_failed": "This part of the video could not be converted. Try again, or try another quality."
     }
   },
   "mobile": {
@@ -1084,7 +1089,8 @@
       "audio_channels": "The sound has more channels than this device plays.",
       "audio_not_streamable": "The sound's format cannot be streamed as it is.",
       "bit_rate": "The video needs a faster connection than the quality chosen allows.",
-      "other": "The server found a reason this app does not know yet."
+      "other": "The server found a reason this app does not know yet.",
+      "keyframes_unknown": "The video's keyframes could not be found, so it is converted instead of copied."
     }
   }
 }

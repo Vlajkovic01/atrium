@@ -151,6 +151,9 @@ public static class MediaSetup
         services.TryAddSingleton(options);
         services.AddSingleton<MetadataReader>();
         services.AddSingleton<Streaming.KeyframeIndex>();
+        services.TryAddSingleton(sp => Streaming.StreamLimits.For(sp.GetRequiredService<Atrium.Jobs.HardwareInfo>()));
+        services.AddSingleton<Streaming.StreamSessions>();
+        services.AddHostedService<Streaming.StreamSweeper>();
         services.AddSingleton<IImageEncoder>(_ => options.ImageWorker is { } start
             ? new WorkerImageEncoder(start, options.ImageWorkerProcesses, options.ToolTimeout)
             : new InProcessImageEncoder());

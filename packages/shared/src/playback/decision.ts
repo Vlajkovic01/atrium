@@ -6,6 +6,7 @@ import type { ClientProfile } from "./profile.ts";
 export type PlaybackView = components["schemas"]["PlaybackView"];
 export type PlaybackMethod = components["schemas"]["PlaybackMethod"];
 export type MediaStream = components["schemas"]["MediaStream"];
+export type StreamView = components["schemas"]["StreamView"];
 
 /** The calls a player makes before it plays (DESIGN.md 7.3). The server decides; clients never guess. */
 export function playbackApi(api: ApiClient) {
@@ -26,6 +27,26 @@ export function playbackApi(api: ApiClient) {
           body: { profile, audioStream: options.audioStream ?? null },
         }),
       ),
+
+    /**
+     * Opens an HLS stream when the decision was not to play the original.
+     * The answer's master URL needs no token: the stream's identifier is
+     * its access, and only this session has it.
+     */
+    openStream: (
+      nodeId: string,
+      profile: ClientProfile,
+      options: { readonly audioStream?: number; readonly startMs?: number } = {},
+    ): Promise<StreamView> =>
+      call(
+        api.POST("/api/v1/playback/sessions", {
+          body: { nodeId, profile, audioStream: options.audioStream ?? null, startMs: options.startMs ?? null },
+        }),
+      ),
+
+    /** Ends a stream, so the server stops making it. */
+    closeStream: (id: string): Promise<void> =>
+      call(api.DELETE("/api/v1/playback/sessions/{id}", { params: { path: { id } } })),
   };
 }
 
