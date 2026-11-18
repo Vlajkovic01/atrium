@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Icon, type IconName } from "../../src/components/Icon.tsx";
 import { useNotifications } from "../../src/notifications.ts";
 import { useServers } from "../../src/servers.tsx";
+import { SyncProvider } from "../../src/sync/SyncProvider.tsx";
 import { UploadsPanel } from "../../src/uploads/UploadsPanel.tsx";
 import { UploadsProvider } from "../../src/uploads/UploadsProvider.tsx";
 import { space, useTheme } from "../../src/theme.ts";
@@ -25,7 +26,9 @@ export default function TabsLayout() {
   // Uploads belong to the server in front, and start over with another.
   return (
     <UploadsProvider key={active.id}>
-      <SignedInTabs />
+      <SyncProvider>
+        <SignedInTabs />
+      </SyncProvider>
     </UploadsProvider>
   );
 }

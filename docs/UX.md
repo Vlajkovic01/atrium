@@ -425,6 +425,10 @@ what will be removed and only offers items the server has verified.
 
 ### Offline
 
+What is shown stays in step with the server while the app is open: a
+change made elsewhere appears within half a minute, without pulling down
+(D-055).
+
 "Make available offline" on files, folders, albums, movies and episodes.
 A Downloads screen shows progress and space used. Downloads resume after
 interruption. Offline items open without a connection; changes made on

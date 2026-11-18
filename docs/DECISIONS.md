@@ -1048,3 +1048,25 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   once, by the shared rule the web also uses.
 - Not yet: sharing into Atrium from other apps.
 
+## D-055 Offline on the phone: the change feed and the local database (Proposed, Phase 4)
+
+- **The phone reads the change feed** (D-047) when the app opens, every
+  half minute while it is in front, and when it comes back to the front.
+  What changed elsewhere is read again: the folders it is in, the items,
+  the trash when something went, the timeline when photos may have come
+  or gone. A first pull, or one after more than 30 days away, reads
+  everything again. Nothing runs while the app is in the background.
+- **The cursor is kept only once a pull was applied**, so a pull that fails
+  halfway is read again next time; applying an answer twice ends the
+  same (D-047).
+- **The pulling and its meaning are in the shared package** (`pullChanges`,
+  `changeEffects`), tested there, so the TV app and the web can use them.
+- **The app's own SQLite database** (expo-sqlite, already in the app)
+  holds the cursor per server, and will hold the offline copies. It has
+  versioned steps like the server's migrations. It holds nothing secret
+  and can be lost at any time: the app then reads everything again.
+  Signing out of a server removes its rows.
+- Alternative: reading open folders again on a timer. Simpler, but it
+  reads everything every time, never notices a change in a folder that is
+  not open, and gives offline copies nothing to follow.
+
