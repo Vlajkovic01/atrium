@@ -264,6 +264,41 @@
       "locked": "Atrium je zaključan",
       "lockedBody": "Otključajte otiskom, licem ili zaključavanjem ekrana telefona.",
       "unlock": "Otključaj"
+    },
+    "backup": {
+      "title": "Rezervna kopija kamere",
+      "folder": "Rezervna kopija kamere",
+      "intro": "Šalje fotografije i video snimke koje izaberete sa ovog telefona u Rezervnu kopiju kamere u vašim fajlovima na ovom serveru. Svaki se prepoznaje po sadržaju, pa se ništa što je već na serveru ne šalje ponovo, čak ni posle ponovne instalacije aplikacije.",
+      "neverDeletes": "Rezervna kopija nikad ništa ne briše sa ovog telefona.",
+      "turnOn": "Uključi rezervnu kopiju kamere",
+      "turnOff": "Isključi rezervnu kopiju kamere",
+      "denied": "Atrium ne sme da čita vaše fotografije i video snimke. Dozvolite to u podešavanjima telefona, pod Aplikacije, Atrium, Dozvole.",
+      "limited": "Dozvolili ste samo neke fotografije i snimke. Samo oni se kopiraju; dozvolite sve u podešavanjima telefona da bi se kopirali i ostali.",
+      "done": "{done} od {chosen} na serveru",
+      "waiting": "{count, plural, one {# čeka} few {# čekaju} other {# čeka}} · {size}",
+      "failed": "{count, plural, one {# nije moglo da se kopira.} few {# nisu mogla da se kopiraju.} other {# nije moglo da se kopira.}}",
+      "lastRun": "Poslednji put završeno {when}",
+      "whileOpen": "Za sada rezervna kopija radi dok je Atrium otvoren.",
+      "now": "Kopiraj sada",
+      "what": "Šta se kopira",
+      "photos": "Fotografije",
+      "videos": "Video snimci",
+      "albums": "Iz ovih albuma",
+      "allAlbums": "Svi albumi",
+      "when": "Kada",
+      "wifiOnly": "Samo na Wi-Fi mreži",
+      "chargingOnly": "Samo dok se puni",
+      "activity": {
+        "off": "Rezervna kopija kamere je isključena",
+        "noAccess": "Čeka se dozvola za čitanje fotografija i snimaka",
+        "waitingWifi": "Čeka se Wi-Fi",
+        "waitingCharging": "Čeka se da se telefon puni",
+        "reading": "Traže se nove fotografije i snimci…",
+        "checking": "Proverava se {name}",
+        "sending": "Šalje se {name} · {percent}%",
+        "unreachable": "Server nije dostupan; pokušaće se ponovo kasnije",
+        "idle": "Sve izabrano je kopirano"
+      }
     }
   },
   "nav": {

@@ -182,6 +182,17 @@ export function filesApi(api: ApiClient) {
         }),
       ),
 
+    /**
+     * Which of these contents (hex SHA-256) the person already has on the
+     * server, in any of their files: camera backup sends only the others.
+     */
+    ownedHashes: async (hashes: readonly string[]): Promise<ReadonlySet<string>> =>
+      new Set(
+        hashes.length === 0
+          ? []
+          : (await call(api.POST("/api/v1/uploads/check", { body: { hashes: [...hashes] } }))).owned,
+      ),
+
     /** Several items, or a folder: one ZIP, streamed by the server. */
     archiveUrl: (ids: readonly string[]): Promise<SignedUrl> =>
       call(api.POST("/api/v1/downloads/archive", { body: { ids: [...ids] } })),

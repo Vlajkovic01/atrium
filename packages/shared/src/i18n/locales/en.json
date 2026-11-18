@@ -264,6 +264,41 @@
       "locked": "Atrium is locked",
       "lockedBody": "Unlock with your fingerprint, face or the phone's screen lock.",
       "unlock": "Unlock"
+    },
+    "backup": {
+      "title": "Camera backup",
+      "folder": "Camera backup",
+      "intro": "Sends the photos and videos you choose from this phone to Camera backup in your files on this server. Each is known by its content, so nothing already on the server is sent again, even after reinstalling the app.",
+      "neverDeletes": "Nothing is ever deleted from this phone by backup.",
+      "turnOn": "Turn on camera backup",
+      "turnOff": "Turn off camera backup",
+      "denied": "Atrium may not read your photos and videos. Allow it in the phone's settings, under Apps, Atrium, Permissions.",
+      "limited": "You allowed only some photos and videos. Only those are backed up; allow all in the phone's settings to back up the rest.",
+      "done": "{done} of {chosen} on the server",
+      "waiting": "{count, plural, one {# waiting} other {# waiting}} · {size}",
+      "failed": "{count, plural, one {# could not be backed up.} other {# could not be backed up.}}",
+      "lastRun": "Last finished {when}",
+      "whileOpen": "For now, backup runs while Atrium is open.",
+      "now": "Back up now",
+      "what": "What to back up",
+      "photos": "Photos",
+      "videos": "Videos",
+      "albums": "From these albums",
+      "allAlbums": "All albums",
+      "when": "When",
+      "wifiOnly": "Only on Wi-Fi",
+      "chargingOnly": "Only while charging",
+      "activity": {
+        "off": "Camera backup is off",
+        "noAccess": "Waiting for permission to read photos and videos",
+        "waitingWifi": "Waiting for Wi-Fi",
+        "waitingCharging": "Waiting for the phone to charge",
+        "reading": "Looking for new photos and videos…",
+        "checking": "Checking {name}",
+        "sending": "Sending {name} · {percent}%",
+        "unreachable": "The server cannot be reached; trying again later",
+        "idle": "Everything chosen is backed up"
+      }
     }
   },
   "nav": {
