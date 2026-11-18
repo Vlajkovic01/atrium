@@ -4,6 +4,7 @@ import {
   filesApi,
   notificationsApi,
   photosApi,
+  playbackApi,
   searchApi,
   type AlbumsApi,
   type DevicesApi,
@@ -24,6 +25,7 @@ interface Calls {
   readonly search: SearchApi;
   readonly notifications: NotificationsApi;
   readonly devices: DevicesApi;
+  readonly playback: ReturnType<typeof playbackApi>;
 }
 
 const callsOf = new WeakMap<ServerSession, Calls>();
@@ -43,6 +45,8 @@ export interface ActiveServer {
   readonly notifications: NotificationsApi;
   /** The person's devices, and approving a TV. */
   readonly devices: DevicesApi;
+  /** How a video plays here, and its streams (DESIGN.md 7.3). */
+  readonly playback: ReturnType<typeof playbackApi>;
 }
 
 /**
@@ -67,6 +71,7 @@ export function useActiveServer(): ActiveServer {
       search: searchApi(session.api),
       notifications: notificationsApi(session.api),
       devices: devicesApi(session.api),
+      playback: playbackApi(session.api),
     };
     callsOf.set(session, calls);
   }

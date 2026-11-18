@@ -1429,3 +1429,35 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   browser: Edge on the laptop, Google Chrome in CI instead of Playwright's
   Chromium, which has neither.
 
+## D-067 The mobile player (Proposed, Phase 5)
+
+- **Android says what it plays.** A small Atrium module
+  (`mobile/modules/atrium-media-capabilities`) reads MediaCodecList: every
+  decoder with its profiles, levels and largest picture, and the HDR
+  types of the screen. It only reads; turning Android's constants into
+  the server's terms is `androidProfile` in the shared package, tested
+  there with a realistic phone, so the rules can be checked without one.
+  Several decoders of one format count together; a decoder of a profile
+  is taken to decode the simpler ones inside it (High: Main and
+  Constrained Baseline). HDR needs both the screen and a 10-bit decoder;
+  Dolby Vision also its decoder, whose profiles are sent.
+  Alternative: a fixed list per Android version, which says nothing of
+  the phone in the hand.
+- **The platform player, Media3 through expo-video** (D-007), with its own
+  controls; Atrium adds the audio track, quality and playback info above
+  it. Media3 plays MKV, WebM, MPEG-TS and AVI itself, so most files play
+  as they are; HLS when the server streams.
+- **A copy kept on the phone plays as it is**, without asking the server:
+  it must work offline.
+- **When nothing here can play a file** (the server cannot read it, or
+  the phone has no HLS, or HDR cannot be mapped on a small server), the
+  file is offered to another app, as for any file the app does not show
+  (D-052).
+- **Not on the phone yet**: seek pictures (Media3's own seek bar cannot
+  show them) and gestures. Phase 9 brings picture-in-picture and
+  background audio; seek pictures with a seek bar of Atrium's own.
+- **Checked where**: the browser preview plays an MP4 through the same
+  component (react-native-web, profile from the browser) and shows the
+  info and quality menus. Reading Android's decoders, Media3 playing HLS
+  and MKV, and HDR are only on a phone (APK from CI).
+

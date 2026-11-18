@@ -507,6 +507,11 @@ Platform player with the same controls as the web, plus gestures (double
 tap to skip, swipe for brightness and volume), picture-in-picture,
 background audio, AirPlay and Chromecast (Phase 9), and rotation lock.
 
+Built in Phase 5 (D-067): the platform player's own controls (play,
+seek, time, full screen), with three buttons above it: audio track (when
+there are several), quality, and playback info. Seek pictures and
+gestures are not built on the phone yet.
+
 ---
 
 ## TV (Phase 10)
