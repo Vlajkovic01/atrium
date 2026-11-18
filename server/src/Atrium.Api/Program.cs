@@ -142,6 +142,7 @@ v1.MapAdminLibraryEndpoints();
 v1.MapMediaEndpoints();
 v1.MapPlaybackEndpoints();
 v1.MapStreamingEndpoints();
+v1.MapHardwareEndpoints();
 v1.MapPhotoEndpoints();
 v1.MapNavigationEndpoints();
 

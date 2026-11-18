@@ -41,6 +41,7 @@ public sealed class StreamSession : IAsyncDisposable
     private readonly ILogger _logger;
     private readonly string _ffmpeg;
     private readonly Func<CancellationToken, Task<string>> _input;
+    private readonly Action<VideoEncoderKind, string>? _encoderFailed;
     private Run? _run;
     private int _runs;
     private byte[]? _init;
@@ -61,7 +62,8 @@ public sealed class StreamSession : IAsyncDisposable
         string ffmpeg,
         Func<CancellationToken, Task<string>> input,
         TimeProvider time,
-        ILogger logger)
+        ILogger logger,
+        Action<VideoEncoderKind, string>? encoderFailed = null)
     {
         Id = id;
         UserId = userId;
@@ -76,6 +78,7 @@ public sealed class StreamSession : IAsyncDisposable
         StartIndex = Math.Clamp(startIndex, 0, Math.Max(0, segments.Count - 1));
         _ffmpeg = ffmpeg;
         _input = input;
+        _encoderFailed = encoderFailed;
         Time = time;
         _logger = logger;
         LastUsed = time.GetUtcNow();
@@ -92,7 +95,8 @@ public sealed class StreamSession : IAsyncDisposable
 
     public PlaybackDecision Decision { get; }
 
-    public StreamOutput Output { get; }
+    /// <summary>What is sent; a hardware encoder that fails is replaced by software for the rest of the stream.</summary>
+    public StreamOutput Output { get; private set; }
 
     public IReadOnlyList<Segment> Segments { get; }
 
@@ -198,7 +202,17 @@ public sealed class StreamSession : IAsyncDisposable
                         break;
                     }
 
-                    throw new StreamFailedException($"FFmpeg stopped before segment {index}: {_run?.Errors.Trim()}");
+                    var errors = _run?.Errors.Trim() ?? string.Empty;
+                    if (!Output.CopyVideo && Output.Encoder != VideoEncoderKind.Software)
+                    {
+                        // The hardware let this stream down: software takes over (DESIGN.md 7.5).
+                        _encoderFailed?.Invoke(Output.Encoder, errors);
+                        Output = Output with { Encoder = VideoEncoderKind.Software };
+                        await StartRunAsync(index, ct);
+                        continue;
+                    }
+
+                    throw new StreamFailedException($"FFmpeg stopped before segment {index}: {errors}");
                 }
 
                 _lock.Release();

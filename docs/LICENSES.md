@@ -103,14 +103,24 @@ ones in the repository.
 | NetVips.Native, NetVips.Native.win-x64 | 8.18.7 | LGPL-3.0-or-later | Prebuilt libvips: in the test projects on every platform, and in Windows development builds of the server. Not in the image, which uses the distribution's libvips. Has no HEIC decoder |
 | MetadataExtractor | 2.9.3 | Apache-2.0 | EXIF, XMP and container metadata of photos and videos |
 | XmpCore | 6.1.10.1 | BSD-3-Clause (Adobe XMP toolkit license) | Brought by MetadataExtractor |
-| FFmpeg, ffprobe (Ubuntu package in the image) | distribution's | GPL-2.0-or-later as built by Ubuntu (with libx264, libx265); see flags 1 and 2 | Probing, video frames, short previews |
+| FFmpeg, ffprobe (Ubuntu package in the image) | distribution's | GPL-2.0-or-later as built by Ubuntu (with libx264, libx265); see flags 1 and 2 | Phase 3 only; replaced in Phase 5 by jellyfin-ffmpeg below |
 | FFmpeg (Gyan build via winget) | latest | GPL-3.0 | Development laptop only, to run the media tests |
 
 Flag for the release (requirement 8): the image redistributes Ubuntu's
-FFmpeg and libvips binaries. The GPL and LGPL obligations are met by
+libvips binaries, and since Phase 5 Jellyfin's FFmpeg build (below). The GPL and LGPL obligations are met by
 offering the matching source; the release must state where it is
 (Ubuntu's source packages for the pinned versions, or a copy published
 with the release). HEVC decoding (libde265, FFmpeg) falls under flag 2.
+
+## Approved for Phase 5 (video streaming)
+
+| Package | Version | License | Use |
+|---|---|---|---|
+| jellyfin-ffmpeg8 (Jellyfin's apt repository, in the image) | 8.1.3-2-noble | GPL-3.0-or-later (built with --enable-gpl --enable-version3, with libx264, libx265 and others; never --enable-nonfree, which CI checks in the image) | FFmpeg and ffprobe for probing, thumbnails, previews and streaming, with hardware encoders (NVENC, Quick Sync, VA-API). Bundles the Intel media driver (MIT), libva (MIT) and libvpl (MIT). Its source is published by Jellyfin at github.com/jellyfin/jellyfin-ffmpeg; the release must point to the tag of the pinned version (flag 1). Encoders of patented formats fall under flag 2 |
+
+Flag: the image grows by about 220 MB installed, mostly drivers for
+hardware encoding. The Ubuntu FFmpeg it replaces was smaller; Jellyfin's
+is built and tested for hardware transcoding on many devices (D-064).
 
 ## Approved for Phase 4 (mobile app)
 

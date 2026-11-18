@@ -44,6 +44,23 @@ services:
       # one read-only (:ro), then add it under Administration, Libraries
       # with the path on the right, for example:
       #   - /mnt/storage/archive:/media/archive:ro
+    # Optional: hardware video encoding (DESIGN.md 7.5). Atrium tests each
+    # encoder itself and falls back to the processor; Administration,
+    # Background work shows what works.
+    # Intel or AMD graphics (Quick Sync, VA-API): pass the render device and
+    # the group that owns it on this machine (see: getent group render):
+    # devices:
+    #   - /dev/dri:/dev/dri
+    # group_add:
+    #   - "993"
+    # NVIDIA (NVENC), with the NVIDIA Container Toolkit installed:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu, video]
     depends_on:
       postgres:
         condition: service_healthy

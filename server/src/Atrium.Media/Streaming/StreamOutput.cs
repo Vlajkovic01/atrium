@@ -8,6 +8,7 @@ namespace Atrium.Media.Streaming;
 /// <param name="VideoBitRate">For encoded video, the bit rate aimed at, in bits per second.</param>
 /// <param name="MaxHeight">For encoded video, the tallest picture sent; never larger than the original.</param>
 /// <param name="ToneMap">HDR shown on a screen without HDR: mapped to SDR while encoding.</param>
+/// <param name="Encoder">Which encoder makes encoded video (D-064).</param>
 public sealed record StreamOutput(
     int VideoStream,
     int? AudioStream,
@@ -15,7 +16,8 @@ public sealed record StreamOutput(
     bool CopyAudio,
     long VideoBitRate,
     int MaxHeight,
-    bool ToneMap)
+    bool ToneMap,
+    VideoEncoderKind Encoder = VideoEncoderKind.Software)
 {
     /// <summary>Encoded sound: stereo AAC, which every client plays.</summary>
     public const long AudioBitRate = 192_000;
@@ -25,7 +27,7 @@ public sealed record StreamOutput(
     /// by the tallest picture the bit rate carries well, never above the
     /// original or 1080 lines.
     /// </summary>
-    public static StreamOutput For(PlaybackDecision decision, MediaStream video, ClientProfile client)
+    public static StreamOutput For(PlaybackDecision decision, MediaStream video, ClientProfile client, VideoEncoderKind encoder = VideoEncoderKind.Software)
     {
         var copyVideo = decision.Method is PlaybackMethod.Remux or PlaybackMethod.AudioTranscode;
         var copyAudio = decision.Method == PlaybackMethod.Remux;
@@ -42,7 +44,7 @@ public sealed record StreamOutput(
 
         var toneMap = video.Hdr != HdrFormat.None && decision.Reasons.Contains(PlaybackReasons.VideoHdr);
         return new StreamOutput(
-            decision.VideoStream, decision.AudioStream, copyVideo, copyAudio, bitRate, Math.Min(height, sourceHeight), toneMap);
+            decision.VideoStream, decision.AudioStream, copyVideo, copyAudio, bitRate, Math.Min(height, sourceHeight), toneMap, encoder);
     }
 
     /// <summary>
@@ -69,6 +71,11 @@ public sealed record StreamOutput(
             args.AddRange(["-reconnect", "1", "-reconnect_on_network_error", "1", "-reconnect_delay_max", "5"]);
         }
 
+        if (!CopyVideo && Encoder == VideoEncoderKind.Vaapi)
+        {
+            args.AddRange(["-vaapi_device", VideoEncoders.VaapiDevice]);
+        }
+
         args.AddRange(["-i", input, "-map", $"0:{VideoStream.ToString(CultureInfo.InvariantCulture)}"]);
         if (AudioStream is { } audio)
         {
@@ -88,11 +95,26 @@ public sealed record StreamOutput(
                 filters.Add("zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv");
             }
 
+            // Scaling stays in software for every encoder: one path to keep
+            // right, and the frames are small by then. Hardware encoders take
+            // NV12; VAAPI's frames are uploaded to the device.
             filters.Add(string.Create(CultureInfo.InvariantCulture, $"scale=-2:'min({MaxHeight},ih)'"));
-            filters.Add("format=yuv420p");
+            filters.Add(Encoder is VideoEncoderKind.Software or VideoEncoderKind.Nvenc ? "format=yuv420p" : "format=nv12");
+            if (Encoder == VideoEncoderKind.Vaapi)
+            {
+                filters.Add("hwupload");
+            }
+
+            args.AddRange(["-vf", string.Join(',', filters), "-c:v", VideoEncoders.Encoder(Encoder), "-profile:v", "high"]);
+            args.AddRange(Encoder switch
+            {
+                VideoEncoderKind.Software => ["-preset", "veryfast"],
+                VideoEncoderKind.Nvenc => ["-preset", "p4", "-forced-idr", "1"],
+                VideoEncoderKind.Qsv => ["-preset", "veryfast", "-forced_idr", "1"],
+                VideoEncoderKind.Amf => ["-quality", "speed"],
+                _ => [],
+            });
             args.AddRange([
-                "-vf", string.Join(',', filters),
-                "-c:v", "libx264", "-preset", "veryfast", "-profile:v", "high",
                 "-b:v", VideoBitRate.ToString(CultureInfo.InvariantCulture),
                 "-maxrate", VideoBitRate.ToString(CultureInfo.InvariantCulture),
                 "-bufsize", (VideoBitRate * 2).ToString(CultureInfo.InvariantCulture),

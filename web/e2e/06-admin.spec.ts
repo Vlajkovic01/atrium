@@ -46,6 +46,17 @@ test("administration is one menu entry that opens an overview of the server", as
   await expect(page).toHaveURL(/\/admin\/people$/);
 });
 
+test("the video encoders are tested on demand and software always works", async ({ page }) => {
+  await signIn(page, "/admin/background-work");
+  const card = page.locator("section.card").filter({ has: page.getByRole("heading", { name: "Video encoding" }) });
+  await card.getByRole("button", { name: "Test again" }).click();
+  const tested = card.getByRole("list", { name: "Encoders tested on this machine" });
+  await expect(tested.getByRole("listitem").filter({ hasText: "Software (processor)" })).toContainText("Works", {
+    timeout: 60_000,
+  });
+  await expect(card.getByText("Streams are encoded with")).toBeVisible();
+});
+
 test("a backup is made and the storage is checked on demand", async ({ page }) => {
   await signIn(page, "/admin/backups");
   await page.getByRole("button", { name: "Back up now" }).click();

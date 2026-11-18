@@ -76,6 +76,13 @@ public sealed class AtriumFactory : WebApplicationFactory<Program>
 
             // Real Argon2id, at a cost that keeps the suite fast.
             services.AddSingleton(new Argon2Settings(MemoryKib: 1024, Passes: 1));
+
+            // Test encodes at every start of a test server would only load the
+            // machine; tests that need the encoders detect them themselves.
+            foreach (var detection in services.Where(d => d.ImplementationType == typeof(Atrium.Media.Streaming.VideoEncoderDetection)).ToList())
+            {
+                services.Remove(detection);
+            }
         });
     }
 

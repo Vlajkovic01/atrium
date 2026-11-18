@@ -38,6 +38,7 @@ public static class StreamingEndpoints
     public const string TooManyStreams = "playback.too_many_streams";
     public const string RemoteStorage = "playback.remote_storage";
     public const string StreamFailed = "playback.stream_failed";
+    public const string ToneMappingUnavailable = "playback.tone_mapping_unavailable";
 
     /// <summary>Files larger than this are not scanned for keyframes while a person waits; their video is encoded instead.</summary>
     private const long MaxScanWhileWaiting = 2L * 1024 * 1024 * 1024;
@@ -85,6 +86,8 @@ public static class StreamingEndpoints
         KeyframeIndex keyframes,
         StreamSessions sessions,
         LoopbackSources loopback,
+        VideoEncoders encoders,
+        Atrium.Jobs.HardwareInfo hardware,
         CancellationToken ct)
     {
         var (decided, problem) = await PlaybackEndpoints.DecideForAsync(
@@ -159,7 +162,19 @@ public static class StreamingEndpoints
             return ApiProblem.Create(StatusCodes.Status422UnprocessableEntity, PlaybackEndpoints.Unreadable);
         }
 
-        var output = StreamOutput.For(decision, video, request.Profile);
+        var output = StreamOutput.For(decision, video, request.Profile, encoders.Chosen);
+
+        // Mapping HDR to SDR runs on the processor, whichever encoder follows,
+        // and is too slow on a small device to watch (DESIGN.md 7.5, D-064).
+        if (output.ToneMap && hardware.Profile == Atrium.Jobs.HardwareProfile.Small)
+        {
+            if (token is not null)
+            {
+                loopback.Remove(token);
+            }
+
+            return ApiProblem.Create(StatusCodes.Status422UnprocessableEntity, ToneMappingUnavailable);
+        }
         var origin = segments[0].StartUs;
         var start = SegmentPlan.At(segments, origin + (Math.Max(0, request.StartMs ?? 0) * 1000))!.Index;
         var (session, refusal) = await sessions.OpenAsync(

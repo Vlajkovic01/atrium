@@ -888,7 +888,15 @@ software for that session and is reported in the admin UI.
 
 HDR to SDR tone mapping is used only when the client cannot display HDR.
 On the small profile without hardware support it is refused with an
-explanation instead of producing unwatchable playback.
+explanation instead of producing unwatchable playback. Tone mapping runs
+on the processor for every encoder so far, so the small profile refuses
+it whatever the encoder (D-064).
+
+Candidates by platform: NVENC, Quick Sync and VA-API on Linux; NVENC,
+Quick Sync and AMF on Windows; VideoToolbox on macOS. Detection runs a
+few seconds after the server starts and when an admin asks
+(Administration, Background work), and streams use the first that works.
+Scaling stays on the processor; hardware streams have their own limit.
 
 ### 7.6 Subtitles and audio (Phase 6)
 
@@ -907,7 +915,8 @@ explanation instead of producing unwatchable playback.
 
 FFmpeg and ffprobe run as separate processes. Atrium is AGPL-3.0 (D-001),
 which is compatible with a GPL-3.0 FFmpeg build, so the image can include
-libx264 and libx265. Builds must never use `--enable-nonfree`: the result
+libx264 and libx265. The image uses Jellyfin's FFmpeg build (D-064), with
+the hardware encoders and their drivers; CI fails if it is ever nonfree. Builds must never use `--enable-nonfree`: the result
 cannot be redistributed. Details and the patent note are in
 [LICENSES.md](LICENSES.md).
 

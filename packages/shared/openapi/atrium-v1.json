@@ -4429,6 +4429,47 @@
         }
       }
     },
+    "/api/v1/admin/hardware": {
+      "get": {
+        "tags": [
+          "Administration"
+        ],
+        "operationId": "GetHardware",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HardwareView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/hardware/detect": {
+      "post": {
+        "tags": [
+          "Administration"
+        ],
+        "description": "Tests every candidate video encoder again with a one-second encode, as after changing the machine or its drivers.",
+        "operationId": "DetectHardware",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HardwareView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/timeline/buckets": {
       "get": {
         "tags": [
@@ -6433,12 +6474,107 @@
           }
         }
       },
+      "EncoderTest": {
+        "required": [
+          "kind",
+          "works",
+          "error"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/VideoEncoderKind"
+          },
+          "works": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "HardwareProfile": {
         "enum": [
           "small",
           "medium",
           "large"
         ]
+      },
+      "HardwareView": {
+        "required": [
+          "processorCount",
+          "memoryBytes",
+          "profile",
+          "encoders",
+          "chosen",
+          "detectedAt",
+          "lastFailure",
+          "maxSoftwareEncodes",
+          "maxHardwareEncodes"
+        ],
+        "type": "object",
+        "properties": {
+          "processorCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "memoryBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/HardwareProfile"
+          },
+          "encoders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EncoderTest"
+            }
+          },
+          "chosen": {
+            "$ref": "#/components/schemas/VideoEncoderKind"
+          },
+          "detectedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastFailure": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "maxSoftwareEncodes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "maxHardwareEncodes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
       },
       "HashCheckRequest": {
         "required": [
@@ -9648,6 +9784,16 @@
             "format": "int32"
           }
         }
+      },
+      "VideoEncoderKind": {
+        "enum": [
+          "software",
+          "nvenc",
+          "qsv",
+          "vaapi",
+          "videoToolbox",
+          "amf"
+        ]
       },
       "ViewPageView": {
         "required": [

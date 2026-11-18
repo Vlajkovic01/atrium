@@ -1327,3 +1327,43 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   idle), is rare at home, and resuming within those 30 minutes already
   uses the same stream. Revisited if usage shows otherwise.
 
+## D-064 Hardware encoding (Proposed, Phase 5; owner delegated the FFmpeg choice)
+
+- **Jellyfin's FFmpeg in the image.** jellyfin-ffmpeg8, pinned, from
+  Jellyfin's apt repository, whose key is checked against its fingerprint
+  in the Dockerfile. GPL-3.0, never nonfree, which a CI step reads from
+  the image's own build configuration. It carries VA-API, Quick Sync and
+  NVENC with their drivers, built and tested for hardware transcoding.
+  Cost: about 220 MB more in the image. Alternatives: Ubuntu's FFmpeg
+  (smaller, fine for probing, not maintained for hardware transcoding);
+  a static build of our own (a toolchain to keep secure).
+- **Tested, not trusted.** An encoder FFmpeg lists may lack its device,
+  driver or permission, so each candidate of the platform encodes one
+  real second; software is tested too. Streams use the first hardware
+  encoder that works, else software. Detection runs five seconds after
+  start, so starting is not slowed, and again when an admin asks.
+- **Fallback during a stream.** If a hardware encoder's run stops before
+  making the segment asked for, that stream continues in software, and
+  the failure is shown to the admin. The encoder stays chosen for other
+  streams: one odd file should not turn the hardware off for everyone.
+- **One path for the frames.** Decoding and scaling stay on the
+  processor for every encoder; the encoder gets NV12 (VA-API's uploaded to
+  the device). Fully hardware pipelines differ per vendor and would each
+  need a device to test on. Keyframes are forced at every six-second
+  boundary on all encoders (`-forced-idr` for NVENC and Quick Sync), which
+  the plan of segments depends on.
+- **Limits.** Hardware streams have their own limit (three by default):
+  the device, not the processor, is what they use up.
+- **Tone mapping stays on the processor**, so a small device refuses HDR
+  to SDR whatever the encoder (`playback.tone_mapping_unavailable`), as
+  DESIGN.md 7.5 asks of the case without hardware. Tone mapping on the GPU
+  (OpenCL, VA-API, CUDA filters in Jellyfin's build) is a later step.
+- **What is verified where.** CI has no GPU: there every hardware test
+  fails and the tests check detection, the fallback to software and the
+  arguments of each encoder. The development laptop has Intel graphics:
+  there Quick Sync is chosen, and a test streams with it end to end and
+  checks that every segment starts at its six-second boundary. NVENC,
+  VA-API, AMF and VideoToolbox wait for hardware to try them on.
+- **Containers.** Compose has commented blocks for `/dev/dri` with its
+  group and for NVIDIA's toolkit. Nothing is needed for software encoding.
+
