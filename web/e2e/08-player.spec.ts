@@ -17,7 +17,7 @@ test.describe.configure({ mode: "serial" });
 const OWNER = "owner";
 const PASSWORD = "correct horse battery";
 
-/** Thirty seconds of picture and tone in MPEG-TS, made here so the test carries no binary file. */
+/** A minute of picture and tone in MPEG-TS, made here so the test carries no binary file; long enough that a skip ahead never meets the end. */
 function film(): Buffer {
   const dir = mkdtempSync(join(tmpdir(), "atrium-e2e-"));
   try {
@@ -29,11 +29,11 @@ function film(): Buffer {
       "-f",
       "lavfi",
       "-i",
-      "testsrc=duration=30:size=640x360:rate=24",
+      "testsrc=duration=60:size=640x360:rate=24",
       "-f",
       "lavfi",
       "-i",
-      "sine=frequency=440:duration=30",
+      "sine=frequency=440:duration=60",
       "-c:v",
       "libx264",
       "-preset",
