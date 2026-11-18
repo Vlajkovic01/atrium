@@ -802,7 +802,17 @@ When starting playback a client sends what it can play:
 - maximum bitrate (user setting or measured).
 
 The profile is built in the shared package from platform queries, so all
-clients describe themselves the same way.
+clients describe themselves the same way. Names are FFmpeg's (h264, hevc,
+av1, aac, eac3) and levels are written as the codec writes them (5.1), so
+the server compares them without a table per client. A browser's profile
+comes from `canPlayType` and Media Source; the phone's from Android's
+list of decoders (Phase 5, mobile player).
+
+What the server compares it with is read once, when the file is read
+(7.1): every video, audio and subtitle stream with codec, profile,
+level, bit depth, size, frame rate, bit rate, dynamic range (HDR10, HLG,
+Dolby Vision with its profile and base layer), channels, language and
+the default and forced flags, kept with the file's facts.
 
 ### 7.3 Playback decision
 
@@ -818,7 +828,21 @@ the player can show ("Transcoding: audio format not supported").
 | Full transcode | Video re-encoded, adaptive HLS | High |
 
 The server never transcodes when direct play is possible (rule 8). Remux
-matters mostly on Apple devices, whose player does not open MKV.
+matters mostly on Apple devices, whose player does not open MKV, and in
+browsers, which do not open it either.
+
+Rules, in order (D-059):
+
+- The original plays when the client opens the container and plays the
+  video, the chosen audio track and the bit rate.
+- Video the client plays is copied, if HLS can carry its codec (H.264,
+  HEVC, AV1, VP9): a remux, or an audio transcode when only the sound
+  does not play or cannot be carried.
+- Anything else about the video, or a bit rate above the client's limit,
+  means a full transcode.
+- Dolby Vision without a decoder for its profile plays as its base layer
+  (HDR10, HLG or SDR) when the client shows that; profile 5 has none.
+- Portrait video is compared with a resolution limit turned on its side.
 
 ### 7.4 On-demand transcoding
 
