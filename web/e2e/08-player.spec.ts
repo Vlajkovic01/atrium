@@ -78,7 +78,11 @@ async function playsOn(page: Page): Promise<void> {
 test("an MPEG-TS film is remuxed, plays, says why, changes quality and seeks with the keyboard", async ({ page }) => {
   await signIn(page, "/files");
   await expect(page.getByRole("heading", { name: "My files" })).toBeVisible();
-  await page.getByTestId("upload-files").setInputFiles([{ name: "film.m2ts", mimeType: "video/mp2t", buffer: film() }]);
+  // A file after the film: in the viewer the arrows would move to it, but inside the player they skip.
+  await page.getByTestId("upload-files").setInputFiles([
+    { name: "film.m2ts", mimeType: "video/mp2t", buffer: film() },
+    { name: "zz-notes.txt", mimeType: "text/plain", buffer: Buffer.from("after the film") },
+  ]);
   await expect(page.getByRole("region", { name: "Uploads" }).getByText("Uploads finished")).toBeVisible();
 
   await page.getByRole("button", { name: "film.m2ts", exact: true }).click();
@@ -115,4 +119,5 @@ test("an MPEG-TS film is remuxed, plays, says why, changes quality and seeks wit
       timeout: 30_000,
     })
     .toBeGreaterThan(now + 8);
+  await expect(page.getByRole("dialog", { name: "film.m2ts" })).toBeVisible();
 });

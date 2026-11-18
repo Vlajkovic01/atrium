@@ -170,7 +170,10 @@ export function VideoPlayer({ nodeId, name }: { readonly nodeId: string; readonl
     };
     const action = actions[event.key];
     if (action) {
+      // The viewer around the player uses the arrows to move between files;
+      // inside the player they skip instead.
       event.preventDefault();
+      event.stopPropagation();
       action();
     }
   };
@@ -296,6 +299,7 @@ export function VideoPlayer({ nodeId, name }: { readonly nodeId: string; readonl
               onChange={(e) => {
                 const value = Number(e.currentTarget.value);
                 reopen(() => setAudioStream(value));
+                frame.current?.focus();
               }}
             >
               {audio.map((track) => (
@@ -311,6 +315,7 @@ export function VideoPlayer({ nodeId, name }: { readonly nodeId: string; readonl
             onChange={(e) => {
               const value = Number(e.currentTarget.value);
               reopen(() => setQuality(value));
+              frame.current?.focus();
             }}
           >
             {QUALITIES.map(([key], index) => (
