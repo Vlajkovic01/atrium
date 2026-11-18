@@ -13,9 +13,14 @@ namespace Atrium.Media.Streaming;
 /// <param name="MaxEncodes">Streams whose video is encoded again, at once on the server.</param>
 /// <param name="MaxCopies">Streams whose video is copied (remux, audio transcode), at once on the server.</param>
 /// <param name="MaxPerUser">Streams one person has at once.</param>
-public sealed record StreamLimits(int MaxEncodes, int MaxCopies, int MaxPerUser)
+/// <param name="MaxCacheBytes">What all streams together keep in the cache location.</param>
+public sealed record StreamLimits(int MaxEncodes, int MaxCopies, int MaxPerUser, long MaxCacheBytes = StreamLimits.DefaultCacheBytes)
 {
     public const string MaxEncodesKey = "ATRIUM_MAX_TRANSCODES";
+
+    public const string CacheKey = "ATRIUM_STREAM_CACHE_GB";
+
+    public const long DefaultCacheBytes = 20L * 1024 * 1024 * 1024;
 
     /// <summary>
     /// By the machine (D-003): a small device encodes one video at a time,
@@ -29,7 +34,10 @@ public sealed record StreamLimits(int MaxEncodes, int MaxCopies, int MaxPerUser)
             encodes = configured;
         }
 
-        return new StreamLimits(encodes, Math.Max(4, encodes * 4), 3);
+        var cache = double.TryParse(Environment.GetEnvironmentVariable(CacheKey), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var gb) && gb > 0
+            ? (long)(gb * 1024 * 1024 * 1024)
+            : DefaultCacheBytes;
+        return new StreamLimits(encodes, Math.Max(4, encodes * 4), 3, cache);
     }
 }
 
@@ -97,6 +105,25 @@ public sealed class StreamSessions(MediaOptions options, StreamLimits limits, Ti
 
                 await CloseAsync(oldest.Id);
                 open.Remove(oldest);
+            }
+
+            // Over the cache's limit, idle streams give way, oldest first.
+            var size = open.Sum(s => s.SizeOnDisk());
+            foreach (var idle in open.Where(s => time.GetUtcNow() - s.LastUsed >= IdleStop).OrderBy(s => s.LastUsed).ToList())
+            {
+                if (size <= limits.MaxCacheBytes)
+                {
+                    break;
+                }
+
+                size -= idle.SizeOnDisk();
+                await CloseAsync(idle.Id);
+                open.Remove(idle);
+            }
+
+            if (size > limits.MaxCacheBytes)
+            {
+                return (null, StreamRefusal.ServerBusy);
             }
 
             var encodes = !output.CopyVideo;

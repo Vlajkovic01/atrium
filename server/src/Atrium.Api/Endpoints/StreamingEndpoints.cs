@@ -1,5 +1,6 @@
 using System.Globalization;
 using Atrium.Api.Auth;
+using Atrium.Api.Files;
 using Atrium.Core.Media;
 using Atrium.Data;
 using Atrium.Files;
@@ -9,6 +10,7 @@ using Atrium.Media;
 using Atrium.Media.Playback;
 using Atrium.Media.Streaming;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 
 namespace Atrium.Api.Endpoints;
 
@@ -68,6 +70,9 @@ public static class StreamingEndpoints
         stream.MapGet("/index.m3u8", Index).WithName("GetStreamPlaylist");
         stream.MapGet("/init.mp4", InitAsync).WithName("GetStreamInit");
         stream.MapGet("/{segment:int}.m4s", SegmentAsync).WithName("GetStreamSegment");
+
+        // FFmpeg's way to files on remote storage; never part of the public API (D-063).
+        routes.MapGet("/internal/sources/{token}", SourceAsync).AllowAnonymous().ExcludeFromDescription();
         return routes;
     }
 
@@ -79,6 +84,7 @@ public static class StreamingEndpoints
         MediaFiles files,
         KeyframeIndex keyframes,
         StreamSessions sessions,
+        LoopbackSources loopback,
         CancellationToken ct)
     {
         var (decided, problem) = await PlaybackEndpoints.DecideForAsync(
@@ -109,10 +115,17 @@ public static class StreamingEndpoints
             return ApiProblem.Missing();
         }
 
-        // FFmpeg reads remote storage through a loopback URL, which comes next (DESIGN.md 7.4).
-        if (localPath is null)
+        // FFmpeg reads remote storage through a URL on this machine, never with its credentials.
+        string? token = null;
+        var input = localPath;
+        if (input is null)
         {
-            return ApiProblem.Create(StatusCodes.Status503ServiceUnavailable, RemoteStorage);
+            if (loopback.Register(found.Node.Id) is not { } registered)
+            {
+                return ApiProblem.Create(StatusCodes.Status503ServiceUnavailable, RemoteStorage);
+            }
+
+            (input, token) = registered;
         }
 
         var video = info.Streams.First(s => s.Index == decision.VideoStream);
@@ -121,7 +134,7 @@ public static class StreamingEndpoints
         IReadOnlyList<Segment> segments;
         if (decision.Method is PlaybackMethod.Remux or PlaybackMethod.AudioTranscode)
         {
-            var times = await keyframes.GetAsync(source, container, localPath, scan: source.Size <= MaxScanWhileWaiting, ct);
+            var times = await keyframes.GetAsync(source, container, input, scan: source.Size <= MaxScanWhileWaiting, ct);
             if (times is null)
             {
                 decision = decision with
@@ -159,12 +172,23 @@ public static class StreamingEndpoints
             video,
             audio,
             start,
-            _ => Task.FromResult(localPath));
+            _ => Task.FromResult(input));
         if (session is null)
         {
+            if (token is not null)
+            {
+                loopback.Remove(token);
+            }
+
             return refusal == StreamRefusal.TooManyForUser
                 ? ApiProblem.Create(StatusCodes.Status429TooManyRequests, TooManyStreams)
                 : ApiProblem.Create(StatusCodes.Status503ServiceUnavailable, Busy);
+        }
+
+        if (token is not null)
+        {
+            var id = session.Id;
+            loopback.Bind(token, () => sessions.Find(id) is not null);
         }
 
         var view = new StreamView(
@@ -265,6 +289,31 @@ public static class StreamingEndpoints
         {
             loggers.CreateLogger(typeof(StreamingEndpoints)).LogWarning("A stream's segment failed: {Reason}", e.Message);
             return ApiProblem.Create(StatusCodes.Status500InternalServerError, StreamFailed);
+        }
+    }
+
+    private static async Task<IResult> SourceAsync(
+        string token, HttpContext http, LoopbackSources loopback, AtriumDbContext db, NodeContent content, CancellationToken ct)
+    {
+        if (!LoopbackSources.FromThisMachine(http) || loopback.Find(token) is not { } nodeId
+            || await db.Nodes.AsNoTracking().SingleOrDefaultAsync(n => n.Id == nodeId, ct) is not { } node)
+        {
+            return Results.NotFound();
+        }
+
+        var library = await db.Libraries.AsNoTracking().SingleAsync(l => l.Id == node.LibraryId, ct);
+        try
+        {
+            await FileContent.ServeAsync(http, await content.SourceAsync(node, library, ct), node.Name, node.MediaType, inline: false, ct);
+            return Results.Empty;
+        }
+        catch (LocationUnavailableException e)
+        {
+            return ApiProblem.Create(StatusCodes.Status503ServiceUnavailable, e.Code);
+        }
+        catch (ContentUnavailableException) when (!http.Response.HasStarted)
+        {
+            return Results.NotFound();
         }
     }
 

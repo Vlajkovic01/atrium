@@ -867,13 +867,16 @@ Rules, in order (D-059):
   (D-062), so segments of different runs join without a seam.
 - FFmpeg is paused when it is far ahead of the playback position and
   stopped when the session goes idle.
-- Segments are written to the cache and reused by later sessions with the
-  same parameters.
+- Segments are written to the cache while the stream lasts: at most about
+  twenty minutes of them per stream, those near the player, and a limit
+  for all streams together (20 GB by default), over which idle streams
+  give way. They are not shared between streams (D-063).
 - Limits, all configurable: concurrent transcodes, maximum resolution and
   bitrate, per-user stream count. When a limit is reached the client gets
   a clear error, not a stalled player.
 - Sources on S3 are read by FFmpeg through a loopback URL on the server,
-  signed for that process. FFmpeg never receives storage credentials.
+  a random token that lasts as long as its stream and is answered only to
+  this machine. FFmpeg never receives storage credentials.
 
 ### 7.5 Hardware acceleration
 

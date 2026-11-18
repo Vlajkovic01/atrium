@@ -63,6 +63,12 @@ public sealed record StreamOutput(
         args.AddRange(CopyVideo
             ? ["-seek_timestamp", "1", "-ss", Seconds(start.StartUs + SeekMarginUs)]
             : ["-ss", Seconds(start.StartUs)]);
+        if (input.StartsWith("http://", StringComparison.Ordinal) || input.StartsWith("https://", StringComparison.Ordinal))
+        {
+            // Remote storage through the server (D-063): a dropped connection is picked up again.
+            args.AddRange(["-reconnect", "1", "-reconnect_on_network_error", "1", "-reconnect_delay_max", "5"]);
+        }
+
         args.AddRange(["-i", input, "-map", $"0:{VideoStream.ToString(CultureInfo.InvariantCulture)}"]);
         if (AudioStream is { } audio)
         {
