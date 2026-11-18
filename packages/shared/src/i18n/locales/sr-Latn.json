@@ -278,7 +278,10 @@
       "waiting": "{count, plural, one {# čeka} few {# čekaju} other {# čeka}} · {size}",
       "failed": "{count, plural, one {# nije moglo da se kopira.} few {# nisu mogla da se kopiraju.} other {# nije moglo da se kopira.}}",
       "lastRun": "Poslednji put završeno {when}",
-      "whileOpen": "Za sada rezervna kopija radi dok je Atrium otvoren.",
+      "lastRunBackground": "Poslednji put završeno {when}, u pozadini",
+      "background": "Android pušta rezervnu kopiju da radi u pozadini otprilike na svakih 15 minuta, kad uslovi ispod to dozvoljavaju. Dok Atrium šalje sa ovog ekrana, obaveštenje ga drži u radu i kad izađete iz aplikacije.",
+      "serviceTitle": "Pravi se rezervna kopija fotografija i video snimaka",
+      "serviceText": "{left, plural, one {Ostao je # fajl} few {Ostala su # fajla} other {Ostalo je # fajlova}} · {name}",
       "now": "Kopiraj sada",
       "what": "Šta se kopira",
       "photos": "Fotografije",
@@ -297,6 +300,7 @@
         "checking": "Proverava se {name}",
         "sending": "Šalje se {name} · {percent}%",
         "unreachable": "Server nije dostupan; pokušaće se ponovo kasnije",
+        "paused": "Zastalo; nastavlja se pri sledećem pokretanju",
         "idle": "Sve izabrano je kopirano"
       }
     }

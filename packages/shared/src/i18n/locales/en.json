@@ -278,7 +278,10 @@
       "waiting": "{count, plural, one {# waiting} other {# waiting}} · {size}",
       "failed": "{count, plural, one {# could not be backed up.} other {# could not be backed up.}}",
       "lastRun": "Last finished {when}",
-      "whileOpen": "For now, backup runs while Atrium is open.",
+      "lastRunBackground": "Last finished {when}, in the background",
+      "background": "Android lets backup run in the background about every 15 minutes, when the conditions below allow. While Atrium sends from the screen, a notification keeps it going if you leave the app.",
+      "serviceTitle": "Backing up photos and videos",
+      "serviceText": "{left, plural, one {# file left} other {# files left}} · {name}",
       "now": "Back up now",
       "what": "What to back up",
       "photos": "Photos",
@@ -297,6 +300,7 @@
         "checking": "Checking {name}",
         "sending": "Sending {name} · {percent}%",
         "unreachable": "The server cannot be reached; trying again later",
+        "paused": "Paused; continues on the next run",
         "idle": "Everything chosen is backed up"
       }
     }

@@ -35,6 +35,12 @@ for (const [language, locale, scheme] of [
         timeout: 60_000,
       });
       await expect(page.getByText(say("6 of 6 on the server", "6 od 6 na serveru"))).toBeVisible();
+      await expect(page.getByText(say("Last finished", "Poslednji put završeno"), { exact: false })).toBeVisible();
+      await expect(
+        page.getByText(say("Android lets backup run in the background", "Android pušta rezervnu kopiju"), {
+          exact: false,
+        }),
+      ).toBeVisible();
       await shot(page, `${language}-161-backup-done`);
 
       // Only one album: the counts follow.

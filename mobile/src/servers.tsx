@@ -1,7 +1,7 @@
-import { ServerRegistry, type KnownServer } from "@atrium/shared";
+import type { KnownServer, ServerRegistry } from "@atrium/shared";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-import { secrets, settings } from "./platform/storage";
+import { loadRegistry } from "./registry.ts";
 
 interface ServersValue {
   readonly registry: ServerRegistry;
@@ -33,7 +33,7 @@ export function ServersProvider({ children }: { readonly children: ReactNode }) 
   useEffect(() => {
     let stop: (() => void) | undefined;
     let cancelled = false;
-    void ServerRegistry.load({ store: settings, secrets }).then((loaded) => {
+    void loadRegistry().then((loaded) => {
       if (!cancelled) {
         stop = loaded.onChange(() => setRevision((r) => r + 1));
         setRegistry(loaded);

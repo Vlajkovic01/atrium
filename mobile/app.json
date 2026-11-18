@@ -78,7 +78,8 @@
           "isAccessMediaLocationEnabled": true,
           "granularPermissions": ["photo", "video"]
         }
-      ]
+      ],
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true

@@ -4,6 +4,8 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 
+// Camera backup's background job is defined when the app's code loads, also when Android starts it with no screen (D-058).
+import "../src/backup/background";
 import { forgetLocalCopies } from "../src/files/local";
 import { loadFileOrder } from "../src/files/order.ts";
 import { initI18n } from "../src/i18n.ts";

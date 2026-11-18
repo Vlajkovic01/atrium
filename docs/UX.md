@@ -423,8 +423,16 @@ the photo and video permission. Photos, videos and device albums are
 chosen; conditions are Wi-Fi only (on by default) and only while
 charging. The status card says what is happening now, how many are on
 the server, what waits and its size, what failed and why, when a run
-last finished, and when access is limited to selected photos. For now it
-runs while the app is open; the background comes next.
+last finished (and whether in the background), and when access is
+limited to selected photos. It runs when the app opens and every 15
+minutes while open; Android's background job runs it about every 15
+minutes at the soonest when Android allows, also after the app was
+closed, and the screen says so rather than promising continuous backup.
+When the app has files to send, a notification ("Backing up photos and
+videos", files left and the current name, a progress bar) keeps sending
+if the person leaves the app; it disappears when the run ends. The
+notification permission is asked when backup is turned on; refusing it
+changes nothing but the notification.
 
 Backed-up items are identified by content hash so reinstalling the app
 does not upload everything again. The app never deletes from the device
