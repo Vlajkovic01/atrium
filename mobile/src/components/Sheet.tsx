@@ -30,8 +30,10 @@ export function Sheet({
         <Pressable
           style={[StyleSheet.absoluteFill, styles.shade]}
           onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel={t("common.close")}
+          // A touch outside closes; for a screen reader the panel's own button does, so this is not announced twice.
+          accessible={false}
+          importantForAccessibility="no-hide-descendants"
+          accessibilityElementsHidden
         />
         <View
           accessibilityViewIsModal

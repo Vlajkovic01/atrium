@@ -363,6 +363,17 @@ folder again; long folders arrive page by page while scrolling. A folder
 that cannot be changed carries a lock and says why. Touching a file shows
 its details until opening files is built.
 
+Actions: each row has a menu (rename, move, copy, move to trash,
+details); a long press starts choosing several items, and the actions
+for the choice sit along the bottom edge. New folder is in the top bar.
+Move and copy open a folder picker that stays in the library. Moving to
+the trash offers Undo for eight seconds. Where nothing can be changed,
+the menu offers only the details and a long press chooses nothing. The
+Trash opens from the top bar of where files start: each item says where
+it was and how long it stays; restoring an item whose folder is in the
+trash too asks where to put it; deleting for good always asks and says
+how many items and how much space.
+
 Folder browsing, search, sort. Actions through a long-press menu and
 multi-select. Upload from the device's file picker, camera or photo
 library. Share sheet integration: "Save to Atrium" from other apps.

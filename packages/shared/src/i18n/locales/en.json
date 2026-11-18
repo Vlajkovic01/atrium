@@ -193,6 +193,7 @@
       "soon": "Your photos will be shown here in the next version of the app."
     },
     "files": {
+      "selectAll": "Select all",
       "kinds": {
         "image": "Picture",
         "video": "Video",

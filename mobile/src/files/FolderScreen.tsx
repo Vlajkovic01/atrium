@@ -6,6 +6,7 @@ import {
   formatBytes,
   formatDateTime,
   homeLibrary,
+  libraryRootName,
   type FileCategory,
   type FileOrder,
   type LibraryInfo,
@@ -33,6 +34,7 @@ import { Sheet, SheetOption } from "../components/Sheet.tsx";
 import { Body, Button, ErrorMessage, Notice } from "../components/ui.tsx";
 import { currentLocale } from "../i18n.ts";
 import { radius, space, type, useTheme } from "../theme.ts";
+import { useFileActions } from "./actions.tsx";
 import { setFileOrder, useFileOrder } from "./order.ts";
 
 const PAGE = 200;
@@ -102,7 +104,7 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
   const items = useMemo(() => children.data?.pages.flatMap((p) => p.items) ?? [], [children.data]);
   const [pulled, setPulled] = useState(false);
 
-  const rootName = (l: LibraryInfo): string => (l.kind === "personal" ? t("files.myFiles") : l.name);
+  const rootName = (l: LibraryInfo): string => libraryRootName(l, t("files.myFiles"));
   const nameOf = (node: NodeInfo): string =>
     library && node.id === library.rootNodeId ? rootName(library) : node.name;
   const atRoot = library !== undefined && folderId === library.rootNodeId;
@@ -110,6 +112,16 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
   const locale = currentLocale();
   // The folders above this one, from the library's top down; the folder itself is the screen's title.
   const above = (path.data ?? []).filter((node) => node.id !== folderId);
+
+  const canWrite = folder.data?.canWrite ?? false;
+  const actions = useFileActions({
+    folder: folder.data,
+    rootName: library ? rootName(library) : t("files.title"),
+    onDetails: setDetails,
+  });
+  const chosen = items.filter((item) => actions.selected.has(item.id));
+  // Choosing several items: the bar counts them and the actions sit along the bottom edge.
+  const selecting = chosen.length > 0;
 
   const openFolder = (id: string): void => {
     router.push({ pathname: "/files/[folderId]", params: { folderId: id } });
@@ -239,34 +251,78 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={[styles.flex, { backgroundColor: colors.paper }]}>
-      <View style={styles.bar}>
-        {given !== undefined ? (
+      {selecting ? (
+        <View style={styles.bar}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t("common.back")}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace("/files"))}
+            accessibilityLabel={t("common.cancel")}
+            onPress={actions.clearSelection}
             style={styles.barButton}
           >
-            <Icon name="chevronLeft" />
+            <Icon name="close" />
           </Pressable>
-        ) : null}
-        <Text accessibilityRole="header" numberOfLines={1} style={[styles.barTitle, { color: colors.ink }]}>
-          {title}
-        </Text>
-        {folder.data && !folder.data.canWrite ? (
-          <View accessible accessibilityLabel={t("files.readOnly")} style={styles.barButton}>
-            <Icon name="lock" size={20} color={colors.inkFaint} />
-          </View>
-        ) : null}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${t("files.sortBy")}: ${t(fileOrderLabelKey(order))}`}
-          onPress={() => setSorting(true)}
-          style={styles.barButton}
-        >
-          <Icon name="sort" />
-        </Pressable>
-      </View>
+          <Text accessibilityRole="header" numberOfLines={1} style={[styles.barTitle, { color: colors.ink }]}>
+            {t("files.selected", { count: chosen.length })}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t("mobile.files.selectAll")}
+            onPress={() => actions.selectAll(items)}
+            style={styles.barButton}
+          >
+            <Icon name="checkCircle" />
+          </Pressable>
+        </View>
+      ) : (
+        <View style={styles.bar}>
+          {given !== undefined ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("common.back")}
+              onPress={() => (router.canGoBack() ? router.back() : router.replace("/files"))}
+              style={styles.barButton}
+            >
+              <Icon name="chevronLeft" />
+            </Pressable>
+          ) : null}
+          <Text accessibilityRole="header" numberOfLines={1} style={[styles.barTitle, { color: colors.ink }]}>
+            {title}
+          </Text>
+          {folder.data && !folder.data.canWrite ? (
+            <View accessible accessibilityLabel={t("files.readOnly")} style={styles.barButton}>
+              <Icon name="lock" size={20} color={colors.inkFaint} />
+            </View>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${t("files.sortBy")}: ${t(fileOrderLabelKey(order))}`}
+            onPress={() => setSorting(true)}
+            style={styles.barButton}
+          >
+            <Icon name="sort" />
+          </Pressable>
+          {canWrite ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("files.newFolder")}
+              onPress={actions.newFolder}
+              style={styles.barButton}
+            >
+              <Icon name="folderPlus" />
+            </Pressable>
+          ) : null}
+          {given === undefined ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t("trash.title")}
+              onPress={() => router.push("/files/trash")}
+              style={styles.barButton}
+            >
+              <Icon name="trash" />
+            </Pressable>
+          ) : null}
+        </View>
+      )}
 
       {libraries.data && libraries.data.length === 0 ? (
         <View style={styles.message}>
@@ -327,11 +383,30 @@ export function FolderScreen({ folderId: given }: { readonly folderId?: string }
                   ? formatDateTime(item.modifiedAt, locale)
                   : `${formatBytes(Number(item.size), locale)} · ${formatDateTime(item.modifiedAt, locale)}`
               }
-              onPress={() => (item.kind === "folder" ? openFolder(item.id) : setDetails(item))}
+              selected={selecting ? actions.selected.has(item.id) : undefined}
+              onPress={() =>
+                selecting ? actions.select(item) : item.kind === "folder" ? openFolder(item.id) : setDetails(item)
+              }
+              // Choosing starts with a long press, where something can be done with the choice.
+              onLongPress={canWrite ? () => actions.select(item) : undefined}
+              onMore={() => actions.openMenu(item)}
             />
           )}
         />
       )}
+
+      {selecting ? (
+        <View style={[styles.actionBar, { backgroundColor: colors.surface, borderColor: colors.line }]}>
+          {chosen.length === 1 ? (
+            <BarAction icon="pencil" label={t("files.rename")} onPress={() => actions.rename(chosen[0]!)} />
+          ) : null}
+          <BarAction icon="move" label={t("files.move")} onPress={() => actions.moveOrCopy("move", chosen)} />
+          <BarAction icon="copy" label={t("files.copy")} onPress={() => actions.moveOrCopy("copy", chosen)} />
+          <BarAction icon="trash" label={t("files.delete")} onPress={() => actions.trash(chosen)} />
+        </View>
+      ) : null}
+
+      {actions.overlays}
 
       {sorting ? (
         <Sheet title={t("files.sortBy")} onClose={() => setSorting(false)}>
@@ -367,40 +442,85 @@ function Row({
   node,
   detail,
   onPress,
+  onLongPress,
+  onMore,
+  selected,
 }: {
   readonly node: NodeInfo;
   readonly detail: string;
   readonly onPress: () => void;
+  readonly onLongPress: (() => void) | undefined;
+  /** Opens the actions on this one item. */
+  readonly onMore: () => void;
+  /** Whether it is among the chosen items; undefined while nothing is being chosen. */
+  readonly selected: boolean | undefined;
 }) {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const isFolder = node.kind === "folder";
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${node.name}, ${detail}`}
-      style={({ pressed }) => [styles.row, { backgroundColor: pressed ? colors.surfaceSunk : "transparent" }]}
-    >
-      <View
-        style={[
-          styles.tile,
-          { backgroundColor: isFolder ? colors.accentWash : colors.surface, borderColor: colors.line },
-        ]}
+    <View style={[styles.rowFrame, selected ? { backgroundColor: colors.accentWash } : null]}>
+      <Pressable
+        onPress={onPress}
+        {...(onLongPress ? { onLongPress } : {})}
+        accessibilityRole="button"
+        accessibilityLabel={`${node.name}, ${detail}`}
+        {...(selected === undefined ? {} : { accessibilityState: { selected } })}
+        style={({ pressed }) => [styles.row, { backgroundColor: pressed ? colors.surfaceSunk : "transparent" }]}
       >
-        <Icon
-          name={isFolder ? "folder" : categoryIcons[fileCategory(node)]}
-          color={isFolder ? colors.accentWashInk : colors.inkSoft}
-        />
-      </View>
-      <View style={styles.rowText}>
-        <Text numberOfLines={2} style={[styles.name, { color: colors.ink }]}>
-          {node.name}
-        </Text>
-        <Text numberOfLines={1} style={[styles.detail, { color: colors.inkFaint }]}>
-          {detail}
-        </Text>
-      </View>
-      {isFolder ? <Icon name="chevronRight" size={20} color={colors.inkFaint} /> : null}
+        <View
+          style={[
+            styles.tile,
+            { backgroundColor: isFolder ? colors.accentWash : colors.surface, borderColor: colors.line },
+          ]}
+        >
+          <Icon
+            name={isFolder ? "folder" : categoryIcons[fileCategory(node)]}
+            color={isFolder ? colors.accentWashInk : colors.inkSoft}
+          />
+        </View>
+        <View style={styles.rowText}>
+          <Text numberOfLines={2} style={[styles.name, { color: colors.ink }]}>
+            {node.name}
+          </Text>
+          <Text numberOfLines={1} style={[styles.detail, { color: colors.inkFaint }]}>
+            {detail}
+          </Text>
+        </View>
+        {selected === undefined ? null : (
+          <Icon name={selected ? "checkCircle" : "circle"} color={selected ? colors.accent : colors.inkFaint} />
+        )}
+      </Pressable>
+      {selected === undefined ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${t("files.actions")}: ${node.name}`}
+          onPress={onMore}
+          style={styles.more}
+        >
+          <Icon name="more" color={colors.inkSoft} />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function BarAction({
+  icon,
+  label,
+  onPress,
+}: {
+  readonly icon: IconName;
+  readonly label: string;
+  readonly onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={styles.barAction}>
+      <Icon name={icon} color={colors.ink} />
+      <Text numberOfLines={2} style={[styles.barActionText, { color: colors.inkSoft }]}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -437,7 +557,13 @@ const styles = StyleSheet.create({
   crumbs: { alignItems: "center", gap: space.xs, paddingVertical: space.xs },
   crumb: { flexDirection: "row", alignItems: "center", gap: space.xs },
   crumbText: { fontSize: type.small },
+  rowFrame: { flexDirection: "row", alignItems: "center" },
+  more: { width: 48, height: 56, alignItems: "center", justifyContent: "center", marginRight: space.xs },
+  actionBar: { flexDirection: "row", borderTopWidth: 1, paddingHorizontal: space.sm },
+  barAction: { flex: 1, minHeight: 60, alignItems: "center", justifyContent: "center", gap: 2, padding: space.xs },
+  barActionText: { fontSize: 12, fontWeight: "600", textAlign: "center" },
   row: {
+    flex: 1,
     minHeight: 64,
     flexDirection: "row",
     alignItems: "center",

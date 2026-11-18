@@ -193,6 +193,7 @@
       "soon": "Vaše fotografije će se ovde prikazivati u sledećoj verziji aplikacije."
     },
     "files": {
+      "selectAll": "Izaberi sve",
       "kinds": {
         "image": "Slika",
         "video": "Video",
@@ -309,7 +310,7 @@
     "empty": "Isprazni korpu",
     "emptyTitle": "Isprazniti korpu?",
     "deleteTitle": "Obrisati trajno?",
-    "confirm": "{count, plural, one {# stavka} few {# stavke} other {# stavki}} ({size}) biće trajno obrisano. Ovo ne može da se poništi."
+    "confirm": "{count, plural, one {# stavka ({size}) biće trajno obrisana.} few {# stavke ({size}) biće trajno obrisane.} other {# stavki ({size}) biće trajno obrisano.}} Ovo ne može da se poništi."
   },
   "uploads": {
     "title": "Otpremanja",

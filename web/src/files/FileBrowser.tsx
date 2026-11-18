@@ -1,3 +1,4 @@
+import { batchFailure } from "@atrium/shared";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useEffect,
@@ -12,7 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router";
 
-import { api, ApiError, call } from "../api.ts";
+import { api, call } from "../api.ts";
 import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Select } from "../components/Select.tsx";
@@ -145,9 +146,9 @@ export function FileBrowser() {
 
   /** Reports the items of a batch that did not go through; the rest did. */
   const reportBatch = (results: BatchItem[]) => {
-    const failed = results.filter((r) => !r.ok);
-    if (failed.length > 0) {
-      setError(new ApiError({ code: failed[0]!.code ?? "unknown", params: failed[0]!.params ?? {}, status: 0 }));
+    const failure = batchFailure(results);
+    if (failure) {
+      setError(failure);
     }
   };
 
