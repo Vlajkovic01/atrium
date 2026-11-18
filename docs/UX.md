@@ -342,7 +342,7 @@ the active one; each has its own session, settings and offline files.
 ### Navigation
 
 Bottom tabs: Photos, Files, Watch (Phase 7), Account. The app opens on
-Files until the photo timeline is built. The switcher between servers,
+Photos. Search and notifications open above the tabs. The switcher between servers,
 adding a server and signing out are under Account.
 
 ### Photos
