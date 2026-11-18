@@ -1,19 +1,19 @@
-import { Redirect, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, Text, View } from "react-native";
 
-import { Body, Button, Heading, Notice, Screen, Title } from "../src/components/ui.tsx";
-import { displayAddress } from "../src/connect.ts";
-import { useServers } from "../src/servers.tsx";
-import { radius, space, type, useTheme } from "../src/theme.ts";
+import { Body, Button, Heading, Notice, Screen, Title } from "../../src/components/ui.tsx";
+import { displayAddress } from "../../src/connect.ts";
+import { useServers } from "../../src/servers.tsx";
+import { radius, space, type, useTheme } from "../../src/theme.ts";
 
 /**
- * The connected state, until files and photos arrive: who is signed in
- * where, the other servers the app knows, and signing out. It becomes the
- * Account screen (docs/UX.md, Mobile, Connect).
+ * Who is signed in where, the other servers the app knows, and signing
+ * out (docs/UX.md, Mobile, Connect). Devices and the lock join it later
+ * in this phase.
  */
-export default function Home() {
+export default function Account() {
   const { t } = useTranslation();
   const router = useRouter();
   const { colors } = useTheme();
@@ -22,7 +22,7 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
 
   if (!active) {
-    return <Redirect href="/welcome" />;
+    return null;
   }
 
   const signOut = async (): Promise<void> => {
@@ -39,7 +39,7 @@ export default function Home() {
 
   return (
     <Screen>
-      <Title>{t("mobile.home.heading")}</Title>
+      <Title>{t("nav.account")}</Title>
       <View style={card}>
         <Text style={[styles.name, { color: colors.ink }]}>
           {t("mobile.home.signedInAs", { name: active.user.displayName, server: displayAddress(active.url) })}
@@ -47,7 +47,6 @@ export default function Home() {
         {/* Shown for as long as the connection is not encrypted (DESIGN.md 12, risk 6). */}
         {active.url.startsWith("http://") ? <Notice kind="warning">{t("connection.insecure")}</Notice> : null}
       </View>
-      <Body faint>{t("mobile.home.soon")}</Body>
 
       {servers.length > 1 ? (
         <>

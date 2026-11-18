@@ -341,7 +341,9 @@ the active one; each has its own session, settings and offline files.
 
 ### Navigation
 
-Bottom tabs: Photos, Files, Watch (Phase 7), Account.
+Bottom tabs: Photos, Files, Watch (Phase 7), Account. The app opens on
+Files until the photo timeline is built. The switcher between servers,
+adding a server and signing out are under Account.
 
 ### Photos
 
@@ -350,6 +352,16 @@ supports swipe, pinch zoom, swipe down to close. Items not yet backed up
 carry a small badge.
 
 ### Files
+
+Built so far (D-051): a folder is a screen, so Back goes up one folder;
+the folders above are shown as a path and are one touch away. Where a
+person has more than their own files, the libraries are offered at the
+top. Each row shows what the item is, its size and when it changed; long
+names take two lines. The order (name, date, size, type, either way) is
+chosen from a panel and remembered on the device. Pulling down reads the
+folder again; long folders arrive page by page while scrolling. A folder
+that cannot be changed carries a lock and says why. Touching a file shows
+its details until opening files is built.
 
 Folder browsing, search, sort. Actions through a long-press menu and
 multi-select. Upload from the device's file picker, camera or photo

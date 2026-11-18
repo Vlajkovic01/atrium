@@ -27,7 +27,7 @@ export default function Welcome() {
       <Button onPress={() => router.push("/connect/address")}>{t("mobile.welcome.type")}</Button>
       <Notice kind="accent">{t("mobile.welcome.where")}</Notice>
       {servers.length > 0 ? (
-        <Button variant="ghost" onPress={() => router.replace("/home")}>
+        <Button variant="ghost" onPress={() => router.replace("/account")}>
           {t("common.back")}
         </Button>
       ) : null}
