@@ -243,7 +243,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description How this client plays the video: the original, a remux, the audio converted, or the video encoded again, with the reasons. 409 playback.not_ready while the file has not been read yet. */
+        /** @description How this client plays the video: the original, a remux, the audio converted, or the video encoded again, with the reasons, and for direct play a signed URL of the original. 409 playback.not_ready while the file has not been read yet. */
         post: operations["DecidePlayback"];
         delete?: never;
         options?: never;
@@ -2172,6 +2172,7 @@ export interface components {
             /** Format: int32 */
             audioStream: null | number | string;
             streams: components["schemas"]["MediaStream"][];
+            original: null | components["schemas"]["SignedUrlResponse"];
         };
         ProblemDetails: {
             type?: null | string;

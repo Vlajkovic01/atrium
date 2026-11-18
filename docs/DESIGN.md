@@ -834,7 +834,10 @@ browsers, which do not open it either.
 Rules, in order (D-059):
 
 - The original plays when the client opens the container and plays the
-  video, the chosen audio track and the bit rate.
+  video, the chosen audio track and the bit rate. The answer carries a
+  signed URL of the original with range requests, from any storage
+  location, that lasts the video's length and two hours (at most a day);
+  after a longer pause the player asks again.
 - Video the client plays is copied, if HLS can carry its codec (H.264,
   HEVC, AV1, VP9): a remux, or an audio transcode when only the sound
   does not play or cannot be carried.

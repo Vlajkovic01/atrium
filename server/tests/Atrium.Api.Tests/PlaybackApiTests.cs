@@ -61,7 +61,7 @@ public sealed class PlaybackApiTests : IDisposable
         var blob = await scope.ServiceProvider.GetRequiredService<BlobStore>()
             .StoreAsync(library.StorageLocationId!.Value, new MemoryStream([1, 2, 3, (byte)user.Length]), null, CancellationToken.None);
         var node = (await scope.ServiceProvider.GetRequiredService<NodeService>().AddFileAsync(
-            new FileActor(owner.Id, false, false, false), library.RootNodeId, name + ".part", blob, null, null, ConflictPolicy.Fail, CancellationToken.None)).Value!;
+            new FileActor(owner.Id, false, false, false), library.RootNodeId, name + ".part", blob, name.EndsWith(".mkv", StringComparison.Ordinal) ? "video/x-matroska" : null, null, ConflictPolicy.Fail, CancellationToken.None)).Value!;
         var stored = await db.Nodes.SingleAsync(n => n.Id == node.Id);
         stored.Name = name;
         stored.MediaKind = Path.GetExtension(name) == ".jpg" ? MediaKind.Photo : MediaKind.Video;
@@ -107,6 +107,53 @@ public sealed class PlaybackApiTests : IDisposable
 
         // The streams came back from the database as they were stored.
         Assert.Equal(FilmStreams, view.Streams);
+
+        // Streaming comes from a session, not from the original.
+        Assert.Null(view.Original);
+    }
+
+    [Fact]
+    public async Task Direct_play_gets_a_signed_URL_of_the_original_that_lasts_the_film_and_serves_ranges()
+    {
+        var (token, film) = await FileAsync("ana", "film.mkv");
+        var before = DateTimeOffset.UtcNow;
+
+        var view = await (await DecideAsync(film.Id, token, Browser with { Containers = ["mkv"] })).ReadAsync<PlaybackView>();
+
+        var original = Assert.IsType<SignedUrlResponse>(view.Original);
+        var lasts = original.ExpiresAt - before;
+        Assert.InRange(lasts, TimeSpan.FromHours(3.5) - TimeSpan.FromMinutes(1), TimeSpan.FromHours(3.5) + TimeSpan.FromMinutes(1));
+
+        // A media element sends no token; the signature is the access, and it seeks with ranges.
+        using var request = new HttpRequestMessage(HttpMethod.Get, original.Url);
+        request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(1, 2);
+        var part = await _client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.PartialContent, part.StatusCode);
+        Assert.Equal("bytes 1-2/4", part.Content.Headers.ContentRange?.ToString());
+        Assert.Equal(new byte[] { 2, 3 }, await part.Content.ReadAsByteArrayAsync());
+        Assert.Equal("inline", part.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Equal("video/x-matroska", part.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public void No_signed_URL_lasts_longer_than_a_day()
+    {
+        var signer = _factory.Services.GetRequiredService<Atrium.Api.Files.SignedUrls>();
+        var before = DateTimeOffset.UtcNow;
+
+        var (_, expires) = signer.Sign("/api/v1/nodes/x/content", Guid.NewGuid(), null, TimeSpan.FromHours(30));
+
+        Assert.InRange(expires - before, TimeSpan.FromHours(24) - TimeSpan.FromMinutes(1), TimeSpan.FromHours(24) + TimeSpan.FromMinutes(1));
+    }
+
+    [Theory]
+    [InlineData(null, 2.0)]
+    [InlineData(1_800_000L, 2.5)]
+    [InlineData(5_400_000L, 3.5)]
+    [InlineData(36_000_000L, 12.0)]
+    public void The_original_lasts_the_video_and_two_hours(long? durationMs, double hours)
+    {
+        Assert.Equal(TimeSpan.FromHours(hours), PlaybackEndpoints.OriginalLifetime(durationMs));
     }
 
     [Fact]

@@ -533,7 +533,7 @@
         "tags": [
           "Playback"
         ],
-        "description": "How this client plays the video: the original, a remux, the audio converted, or the video encoded again, with the reasons. 409 playback.not_ready while the file has not been read yet.",
+        "description": "How this client plays the video: the original, a remux, the audio converted, or the video encoded again, with the reasons, and for direct play a signed URL of the original. 409 playback.not_ready while the file has not been read yet.",
         "operationId": "DecidePlayback",
         "parameters": [
           {
@@ -7968,7 +7968,8 @@
           "durationMs",
           "videoStream",
           "audioStream",
-          "streams"
+          "streams",
+          "original"
         ],
         "type": "object",
         "properties": {
@@ -8015,6 +8016,16 @@
             "items": {
               "$ref": "#/components/schemas/MediaStream"
             }
+          },
+          "original": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SignedUrlResponse"
+              }
+            ]
           }
         }
       },

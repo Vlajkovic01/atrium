@@ -25,7 +25,12 @@ public static class FileContent
     private static readonly HashSet<string> InlineTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif", "image/heic", "image/bmp",
-        "video/mp4", "video/webm", "video/quicktime", "audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav", "audio/flac",
+        "video/mp4", "video/webm", "video/quicktime",
+
+        // Containers a phone's player opens from the original (DESIGN.md 7.3).
+        // A media type is never run as a document, and the sandbox applies.
+        "video/x-matroska", "video/mp2t", "video/x-msvideo", "video/ogg",
+        "audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav", "audio/flac",
         "application/pdf", "text/plain",
     };
 
