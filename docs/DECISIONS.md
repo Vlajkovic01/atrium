@@ -885,6 +885,14 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - Limit: a name without a dot or ending in `.lan` is trusted to be local
   because it does not resolve on the internet; a hostile network could
   answer for it, as it could for any plain HTTP address on that network.
+- **Marked for as long as it is used** (Phase 5). Allowed is not safe:
+  every client marks a plain HTTP connection on every signed-in screen,
+  by the shared rule `isUnencrypted`: plain HTTP to anything but this
+  device, since loopback never leaves it. The web keeps its banner; the
+  phone shows a short strip above the tabs, "Not encrypted", which opens
+  the full explanation when tapped. Alternative: the full sentence on
+  every screen, which on a phone takes room from every screen and, read
+  every day, is soon not read at all.
 
 ## D-050 How the mobile app connects and how its screens are checked (Proposed, Phase 4)
 

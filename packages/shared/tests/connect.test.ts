@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPhoneLink, isLocalHost, parsePairingLink, parsePhoneLink, parseServerAddress } from "../src/index.ts";
+import {
+  buildPhoneLink,
+  isLocalHost,
+  isUnencrypted,
+  parsePairingLink,
+  parsePhoneLink,
+  parseServerAddress,
+} from "../src/index.ts";
 
 describe("server address", () => {
   it.each([
@@ -78,6 +85,32 @@ describe("server address", () => {
     }
 
     expect(isLocalHost("[::ffff:192.168.1.1]")).toBe(true);
+  });
+});
+
+describe("unencrypted connections", () => {
+  it.each([
+    "http://192.168.1.20:8080",
+    "http://nas.local",
+    "HTTP://homeserver:5080/atrium",
+    "http://100.64.1.2",
+    "http://[fe80::1]:5080",
+  ])("marks %s", (url) => {
+    expect(isUnencrypted(url)).toBe(true);
+  });
+
+  it.each([
+    "https://atrium.example.org",
+    "https://192.168.1.20",
+    "http://localhost:5080",
+    "http://app.localhost",
+    "http://127.0.0.1:5080",
+    "http://127.8.9.10",
+    "http://[::1]:5080",
+    "",
+    "not an address",
+  ])("does not mark %s", (url) => {
+    expect(isUnencrypted(url)).toBe(false);
   });
 });
 

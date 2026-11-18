@@ -1,10 +1,13 @@
 import { Redirect } from "expo-router";
-import { Tabs } from "expo-router/js-tabs";
+import { BottomTabBar, Tabs } from "expo-router/js-tabs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BackupProvider } from "../../src/backup/BackupProvider.tsx";
 import { Icon, type IconName } from "../../src/components/Icon.tsx";
+import { InsecureStrip } from "../../src/components/InsecureStrip.tsx";
 import { useNotifications } from "../../src/notifications.ts";
 import { OfflineProvider } from "../../src/offline/OfflineProvider.tsx";
 import { useServers } from "../../src/servers.tsx";
@@ -19,6 +22,14 @@ import { space, useTheme } from "../../src/theme.ts";
  * front, and starts over when another server comes to the front, so no
  * screen of one server stays open over another.
  */
+/**
+ * Height of the tab bar above the system's own bottom edge: 6 points above
+ * and below, and in each tab 5 points around a 28-point icon and a label
+ * of one 16-point line. Shorter, the label was squeezed and lost the tails
+ * of letters such as g and j.
+ */
+const TAB_BAR_HEIGHT = 68;
+
 export default function TabsLayout() {
   const { active } = useServers();
   if (!active) {
@@ -41,6 +52,9 @@ export default function TabsLayout() {
 
 function SignedInTabs() {
   const { t } = useTranslation();
+  const { active } = useServers();
+  // The strip over the tabs, when shown, pushes the uploads panel up by its height.
+  const [stripHeight, setStripHeight] = useState(0);
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -55,6 +69,14 @@ function SignedInTabs() {
   return (
     <>
       <Tabs
+        tabBar={(props) => (
+          <>
+            <View onLayout={(event) => setStripHeight(event.nativeEvent.layout.height)}>
+              {active ? <InsecureStrip url={active.url} /> : null}
+            </View>
+            <BottomTabBar {...props} />
+          </>
+        )}
         screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: colors.accent,
@@ -63,11 +85,11 @@ function SignedInTabs() {
           tabBarStyle: {
             backgroundColor: colors.surface,
             borderTopColor: colors.line,
-            height: 64 + insets.bottom,
+            height: TAB_BAR_HEIGHT + insets.bottom,
             paddingTop: 6,
             paddingBottom: insets.bottom + 6,
           },
-          tabBarLabelStyle: { fontSize: 12, fontWeight: "600" },
+          tabBarLabelStyle: { fontSize: 12, lineHeight: 16, fontWeight: "600" },
           sceneStyle: { backgroundColor: colors.paper, paddingBottom: uploadsShown ? UPLOADS_BAR_ROOM : 0 },
         }}
       >
@@ -82,7 +104,7 @@ function SignedInTabs() {
           }}
         />
       </Tabs>
-      <UploadsPanel bottom={64 + insets.bottom + space.sm} />
+      <UploadsPanel bottom={TAB_BAR_HEIGHT + insets.bottom + stripHeight + space.sm} />
     </>
   );
 }

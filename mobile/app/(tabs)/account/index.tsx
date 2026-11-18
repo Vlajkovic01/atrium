@@ -1,3 +1,4 @@
+import { isUnencrypted } from "@atrium/shared";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -54,7 +55,7 @@ export default function Account() {
           {t("mobile.home.signedInAs", { name: active.user.displayName, server: displayAddress(active.url) })}
         </Text>
         {/* Shown for as long as the connection is not encrypted (DESIGN.md 12, risk 6). */}
-        {active.url.startsWith("http://") ? <Notice kind="warning">{t("connection.insecure")}</Notice> : null}
+        {isUnencrypted(active.url) ? <Notice kind="warning">{t("connection.insecure")}</Notice> : null}
       </View>
 
       {servers.length > 1 ? (

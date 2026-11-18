@@ -1,4 +1,4 @@
-import { signInTo } from "@atrium/shared";
+import { isUnencrypted, signInTo } from "@atrium/shared";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -57,7 +57,7 @@ export default function SignIn() {
     <Screen>
       <Title>{challenge === null ? t("signIn.heading") : t("signIn.totpHeading")}</Title>
       <Body>{t("mobile.signIn.server", { server: displayAddress(server) })}</Body>
-      {server.startsWith("http://") ? <Notice kind="warning">{t("connection.insecure")}</Notice> : null}
+      {isUnencrypted(server) ? <Notice kind="warning">{t("connection.insecure")}</Notice> : null}
       {challenge === null ? (
         <>
           <TextField

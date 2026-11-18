@@ -1,4 +1,4 @@
-import { errorMessageKeys, localeNames, supportedLocales, type Locale } from "@atrium/shared";
+import { errorMessageKeys, isUnencrypted, localeNames, supportedLocales, type Locale } from "@atrium/shared";
 import { useEffect, useId, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -311,8 +311,7 @@ export function Card({
 /** Shown on every screen when the page was loaded over plain HTTP from another machine. */
 export function InsecureBanner() {
   const { t } = useTranslation();
-  const local = ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
-  if (window.location.protocol === "https:" || local) {
+  if (!isUnencrypted(window.location.href)) {
     return null;
   }
 
