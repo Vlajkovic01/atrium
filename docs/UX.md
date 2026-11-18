@@ -382,6 +382,13 @@ text inside the app; anything else, or what the phone cannot play, is
 offered to another app, as every file is from the viewer's top bar. The
 previous and next file of the folder are one touch away.
 
+Uploading (D-054): "Upload files" in the top bar of a folder that can
+be changed offers files on the phone, photos and videos, a photo or a
+video taken now. Uploads go on under the tabs, with one line of progress
+above them that opens the list (pause, resume, cancel, clear finished).
+A taken name is asked about as on the web. What is not finished goes on
+when the app is opened again.
+
 Actions: each row has a menu (rename, move, copy, move to trash,
 details); a long press starts choosing several items, and the actions
 for the choice sit along the bottom edge. New folder is in the top bar.

@@ -1019,3 +1019,28 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   engine reads.
 - Not yet: the badge on items not backed up (camera backup).
 
+## D-054 Uploading from the mobile app (Proposed, Phase 4)
+
+- **The web's tus queue, unchanged.** Uploads go through `UploadQueue` from
+  the shared package: two at a time, each continuing after a lost
+  connection, chunks checked with SHA-256, a taken name asked about once
+  with "do the same for the rest".
+- **Every picker hands over a copy in the app's cache.** The upload reads
+  it a chunk at a time, never whole. Because the copy is the app's own,
+  an upload not finished when the app closes goes on when it opens again,
+  without choosing the file again (the web can only offer that). Each
+  unfinished upload is remembered per server with its place on the
+  server; the copy is removed once the file is on the server, or is
+  cancelled, skipped or refused. Cost: a chosen file takes space twice
+  until it is uploaded.
+- **The system's pickers and camera, not our own.** Files through the
+  system's chooser; photos and videos through the system's photo picker,
+  which needs no permission to read the whole library; photos and videos
+  taken with the system camera app. So the app asks for nothing but the
+  camera, already declared for scanning, and declares no microphone.
+  Pictures are sent as they are: no editing, no recompression.
+- **Uploads run while the app is open.** Going on in the background is
+  part of camera backup, where the platform's limits are decided.
+- Not yet: notifications for finished or failed uploads (the next pull
+  request), sharing into Atrium from other apps.
+
