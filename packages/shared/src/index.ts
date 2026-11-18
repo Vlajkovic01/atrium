@@ -17,7 +17,7 @@ export type {
   ServerRegistryOptions,
   UserSummary,
 } from "./connect/registry.ts";
-export { isLocalHost, parseServerAddress } from "./connect/address.ts";
+export { isLocalHost, isUnencrypted, parseServerAddress } from "./connect/address.ts";
 export type { ServerAddress } from "./connect/address.ts";
 export { buildPhoneLink, parsePairingLink, parsePhoneLink } from "./connect/codes.ts";
 export type { PairingLink, PhoneLink } from "./connect/codes.ts";

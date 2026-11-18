@@ -17,6 +17,8 @@
     "add": "Add"
   },
   "connection": {
+    "unencrypted": "Not encrypted",
+    "unencryptedHint": "Shows what an unencrypted connection means",
     "insecure": "This connection is not encrypted. Anyone on the same network can read what you send, including your password."
   },
   "errors": {

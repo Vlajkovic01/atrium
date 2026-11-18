@@ -17,6 +17,8 @@
     "add": "Dodaj"
   },
   "connection": {
+    "unencrypted": "Nije šifrovano",
+    "unencryptedHint": "Prikazuje šta znači nešifrovana veza",
     "insecure": "Ova veza nije šifrovana. Svako na istoj mreži može da pročita ono što šaljete, uključujući lozinku."
   },
   "errors": {

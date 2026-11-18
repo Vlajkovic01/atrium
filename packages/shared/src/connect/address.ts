@@ -68,6 +68,31 @@ export function parseServerAddress(input: string): ServerAddress {
 }
 
 /**
+ * Whether what is sent to this address can be read on the way: plain HTTP
+ * to anything but this device itself. A local address is allowed over
+ * HTTP (see {@link parseServerAddress}), but it is still unencrypted, and
+ * every client marks it so for as long as it is connected (DESIGN.md 12,
+ * risk 6). Loopback never leaves the device, so it is not marked.
+ */
+export function isUnencrypted(url: string): boolean {
+  const match = /^http:\/\/(\[[^\]]*\]|[^/:?#]+)/i.exec(url.trim());
+  if (!match) {
+    return false;
+  }
+
+  return !isLoopbackHost(match[1]!.toLowerCase());
+}
+
+function isLoopbackHost(host: string): boolean {
+  if (host === "localhost" || host.endsWith(".localhost") || host === "[::1]") {
+    return true;
+  }
+
+  const ipv4 = readIpv4(host);
+  return ipv4 !== null && ipv4[0] === 127;
+}
+
+/**
  * Whether a host can only be on the local network or this device: private,
  * loopback and link-local addresses, the range carriers and mesh VPNs use
  * between their own devices (100.64.0.0/10), names that never resolve on
