@@ -243,6 +243,14 @@
       "fetching": "Preuzima se · {done} od {size}",
       "reading": "Čita se folder…",
       "failed": "{count, plural, one {# fajl nije mogao da se preuzme} few {# fajla nisu mogla da se preuzmu} other {# fajlova nije moglo da se preuzme}}"
+    },
+    "devices": {
+      "signOutBody": "Njegova sesija se odmah završava. Za ponovnu prijavu tamo treba lozinka ili nov kod."
+    },
+    "approve": {
+      "scanBody": "Usmerite kameru na kod koji prikazuje televizor.",
+      "notACode": "To nije kod uređaja. Skenirajte kod koji televizor prikazuje kad traži prijavu.",
+      "otherServer": "Taj kod je za drugi server. Ovaj telefon je prijavljen na {server}; odobrite uređaj iz aplikacije prijavljene na njegov server."
     }
   },
   "nav": {

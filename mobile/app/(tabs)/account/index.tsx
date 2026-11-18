@@ -77,6 +77,7 @@ export default function Account() {
       <Button onPress={() => router.push("/notifications")}>
         {unread > 0 ? t("notifications.openUnread", { count: unread }) : t("notifications.open")}
       </Button>
+      <Button onPress={() => router.push("/account/devices")}>{t("devices.heading")}</Button>
       <Button onPress={() => router.push("/account/downloads")}>{t("mobile.offline.title")}</Button>
       <Button onPress={() => router.push("/welcome")}>{t("mobile.home.addServer")}</Button>
       {confirming ? (

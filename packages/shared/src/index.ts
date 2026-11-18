@@ -97,3 +97,5 @@ export { changeEffects, pullChanges } from "./sync/changes.ts";
 export type { ChangeEffects, ChangeInfo, ChangePull } from "./sync/changes.ts";
 export { nextRange, offlineTotals, planOffline } from "./offline/plan.ts";
 export type { KeptFile, OfflinePlan } from "./offline/plan.ts";
+export { devicesApi, normalizePairingCode } from "./connect/devices.ts";
+export type { DevicesApi, PairingApproval, PairingDetails, SessionInfo } from "./connect/devices.ts";

@@ -243,6 +243,14 @@
       "fetching": "Downloading · {done} of {size}",
       "reading": "Reading the folder…",
       "failed": "{count, plural, one {# file could not be downloaded} other {# files could not be downloaded}}"
+    },
+    "devices": {
+      "signOutBody": "Its session ends at once. Signing in there again needs the password, or a new code."
+    },
+    "approve": {
+      "scanBody": "Point the camera at the code the TV shows.",
+      "notACode": "That is not a device's code. Scan the code a TV shows when it asks to be signed in.",
+      "otherServer": "That code is for another server. This phone is signed in to {server}; approve the device from an app signed in to its server."
     }
   },
   "nav": {

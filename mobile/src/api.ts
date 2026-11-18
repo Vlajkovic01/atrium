@@ -1,10 +1,12 @@
 import {
   albumsApi,
+  devicesApi,
   filesApi,
   notificationsApi,
   photosApi,
   searchApi,
   type AlbumsApi,
+  type DevicesApi,
   type FilesApi,
   type NotificationsApi,
   type KnownServer,
@@ -21,6 +23,7 @@ interface Calls {
   readonly albums: AlbumsApi;
   readonly search: SearchApi;
   readonly notifications: NotificationsApi;
+  readonly devices: DevicesApi;
 }
 
 const callsOf = new WeakMap<ServerSession, Calls>();
@@ -38,6 +41,8 @@ export interface ActiveServer {
   readonly search: SearchApi;
   /** The person's notifications on the server in front (D-045). */
   readonly notifications: NotificationsApi;
+  /** The person's devices, and approving a TV. */
+  readonly devices: DevicesApi;
 }
 
 /**
@@ -61,6 +66,7 @@ export function useActiveServer(): ActiveServer {
       albums: albumsApi(session.api),
       search: searchApi(session.api),
       notifications: notificationsApi(session.api),
+      devices: devicesApi(session.api),
     };
     callsOf.set(session, calls);
   }
