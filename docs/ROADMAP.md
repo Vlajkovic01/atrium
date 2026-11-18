@@ -1,6 +1,6 @@
 # Atrium roadmap
 
-Status: revised 2026-11-17 (Phase 4 built).
+Status: revised 2026-11-18 (Phase 5 built).
 
 One phase at a time. Each phase ends with all tests passing, a summary of
 what was built, known risks and open questions, and a stop for approval.
@@ -74,7 +74,7 @@ protect files keep growing with every phase.
   changes allowed per library after a typed confirmation (D-035, D-036).
   It adds to release requirement 3 (an interrupted scan resumes) and 4
   (external libraries join the security review's scope).
-- Phase 4: built, awaiting the owner's approval. The Android app
+- Phase 4: done. The Android app
   (docs/MOBILE.md): connect by QR or address, several servers, files,
   photos with albums and search, resumable uploads, notifications,
   offline folders kept current by the change feed (D-047), camera backup
@@ -85,6 +85,21 @@ protect files keep growing with every phase.
   web app too. It adds to release requirement 4 (the phone's token
   storage, links and plain HTTP rule join the review) and 8 (the app's
   libraries are in LICENSES.md).
+- Phase 5: built, awaiting the owner's approval. Every stream of a video
+  is read once, and the server decides how each client plays it from what
+  the client says it plays (D-059): the original through a signed URL
+  that lasts the film (D-060), or HLS made on demand. Copied video is cut
+  at keyframes read from the container's own index (D-061); FFmpeg runs
+  per stretch of watching and the server keeps the timeline, so a seek
+  starts at once and every boundary holds (D-062). Remote storage is read
+  through a loopback URL, and the stream cache is bounded (D-063).
+  Hardware encoders are tested on the machine and fall back to software;
+  the image moved to Jellyfin's FFmpeg build (D-064). Seek pictures
+  (D-065), the web player (D-066), the mobile player with Android's own
+  description of its decoders (D-067), and the place in a video on every
+  device (D-068). It adds to release requirement 4 (stream identifiers,
+  loopback sources and signed URLs that last a film join the review) and
+  8 (jellyfin-ffmpeg and hls.js are in LICENSES.md).
 
 ## Sequencing notes
 
