@@ -3,6 +3,7 @@ import {
   browserMediaProbe,
   browserProfile,
   playbackApi,
+  resumeFrom,
   type ClientProfile,
   type MediaStream,
   type PlaybackMethod,
@@ -26,6 +27,8 @@ export type Playback =
       readonly streams: readonly MediaStream[];
       readonly audioStream: number | null;
       readonly durationMs: number | null;
+      /** Where to start: where the person was on any device, or where a change of track or quality left off. */
+      readonly startMs: number;
     };
 
 /** How often to ask again while the server is still reading the video, and for how long. */
@@ -63,6 +66,9 @@ export function usePlayback(
           return;
         }
 
+        const durationMs = decided.durationMs === null ? null : Number(decided.durationMs);
+        const start =
+          startMs > 0 ? startMs : resumeFrom(decided.resumeMs === null ? null : Number(decided.resumeMs), durationMs);
         if (decided.method === "directPlay" && decided.original) {
           setState({
             state: "ready",
@@ -72,14 +78,15 @@ export function usePlayback(
             reasons: decided.reasons,
             streams: decided.streams,
             audioStream: decided.audioStream === null ? null : Number(decided.audioStream),
-            durationMs: decided.durationMs === null ? null : Number(decided.durationMs),
+            durationMs,
+            startMs: start,
           });
           return;
         }
 
         const stream = await playback.openStream(nodeId, profile, {
           ...(audioStream === null ? {} : { audioStream }),
-          startMs,
+          startMs: start,
         });
         if (cancelled) {
           void playback.closeStream(stream.id).catch(() => undefined);
@@ -96,6 +103,7 @@ export function usePlayback(
           streams: stream.streams,
           audioStream: stream.audioStream === null ? null : Number(stream.audioStream),
           durationMs: stream.durationMs === null ? null : Number(stream.durationMs),
+          startMs: start,
         });
       } catch (error) {
         if (cancelled) {

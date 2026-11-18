@@ -37,6 +37,8 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options, T
     public DbSet<Upload> Uploads => Set<Upload>();
     public DbSet<LibraryGrant> LibraryGrants => Set<LibraryGrant>();
     public DbSet<MediaInfo> MediaInfos => Set<MediaInfo>();
+
+    public DbSet<PlaybackState> PlaybackStates => Set<PlaybackState>();
     public DbSet<Album> Albums => Set<Album>();
     public DbSet<AlbumItem> AlbumItems => Set<AlbumItem>();
 
@@ -248,6 +250,14 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options, T
             e.ToTable(t => t.HasCheckConstraint(
                 "CK_MediaInfos_OneSource",
                 "(\"BlobId\" IS NULL) <> (\"NodeId\" IS NULL)"));
+        });
+
+        modelBuilder.Entity<PlaybackState>(e =>
+        {
+            e.HasKey(s => new { s.UserId, s.NodeId });
+            e.HasOne<User>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Node>().WithMany().HasForeignKey(s => s.NodeId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(s => s.NodeId);
         });
 
         modelBuilder.Entity<Album>(e =>

@@ -61,6 +61,19 @@ export function playbackApi(api: ApiClient) {
       }
     },
 
+    /**
+     * Saves where this person is in a video, so any of their devices
+     * resumes there (D-068). Players save every few seconds while playing,
+     * on pause and when closed.
+     */
+    savePosition: (nodeId: string, positionMs: number, durationMs: number): Promise<void> =>
+      call(
+        api.PUT("/api/v1/playback/state/{nodeId}", {
+          params: { path: { nodeId } },
+          body: { positionMs: Math.round(positionMs), durationMs: Math.round(durationMs) },
+        }),
+      ),
+
     /** Ends a stream, so the server stops making it. */
     closeStream: (id: string): Promise<void> =>
       call(api.DELETE("/api/v1/playback/sessions/{id}", { params: { path: { id } } })),

@@ -172,6 +172,47 @@ public sealed class PlaybackApiTests : IDisposable
     }
 
     [Fact]
+    public async Task A_position_saved_on_one_device_is_where_another_resumes_and_is_the_persons_own()
+    {
+        var (phone, film) = await FileAsync("ana", "film.mkv");
+        var tv = (await _client.SignInAsync("ana")).AccessToken;
+        var (bob, _) = await FileAsync("bob", "other.mkv");
+        var position = $"/api/v1/playback/state/{film.Id}";
+
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.SendAsync(HttpMethod.Get, position, phone)).StatusCode);
+        Assert.Null((await (await DecideAsync(film.Id, phone, Browser)).ReadAsync<PlaybackView>()).ResumeMs);
+
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.SendAsync(HttpMethod.Put, position, phone, new SavePositionRequest(600_000, 5_400_000))).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.SendAsync(HttpMethod.Put, position, tv, new SavePositionRequest(1_200_000, 5_400_000))).StatusCode);
+
+        // The other device's later save is what both see, in the decision too.
+        var saved = await (await _client.SendAsync(HttpMethod.Get, position, phone)).ReadAsync<PositionView>();
+        Assert.Equal((1_200_000L, 5_400_000L), (saved.PositionMs, saved.DurationMs));
+        Assert.Equal(1_200_000, (await (await DecideAsync(film.Id, phone, Browser)).ReadAsync<PlaybackView>()).ResumeMs);
+
+        // Someone else neither reads nor writes it, and nonsense is refused.
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.SendAsync(HttpMethod.Get, position, bob)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await _client.SendAsync(HttpMethod.Put, position, bob, new SavePositionRequest(1, 10))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.SendAsync(HttpMethod.Put, position, phone, new SavePositionRequest(-1, 10))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await _client.SendAsync(HttpMethod.Put, position, phone, new SavePositionRequest(10, 0))).StatusCode);
+    }
+
+    [Fact]
+    public async Task A_position_goes_with_its_file()
+    {
+        var (token, film) = await FileAsync("ana", "film.mkv");
+        await _client.SendAsync(HttpMethod.Put, $"/api/v1/playback/state/{film.Id}", token, new SavePositionRequest(600_000, 5_400_000));
+
+        await _factory.WithDbAsync(async db =>
+        {
+            db.Nodes.Remove(await db.Nodes.SingleAsync(n => n.Id == film.Id));
+            await db.SaveChangesAsync();
+        });
+
+        Assert.Equal(0, await _factory.WithDbResultAsync(db => db.PlaybackStates.CountAsync()));
+    }
+
+    [Fact]
     public async Task A_client_without_HLS_is_told_it_cannot_play_what_needs_streaming()
     {
         var (token, film) = await FileAsync("ana", "film.mkv");

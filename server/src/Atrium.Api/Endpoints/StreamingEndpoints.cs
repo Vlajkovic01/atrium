@@ -28,7 +28,8 @@ public sealed record StreamView(
     long? DurationMs,
     int VideoStream,
     int? AudioStream,
-    IReadOnlyList<MediaStream> Streams);
+    IReadOnlyList<MediaStream> Streams,
+    long? ResumeMs = null);
 
 /// <summary>Streaming a video as HLS, produced on demand (DESIGN.md 7.4, D-062).</summary>
 public static class StreamingEndpoints
@@ -214,7 +215,8 @@ public static class StreamingEndpoints
             info.DurationMs,
             decision.VideoStream,
             decision.AudioStream,
-            info.Streams);
+            info.Streams,
+            await PlaybackEndpoints.ResumeAsync(db, http.User.UserId()!.Value, found.Node.Id, ct));
         return TypedResults.Created(view.MasterUrl, view);
     }
 

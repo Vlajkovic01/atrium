@@ -607,6 +607,33 @@ namespace Atrium.Data.Postgres.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "PlaybackStates",
+                columns: table => new
+                {
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    NodeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PositionMs = table.Column<long>(type: "bigint", nullable: false),
+                    DurationMs = table.Column<long>(type: "bigint", nullable: false),
+                    UpdatedAt = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PlaybackStates", x => new { x.UserId, x.NodeId });
+                    table.ForeignKey(
+                        name: "FK_PlaybackStates_Nodes_NodeId",
+                        column: x => x.NodeId,
+                        principalTable: "Nodes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PlaybackStates_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AlbumItems",
                 columns: table => new
                 {
@@ -812,6 +839,11 @@ namespace Atrium.Data.Postgres.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_PlaybackStates_NodeId",
+                table: "PlaybackStates",
+                column: "NodeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RecoveryCodes_UserId",
                 table: "RecoveryCodes",
                 column: "UserId");
@@ -897,6 +929,9 @@ namespace Atrium.Data.Postgres.Migrations
 
             migrationBuilder.DropTable(
                 name: "PairingRequests");
+
+            migrationBuilder.DropTable(
+                name: "PlaybackStates");
 
             migrationBuilder.DropTable(
                 name: "RecoveryCodes");

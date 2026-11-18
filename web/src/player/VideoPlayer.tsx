@@ -1,4 +1,12 @@
-import { playbackApi, playbackMethodKey, playbackReasonKeys, trickplayFrame, type TrickplayView } from "@atrium/shared";
+import {
+  SAVE_EVERY_MS,
+  playbackApi,
+  playbackMethodKey,
+  playbackReasonKeys,
+  savesPosition,
+  trickplayFrame,
+  type TrickplayView,
+} from "@atrium/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -52,6 +60,28 @@ export function VideoPlayer({ nodeId, name }: { readonly nodeId: string; readonl
 
   const src = playback.state === "ready" ? playback.src : null;
   const hls = playback.state === "ready" && playback.hls;
+  const startAt = playback.state === "ready" ? playback.startMs / 1000 : 0;
+
+  // The place is saved while playing, on pause and on closing, for any device to resume (D-068).
+  // The last place seen, kept apart from the element, which may be gone when the player closes.
+  const place = useRef({ time: 0, duration: 0 });
+  const save = useCallback(() => {
+    const { time, duration } = place.current;
+    if (savesPosition(duration * 1000) && time > 0) {
+      void playbackApi(api)
+        .savePosition(nodeId, time * 1000, duration * 1000)
+        .catch(() => undefined);
+    }
+  }, [nodeId]);
+  useEffect(() => {
+    if (!playing) {
+      return;
+    }
+
+    const timer = window.setInterval(save, SAVE_EVERY_MS);
+    return () => window.clearInterval(timer);
+  }, [playing, save]);
+  useEffect(() => save, [save]);
 
   // Attach the source; hls.js only where the browser has no HLS of its own.
   useEffect(() => {
@@ -61,6 +91,10 @@ export function VideoPlayer({ nodeId, name }: { readonly nodeId: string; readonl
     }
 
     setFailed(null);
+    if (resumeAt.current === 0 && startAt > 0) {
+      resumeAt.current = startAt;
+    }
+
     let destroy: (() => void) | undefined;
     let cancelled = false;
     const resume = () => {
@@ -110,7 +144,7 @@ export function VideoPlayer({ nodeId, name }: { readonly nodeId: string; readonl
       element.removeAttribute("src");
       element.load();
     };
-  }, [src, hls]);
+  }, [src, hls, startAt]);
 
   /** Plays something else of the same video (another track or quality) from where it was. */
   const reopen = useCallback((change: () => void) => {
@@ -204,8 +238,18 @@ export function VideoPlayer({ nodeId, name }: { readonly nodeId: string; readonl
         playsInline
         onClick={toggle}
         onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
+        onPause={() => {
+          setPlaying(false);
+          save();
+        }}
+        onTimeUpdate={(e) => {
+          const element = e.currentTarget;
+          setTime(element.currentTime);
+          place.current = {
+            time: element.currentTime,
+            duration: Number.isFinite(element.duration) ? element.duration : 0,
+          };
+        }}
         onDurationChange={(e) => setDuration(Number.isFinite(e.currentTarget.duration) ? e.currentTarget.duration : 0)}
         onVolumeChange={(e) => {
           setMuted(e.currentTarget.muted);

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atrium.Data.Sqlite.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261118163800_Initial")]
+    [Migration("20261118225317_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -1002,6 +1002,30 @@ namespace Atrium.Data.Sqlite.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Atrium.Core.Media.PlaybackState", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("NodeId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("DurationMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("PositionMs")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("UpdatedAt")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("UserId", "NodeId");
+
+                    b.HasIndex("NodeId");
+
+                    b.ToTable("PlaybackStates");
+                });
+
             modelBuilder.Entity("Atrium.Core.Settings.Setting", b =>
                 {
                     b.Property<string>("Key")
@@ -1296,6 +1320,21 @@ namespace Atrium.Data.Sqlite.Migrations
                         .WithMany()
                         .HasForeignKey("NodeId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Atrium.Core.Media.PlaybackState", b =>
+                {
+                    b.HasOne("Atrium.Core.Files.Node", null)
+                        .WithMany()
+                        .HasForeignKey("NodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Atrium.Core.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
