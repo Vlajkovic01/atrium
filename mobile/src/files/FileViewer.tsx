@@ -13,6 +13,8 @@ import { Body, Button, ErrorMessage, Notice } from "../components/ui.tsx";
 import { currentLocale } from "../i18n.ts";
 import { radius, space, type, useTheme } from "../theme.ts";
 import { absoluteUrl, localCopy, openElsewhere, type Viewable } from "./local";
+import { copyText, copyUri } from "../offline/copies";
+import { useOfflineMaybe } from "../offline/OfflineProvider.tsx";
 import { nodeIcon } from "./icons.ts";
 import { PdfView } from "./PdfView";
 
@@ -133,13 +135,17 @@ function Inline({
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { server, files } = useActiveServer();
+  const copy = useOfflineMaybe()?.copyOf(node.id) ?? null;
+  const local = copy && copy.version === Number(node.version ?? copy.version) ? copyUri(copy.path!) : null;
   const address = useQuery({
+    enabled: local === null,
     queryKey: [server.id, "content-url", node.id, node.version ?? 0],
     queryFn: async () => absoluteUrl(server.url, (await files.contentUrl(node.id, { inline: true })).url),
     staleTime: ADDRESS_FRESH_MS,
   });
 
-  if (address.error) {
+  const shown = local ?? address.data;
+  if (address.error && !local) {
     return (
       <View style={styles.center}>
         <ErrorMessage error={address.error} />
@@ -147,7 +153,7 @@ function Inline({
     );
   }
 
-  if (!address.data) {
+  if (!shown) {
     return <Loading />;
   }
 
@@ -155,7 +161,7 @@ function Inline({
     case "image":
       return (
         <Image
-          source={{ uri: address.data }}
+          source={{ uri: shown }}
           accessibilityLabel={node.name}
           resizeMode="contain"
           onError={onError}
@@ -164,9 +170,9 @@ function Inline({
       );
     case "video":
     case "audio":
-      return <Player uri={address.data} audio={kind === "audio"} onError={onError} />;
+      return <Player uri={shown} audio={kind === "audio"} onError={onError} />;
     default:
-      return <TextBody uri={address.data} label={t("mobile.viewer.text")} />;
+      return <TextBody uri={shown} copy={local ? copy!.path : null} label={t("mobile.viewer.text")} />;
   }
 }
 
@@ -201,11 +207,23 @@ function Player({
   );
 }
 
-function TextBody({ uri, label }: { readonly uri: string; readonly label: string }) {
+function TextBody({
+  uri,
+  copy,
+  label,
+}: {
+  readonly uri: string;
+  readonly copy: string | null;
+  readonly label: string;
+}) {
   const { colors } = useTheme();
   const text = useQuery({
     queryKey: ["text", uri],
     queryFn: async () => {
+      if (copy) {
+        return copyText(copy);
+      }
+
       const response = await fetch(uri);
       if (!response.ok) {
         throw new Error(String(response.status));
@@ -238,9 +256,10 @@ function TextBody({ uri, label }: { readonly uri: string; readonly label: string
 
 function PdfBody({ node, onError }: { readonly node: Viewable; readonly onError: () => void }) {
   const { server, files } = useActiveServer();
+  const kept = useOfflineMaybe()?.copyOf(node.id) ?? null;
   const copy = useQuery({
-    queryKey: [server.id, "local-copy", node.id, node.version ?? 0],
-    queryFn: () => localCopy(files, server, node),
+    queryKey: [server.id, "local-copy", node.id, node.version ?? 0, kept?.path ?? ""],
+    queryFn: () => (kept?.path ? Promise.resolve(copyUri(kept.path)) : localCopy(files, server, node)),
     staleTime: Infinity,
   });
 
@@ -257,6 +276,7 @@ function PdfBody({ node, onError }: { readonly node: Viewable; readonly onError:
 
 /** Hands a file to another app, saying when there is none or the file could not be fetched. */
 function useOpenElsewhere(node: Viewable) {
+  const kept = useOfflineMaybe()?.copyOf(node.id) ?? null;
   const { t } = useTranslation();
   const { server, files } = useActiveServer();
   const [busy, setBusy] = useState(false);
@@ -273,7 +293,7 @@ function useOpenElsewhere(node: Viewable) {
     setBusy(true);
     setError(null);
     setNoApp(false);
-    openElsewhere(files, server, node)
+    openElsewhere(files, server, node, kept?.path ? copyUri(kept.path) : null)
       .then((result) => setNoApp(result === "noApp"))
       .catch((e: unknown) => setError(e))
       .finally(() => setBusy(false));

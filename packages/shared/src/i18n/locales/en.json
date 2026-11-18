@@ -232,6 +232,17 @@
       "photo": "Take a photo",
       "video": "Record a video",
       "noCamera": "Atrium may not use the camera. Allow it in the phone's settings, under Apps, Atrium."
+    },
+    "offline": {
+      "title": "Downloads",
+      "keep": "Keep on this phone",
+      "remove": "Remove from this phone",
+      "empty": "Nothing is kept on this phone yet. Choose Keep on this phone in the menu of a file or folder, to have it here without a connection.",
+      "used": "{size} on this phone, {count, plural, one {# file} other {# files}}",
+      "ready": "On this phone · {size}",
+      "fetching": "Downloading · {done} of {size}",
+      "reading": "Reading the folder…",
+      "failed": "{count, plural, one {# file could not be downloaded} other {# files could not be downloaded}}"
     }
   },
   "nav": {

@@ -232,6 +232,17 @@
       "photo": "Fotografiši",
       "video": "Snimi video",
       "noCamera": "Atrium ne sme da koristi kameru. Dozvolite je u podešavanjima telefona, pod Aplikacije, Atrium."
+    },
+    "offline": {
+      "title": "Preuzimanja",
+      "keep": "Zadrži na ovom telefonu",
+      "remove": "Ukloni sa ovog telefona",
+      "empty": "Na ovom telefonu još ništa nije zadržano. Izaberite Zadrži na ovom telefonu u meniju fajla ili foldera, da biste ga imali i bez veze.",
+      "used": "{size} na ovom telefonu, {count, plural, one {# fajl} few {# fajla} other {# fajlova}}",
+      "ready": "Na ovom telefonu · {size}",
+      "fetching": "Preuzima se · {done} od {size}",
+      "reading": "Čita se folder…",
+      "failed": "{count, plural, one {# fajl nije mogao da se preuzme} few {# fajla nisu mogla da se preuzmu} other {# fajlova nije moglo da se preuzme}}"
     }
   },
   "nav": {

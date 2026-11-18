@@ -429,6 +429,12 @@ What is shown stays in step with the server while the app is open: a
 change made elsewhere appears within half a minute, without pulling down
 (D-055).
 
+Built so far (D-056): "Keep on this phone" in the menu of any file or
+folder; Downloads under Account with progress, space used and removing
+from the phone; copies follow the server through the change feed and
+open without a connection. Albums, movies and episodes follow with their
+screens.
+
 "Make available offline" on files, folders, albums, movies and episodes.
 A Downloads screen shows progress and space used. Downloads resume after
 interruption. Offline items open without a connection; changes made on

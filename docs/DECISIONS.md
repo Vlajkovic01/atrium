@@ -1070,3 +1070,31 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   reads everything every time, never notices a change in a folder that is
   not open, and gives offline copies nothing to follow.
 
+## D-056 Offline copies on the phone (Proposed, Phase 4)
+
+- **"Keep on this phone" on any file or folder**, from its menu, also in a
+  folder that cannot be changed. A folder means every file below it, now
+  and later. The Downloads screen, under Account, shows each item with its
+  progress and size, the space used in all, and removes an item from the
+  phone (never from the server).
+- **Copies live in the app's documents folder**, not the cache: the
+  system does not clear it by itself and no other app can read it. One
+  folder per server, item and version. Signing out of a server removes
+  its copies and rows.
+- **Fetched a part at a time with Range requests** (4 MB), written at
+  their place in the file, the count of bytes kept in the database after
+  each part. A lost connection, or a closed app, costs at most one part:
+  fetching goes on from the bytes really on the phone. The signed address
+  is asked for again when it runs out. Alternative: the file system's own
+  download task, which resumes only within one run of the app.
+- **Kept in step through the change feed** (D-055): an item the feed
+  touches is listed again and compared with what is kept (`planOffline` in
+  the shared package): new files are fetched, a new version replaces the
+  old copy, what went from the server (or from this person's reach) goes
+  from the phone. A reset of the feed checks every item.
+- **Whole copies open without a connection**, from Downloads and wherever
+  the viewer shows the file. A file under two offline items is kept twice;
+  rare, and simpler than sharing copies between items.
+- Fetching runs while the app is open, one file at a time. In the
+  background it belongs to camera backup's decision.
+

@@ -10,6 +10,7 @@ import type { IconName } from "../components/Icon.tsx";
 import { Sheet, SheetOption } from "../components/Sheet.tsx";
 import { ErrorMessage } from "../components/ui.tsx";
 import { radius, space, type, useTheme } from "../theme.ts";
+import { useOfflineMaybe } from "../offline/OfflineProvider.tsx";
 import { FolderPicker } from "./FolderPicker.tsx";
 
 /** How long "Undo" stays after items went to the trash (as the web app's confirmations, D-045). */
@@ -65,6 +66,7 @@ export function useFileActions({
   const [error, setError] = useState<unknown>(null);
   const [undo, setUndo] = useState<{ readonly ids: readonly string[] } | null>(null);
   const canWrite = folder?.canWrite ?? false;
+  const offline = useOfflineMaybe();
 
   // Another folder: nothing chosen there yet.
   useEffect(() => setSelected(new Set()), [folder?.id]);
@@ -181,6 +183,11 @@ export function useFileActions({
           {canWrite ? option(t("files.move"), "move", (node) => setAsking({ kind: "move", nodes: [node] })) : null}
           {canWrite ? option(t("files.copy"), "copy", (node) => setAsking({ kind: "copy", nodes: [node] })) : null}
           {canWrite ? option(t("files.delete"), "trash", (node) => trash([node])) : null}
+          {offline
+            ? offline.isOffline(menu.id)
+              ? option(t("mobile.offline.remove"), "close", (node) => void offline.remove(node.id))
+              : option(t("mobile.offline.keep"), "download", (node) => void offline.add(node))
+            : null}
           {option(t("files.details"), "info", onDetails)}
         </Sheet>
       ) : null}

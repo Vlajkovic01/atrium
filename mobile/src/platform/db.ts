@@ -1,15 +1,47 @@
 import * as SQLite from "expo-sqlite";
 
+/** A file or folder the person keeps on the phone ("Available offline"). */
+export interface OfflineRoot {
+  readonly nodeId: string;
+  readonly kind: "file" | "folder";
+  readonly name: string;
+  readonly addedAt: number;
+}
+
+/** One file kept on the phone for an offline item: the item itself, or a file below it. */
+export interface OfflineFile {
+  readonly rootId: string;
+  readonly nodeId: string;
+  readonly parentId: string | null;
+  readonly name: string;
+  readonly mediaType: string | null;
+  readonly version: number;
+  readonly size: number;
+  /** Bytes already on the phone; the copy is whole when this equals `size`. */
+  readonly bytes: number;
+  /** Where the copy is, as a `file://` address, or null before any byte arrived. */
+  readonly path: string | null;
+  /** The server's reason the last attempt failed for good, or null. */
+  readonly error: string | null;
+}
+
 /**
  * The app's own database on the phone (expo-sqlite): where each server's
- * change feed was last read, and later the offline copies. Nothing here
- * is secret; tokens stay in the Keystore. It can be deleted at any time:
- * the app then reads everything again from the servers.
+ * change feed was last read, and the offline copies. Nothing here is
+ * secret; tokens stay in the Keystore. It can be lost: the app then reads
+ * everything again from the servers.
  */
 export interface LocalDb {
   /** Where the change feed of a server was last read, or null for never. */
   cursor(serverId: string): Promise<string | null>;
   setCursor(serverId: string, cursor: string): Promise<void>;
+  roots(serverId: string): Promise<OfflineRoot[]>;
+  addRoot(serverId: string, root: OfflineRoot): Promise<void>;
+  /** Forgets an offline item and the rows of its files; the copies themselves are removed by the caller. */
+  removeRoot(serverId: string, nodeId: string): Promise<void>;
+  files(serverId: string, rootId?: string): Promise<OfflineFile[]>;
+  putFile(serverId: string, file: OfflineFile): Promise<void>;
+  removeFile(serverId: string, rootId: string, nodeId: string): Promise<void>;
   /** Forgets everything about a server, when it is signed out of. */
   forgetServer(serverId: string): Promise<void>;
 }
@@ -20,6 +52,28 @@ const MIGRATIONS: readonly string[] = [
      server_id TEXT PRIMARY KEY NOT NULL,
      cursor TEXT NOT NULL,
      read_at INTEGER NOT NULL
+   );`,
+  `CREATE TABLE offline_root (
+     server_id TEXT NOT NULL,
+     node_id TEXT NOT NULL,
+     kind TEXT NOT NULL,
+     name TEXT NOT NULL,
+     added_at INTEGER NOT NULL,
+     PRIMARY KEY (server_id, node_id)
+   );
+   CREATE TABLE offline_file (
+     server_id TEXT NOT NULL,
+     root_id TEXT NOT NULL,
+     node_id TEXT NOT NULL,
+     parent_id TEXT,
+     name TEXT NOT NULL,
+     media_type TEXT,
+     version INTEGER NOT NULL,
+     size INTEGER NOT NULL,
+     bytes INTEGER NOT NULL,
+     path TEXT,
+     error TEXT,
+     PRIMARY KEY (server_id, root_id, node_id)
    );`,
 ];
 
@@ -42,6 +96,32 @@ async function database(): Promise<SQLite.SQLiteDatabase> {
   return opened;
 }
 
+interface FileRow {
+  root_id: string;
+  node_id: string;
+  parent_id: string | null;
+  name: string;
+  media_type: string | null;
+  version: number;
+  size: number;
+  bytes: number;
+  path: string | null;
+  error: string | null;
+}
+
+const toFile = (r: FileRow): OfflineFile => ({
+  rootId: r.root_id,
+  nodeId: r.node_id,
+  parentId: r.parent_id,
+  name: r.name,
+  mediaType: r.media_type,
+  version: r.version,
+  size: r.size,
+  bytes: r.bytes,
+  path: r.path,
+  error: r.error,
+});
+
 export const localDb: LocalDb = {
   cursor: async (serverId) =>
     (
@@ -59,7 +139,81 @@ export const localDb: LocalDb = {
       Date.now(),
     );
   },
+  roots: async (serverId) =>
+    (
+      await (
+        await database()
+      ).getAllAsync<{ node_id: string; kind: "file" | "folder"; name: string; added_at: number }>(
+        "SELECT node_id, kind, name, added_at FROM offline_root WHERE server_id = ? ORDER BY added_at DESC",
+        serverId,
+      )
+    ).map((r) => ({ nodeId: r.node_id, kind: r.kind, name: r.name, addedAt: r.added_at })),
+  addRoot: async (serverId, root) => {
+    await (
+      await database()
+    ).runAsync(
+      "INSERT OR REPLACE INTO offline_root (server_id, node_id, kind, name, added_at) VALUES (?, ?, ?, ?, ?)",
+      serverId,
+      root.nodeId,
+      root.kind,
+      root.name,
+      root.addedAt,
+    );
+  },
+  removeRoot: async (serverId, nodeId) => {
+    const db = await database();
+    await db.withTransactionAsync(async () => {
+      await db.runAsync("DELETE FROM offline_file WHERE server_id = ? AND root_id = ?", serverId, nodeId);
+      await db.runAsync("DELETE FROM offline_root WHERE server_id = ? AND node_id = ?", serverId, nodeId);
+    });
+  },
+  files: async (serverId, rootId) =>
+    (
+      await (
+        await database()
+      ).getAllAsync<FileRow>(
+        rootId
+          ? "SELECT * FROM offline_file WHERE server_id = ? AND root_id = ? ORDER BY name"
+          : "SELECT * FROM offline_file WHERE server_id = ? ORDER BY name",
+        ...(rootId ? [serverId, rootId] : [serverId]),
+      )
+    ).map(toFile),
+  putFile: async (serverId, f) => {
+    await (
+      await database()
+    ).runAsync(
+      `INSERT OR REPLACE INTO offline_file
+         (server_id, root_id, node_id, parent_id, name, media_type, version, size, bytes, path, error)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      serverId,
+      f.rootId,
+      f.nodeId,
+      f.parentId,
+      f.name,
+      f.mediaType,
+      f.version,
+      f.size,
+      f.bytes,
+      f.path,
+      f.error,
+    );
+  },
+  removeFile: async (serverId, rootId, nodeId) => {
+    await (
+      await database()
+    ).runAsync(
+      "DELETE FROM offline_file WHERE server_id = ? AND root_id = ? AND node_id = ?",
+      serverId,
+      rootId,
+      nodeId,
+    );
+  },
   forgetServer: async (serverId) => {
-    await (await database()).runAsync("DELETE FROM sync WHERE server_id = ?", serverId);
+    const db = await database();
+    await db.withTransactionAsync(async () => {
+      await db.runAsync("DELETE FROM sync WHERE server_id = ?", serverId);
+      await db.runAsync("DELETE FROM offline_file WHERE server_id = ?", serverId);
+      await db.runAsync("DELETE FROM offline_root WHERE server_id = ?", serverId);
+    });
   },
 };
