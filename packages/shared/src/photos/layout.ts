@@ -151,3 +151,30 @@ export function parseSearch(text: string, locale: string): ParsedSearch {
 export function bucketRange(year: number, month: number): DateRange {
   return monthRange(year, month);
 }
+
+/** "Thursday, 2 May 2024" for a day of local clock time ("2024-05-02", D-034), in a language. */
+export function formatPhotoDay(day: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "full", timeZone: "UTC" }).format(new Date(`${day}T12:00:00Z`));
+}
+
+/** The length of a video: "0:42" or "1:02:03". */
+export function formatDuration(ms: number): string {
+  const total = Math.round(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = String(total % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`;
+}
+
+/**
+ * When a photo was taken, as the clock showed where it was taken: "15 Oct
+ * 2026, 09:00". Capture times are local clock times (D-034); whatever
+ * offset they carry is ignored, and the device's own time zone plays no
+ * part, so the hour is the same on every device.
+ */
+export function formatTakenAt(capturedAt: string, locale: string): string {
+  const clock = capturedAt.slice(0, 19);
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(
+    new Date(`${clock}Z`),
+  );
+}

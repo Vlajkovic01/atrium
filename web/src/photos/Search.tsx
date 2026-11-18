@@ -9,7 +9,7 @@ import { Icon } from "../components/Icon.tsx";
 import { ErrorMessage, PageHeader } from "../components/ui.tsx";
 import { FilePreview } from "../files/FilePreview.tsx";
 import { formatBytes, currentLocale } from "../i18n.ts";
-import { parseSearch } from "./layout.ts";
+import { parseSearch } from "@atrium/shared";
 import { LoadMore, PhotoTabs, SelectionBar } from "./Photos.tsx";
 import { formatDay, PhotoGrid, type PhotoItem } from "./PhotoGrid.tsx";
 import { Viewer } from "./Viewer.tsx";

@@ -165,8 +165,10 @@ for (const [language, locale, scheme] of [
       await expect(page.getByText(text("ana on", "ana na"))).toBeVisible();
       await shot(page, `${language}-30-account`);
 
-      // After a restart the app is still signed in, opens on Files and remembers the order.
+      // After a restart the app is still signed in, opens on Photos, and Files remembers the order.
       await page.goto("/");
+      await expect(page.getByRole("heading", { name: text("Photos", "Fotografije") })).toBeVisible();
+      await page.getByRole("tab", { name: text("Files", "Fajlovi") }).click();
       await expect(page.getByRole("heading", { name: text("My files", "Moji fajlovi") })).toBeVisible();
       await expect(page.getByText("Rental agreement.pdf")).toBeVisible();
 

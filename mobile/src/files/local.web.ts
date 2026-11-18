@@ -1,4 +1,6 @@
-import type { FilesApi, NodeInfo } from "@atrium/shared";
+import type { FilesApi } from "@atrium/shared";
+
+import type { Viewable } from "./local.ts";
 
 // Only for looking at the app's screens in a browser while developing
 // (mobile/preview). A browser keeps no copies: it is given the signed
@@ -11,7 +13,7 @@ export function absoluteUrl(serverUrl: string, url: string): string {
 export async function localCopy(
   files: FilesApi,
   server: { readonly id: string; readonly url: string },
-  node: NodeInfo,
+  node: Viewable,
 ): Promise<string> {
   const signed = await files.contentUrl(node.id, { inline: true });
   return absoluteUrl(server.url, signed.url);
@@ -22,7 +24,7 @@ export type OpenElsewhere = "opened" | "noApp";
 export async function openElsewhere(
   files: FilesApi,
   server: { readonly id: string; readonly url: string },
-  node: NodeInfo,
+  node: Viewable,
 ): Promise<OpenElsewhere> {
   const signed = await files.contentUrl(node.id, { inline: false });
   window.open(absoluteUrl(server.url, signed.url), "_blank", "noopener");

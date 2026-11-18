@@ -103,6 +103,20 @@ const shapes = {
       <Path d="m8.200 12.300 2.600 2.600 5-5.400" />
     </>
   ),
+  grid: (
+    <>
+      <Rect x={4} y={4} width={6.5} height={6.5} rx={1.5} />
+      <Rect x={13.5} y={4} width={6.5} height={6.5} rx={1.5} />
+      <Rect x={4} y={13.5} width={6.5} height={6.5} rx={1.5} />
+      <Rect x={13.5} y={13.5} width={6.5} height={6.5} rx={1.5} />
+    </>
+  ),
+  calendar: (
+    <>
+      <Rect x={3.5} y={5} width={17} height={15.5} rx={2.2} />
+      <Path d="M3.500 10h17M8 3v4M16 3v4" />
+    </>
+  ),
   sort: <Path d="M7 5v14m0 0-3.500-3.500M7 19l3.500-3.500M17 19V5m0 0-3.500 3.500M17 5l3.500 3.500" />,
   check: <Path d="m5 12.500 4.500 4.500L19 7.500" />,
   close: <Path d="m6 6 12 12M18 6 6 18" />,

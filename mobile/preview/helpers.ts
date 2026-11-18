@@ -29,6 +29,9 @@ export async function signIn(page: Page, baseURL: string, say: Say): Promise<voi
   await page.getByLabel(say("Name", "Ime")).fill("ana");
   await page.getByLabel(say("Password", "Lozinka")).fill(PASSWORD);
   await page.getByRole("button", { name: say("Sign in", "Prijavi se") }).click();
+  // The app opens on Photos; the scenarios that use this work in Files.
+  await expect(page.getByRole("heading", { name: say("Photos", "Fotografije") })).toBeVisible();
+  await page.getByRole("tab", { name: say("Files", "Fajlovi") }).click();
   await expect(page.getByRole("heading", { name: say("My files", "Moji fajlovi") })).toBeVisible();
 }
 
@@ -78,9 +81,15 @@ export async function asAna(request: APIRequestContext) {
   };
 
   // The upload protocol by hand (tus): create, then send the content in the server's chunk size.
-  const upload = async (parentId: string, name: string, content: Buffer): Promise<void> => {
+  // A picture without a recorded time is dated by its file time, which `modifiedAt` sets.
+  const upload = async (parentId: string, name: string, content: Buffer, modifiedAt?: Date): Promise<void> => {
     const tus = { ...headers, "Tus-Resumable": "1.0.0" };
-    const metadata = Object.entries({ parentId, name, onConflict: "fail" })
+    const metadata = Object.entries({
+      parentId,
+      name,
+      onConflict: "fail",
+      ...(modifiedAt ? { modifiedAt: String(modifiedAt.getTime()) } : {}),
+    })
       .map(([key, value]) => `${key} ${Buffer.from(value).toString("base64")}`)
       .join(",");
     const created = await request.post(`${SERVER}/api/v1/uploads`, {

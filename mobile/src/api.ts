@@ -1,14 +1,23 @@
-import { filesApi, type FilesApi, type KnownServer, type ServerSession } from "@atrium/shared";
+import {
+  filesApi,
+  photosApi,
+  type FilesApi,
+  type KnownServer,
+  type PhotosApi,
+  type ServerSession,
+} from "@atrium/shared";
 
 import { useServers } from "./servers.tsx";
 
-const filesOf = new WeakMap<ServerSession, FilesApi>();
+const callsOf = new WeakMap<ServerSession, { files: FilesApi; photos: PhotosApi }>();
 
 export interface ActiveServer {
   readonly server: KnownServer;
   readonly session: ServerSession;
   /** The file calls of the server in front, shared with the web app. */
   readonly files: FilesApi;
+  /** The photo calls of the server in front. */
+  readonly photos: PhotosApi;
 }
 
 /**
@@ -24,11 +33,11 @@ export function useActiveServer(): ActiveServer {
   }
 
   const session = registry.session(active.id);
-  let files = filesOf.get(session);
-  if (!files) {
-    files = filesApi(session.api);
-    filesOf.set(session, files);
+  let calls = callsOf.get(session);
+  if (!calls) {
+    calls = { files: filesApi(session.api), photos: photosApi(session.api) };
+    callsOf.set(session, calls);
   }
 
-  return { server: active, session, files };
+  return { server: active, session, ...calls };
 }

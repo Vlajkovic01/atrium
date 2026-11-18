@@ -9,7 +9,7 @@ import { Button, ErrorMessage, Flash, PageHeader } from "../components/ui.tsx";
 import { batch, downloadArchive } from "../files/actions.ts";
 import { currentLocale } from "../i18n.ts";
 import { AddToAlbum } from "./AddToAlbum.tsx";
-import { bucketRange } from "./layout.ts";
+import { bucketRange } from "@atrium/shared";
 import { PhotoGrid, type PhotoItem } from "./PhotoGrid.tsx";
 import { Viewer } from "./Viewer.tsx";
 

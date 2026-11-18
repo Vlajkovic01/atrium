@@ -347,7 +347,13 @@ adding a server and signing out are under Account.
 
 ### Photos
 
-Same timeline as the web, with pinch to change grid density. The viewer
+Same timeline as the web, with pinch to change grid density.
+Built so far (D-053): days with justified rows laid out by the same code
+as the web; three sizes of pictures, changed by spreading or closing two
+fingers or by the two size buttons, remembered on the device; jump to a
+month and back to the newest; videos show their length. A picture opens
+in the file viewer, with what is known of it (when taken, camera, size)
+one touch away. The app opens on Photos. The viewer
 supports swipe, pinch zoom, swipe down to close. Items not yet backed up
 carry a small badge.
 

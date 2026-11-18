@@ -7,6 +7,7 @@ import { View } from "react-native";
 import { forgetLocalCopies } from "../src/files/local";
 import { loadFileOrder } from "../src/files/order.ts";
 import { initI18n } from "../src/i18n.ts";
+import { loadDensity } from "../src/photos/density.ts";
 import { ServersProvider } from "../src/servers.tsx";
 import { useTheme } from "../src/theme.ts";
 
@@ -29,7 +30,7 @@ export default function RootLayout() {
   useEffect(() => {
     // Copies of files opened last time are no longer looked at (D-052).
     forgetLocalCopies();
-    void Promise.all([initI18n(), loadFileOrder()]).then(() => setReady(true));
+    void Promise.all([initI18n(), loadFileOrder(), loadDensity()]).then(() => setReady(true));
   }, []);
 
   if (!ready) {
