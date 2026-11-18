@@ -46,8 +46,8 @@ export type {
   TrashItem,
 } from "./files/api.ts";
 export { daysUntil, formatBytes, formatDateTime, formatDay } from "./files/format.ts";
-export { TEXT_PREVIEW_LIMIT, fileCategory, fileExtension, previewKind } from "./files/kind.ts";
-export type { FileCategory, PreviewKind } from "./files/kind.ts";
+export { TEXT_PREVIEW_LIMIT, appViewKind, fileCategory, fileExtension, previewKind } from "./files/kind.ts";
+export type { AppViewKind, FileCategory, PreviewKind } from "./files/kind.ts";
 export { TusUpload, encodeMetadata } from "./upload/tus.ts";
 export type { ConflictPolicy, TusTransport, UploadRequest, UploadSource, UploadStatus } from "./upload/tus.ts";
 export { UploadQueue } from "./upload/queue.ts";

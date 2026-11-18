@@ -955,3 +955,35 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   the most a phone's bottom edge holds comfortably.
 - Built in three pull requests: browsing; actions and the trash; opening
   files, with PDF inside the app and "Open in another app" (D-048).
+
+## D-052 Opening files in the mobile app (Proposed, Phase 4)
+
+- **What the app shows itself**: pictures, video and sound in the
+  phone's own player, PDF, and text up to 2 MB, decided by `appViewKind`
+  in the shared package so the TV app follows the same rule. Unlike a
+  browser, the phone's player is given any video or sound and says so
+  when it cannot play one; then, as for every other kind, Office files
+  included (D-048), the file is offered to another app. Every file can
+  also be handed to another app from the viewer's top bar.
+- **Another app gets a copy**, not an address: the file is downloaded
+  into the app's own cache and handed over through Android's file
+  provider. A signed address would carry the person's session to an app
+  Atrium does not control. Cost: the file is downloaded once per version.
+- **Android lets every app that opens that kind of file read the copy**
+  until the phone restarts, not only the app chosen (the system's
+  "open with" grants it ahead of the choice). The copies are therefore
+  deleted when the app starts and when a server is signed out of; a
+  permission to a deleted file reads nothing. Downloads the person wants
+  to keep are the Offline part of this phase, stored apart.
+- **PDF is drawn by the system** (Android PdfRenderer, iOS PDFKit) through
+  react-native-pdf-renderer: almost nothing added to the app. Its limits
+  (no text selection, links do not open) are covered by "Open in another
+  app". Alternatives: react-native-pdf, which bundles pdfium (several MB
+  per processor type); pdf.js in a WebView (a second engine to keep safe).
+- **Video uses expo-video** (Media3 on Android). Phase 5 builds streaming
+  on a player; expo-video plays HLS, so it is the candidate there too,
+  instead of react-native-video listed earlier. Background play and
+  picture-in-picture stay off until Phase 9.
+- The storage permissions expo-file-system declares for Android 12 and
+  older are blocked: the app reads nothing outside its own folders. Camera
+  backup will ask for what it needs, when it is built.

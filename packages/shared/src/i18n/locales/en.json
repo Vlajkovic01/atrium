@@ -216,6 +216,14 @@
     },
     "about": {
       "version": "Version {version}"
+    },
+    "viewer": {
+      "openElsewhere": "Open in another app",
+      "other": "Atrium does not show this kind of file itself. Another app on this phone can open it.",
+      "cannotShow": "This file cannot be shown here. Another app on this phone may be able to open it.",
+      "noApp": "No app on this phone opens this kind of file. Install one that does, then try again.",
+      "position": "{index} of {count}",
+      "text": "Contents of the file"
     }
   },
   "nav": {
@@ -950,7 +958,9 @@
     "details": "Details",
     "none": "This kind of file cannot be shown here. Download it to open it on your device.",
     "office": "Word, Excel and PowerPoint files cannot be shown here yet. Download it to open it on your device.",
-    "showInFolder": "Show in folder"
+    "showInFolder": "Show in folder",
+    "previous": "Previous file",
+    "next": "Next file"
   },
   "notifications": {
     "title": "Notifications",

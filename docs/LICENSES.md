@@ -136,6 +136,9 @@ repository. None is GPL or AGPL (flag 3).
 | expo-camera | 58.0.14 | MIT | Scanning the "connect a phone" code. On Android it reads codes with Google ML Kit's bundled barcode model: free to distribute, runs on the device and sends nothing, but closed source, which would matter only for a store that takes open source alone |
 | expo-build-properties | 58.0.12 | MIT | Build setting that lets the Android app speak plain HTTP at all; the app itself allows it only to local addresses (D-049) |
 | @tanstack/react-query | 5.107.1 | MIT | What screens read from the server: kept briefly, read again, page by page. The same package as the web app; JavaScript only, nothing native |
+| expo-video | 58.0.14 | MIT | Plays video and sound inside the app with the phone's own player (Media3 on Android, Apache-2.0; AVPlayer on iOS). Background play and picture-in-picture are off until Phase 9 |
+| expo-file-system | 58.0.13 | MIT | Copies of opened files in the app's cache, and handing a file to another app (D-052). Its old storage permissions are blocked in `app.json` |
+| react-native-pdf-renderer | 2.3.0 | MIT | PDF inside the app, drawn by the system (Android PdfRenderer, iOS PDFKit), so no PDF engine is carried. Chosen over react-native-pdf (MIT), which bundles pdfium and several MB per processor type |
 | react-native-web, react-dom | 0.21.4, 19.3.0 | MIT | Development only: shows the app's screens in a browser (`mobile/preview`). Not in the app |
 | Playwright | 1.65.0 | Apache-2.0 | Development only, as for the web app |
 
@@ -154,5 +157,5 @@ alternatives at the start of the phase that needs it.
 | Offline place names | 3 | Dropped: no location in Atrium (D-031) | |
 | Translations runtime | 1 | i18next; FormatJS | MIT; BSD-3-Clause |
 | HLS in browsers | 5 | hls.js | Apache-2.0 |
-| Native video | 5 | react-native-video (Media3, AVPlayer) | MIT; Media3 is Apache-2.0 |
+| Native video | 5 | expo-video, already in the app for playing files (D-052); react-native-video (Media3, AVPlayer) | MIT both; Media3 is Apache-2.0 |
 | Speech-to-text | 6 | whisper.cpp as an external process | MIT; model weights MIT |

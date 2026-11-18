@@ -148,7 +148,7 @@ export function FilePreview(props: {
           <button
             type="button"
             className="viewer-nav is-prev"
-            aria-label={t("photos.previous")}
+            aria-label={t("preview.previous")}
             onClick={() => props.onIndex(props.index - 1)}
           >
             <Icon name="chevronLeft" size={28} />
@@ -159,7 +159,7 @@ export function FilePreview(props: {
           <button
             type="button"
             className="viewer-nav is-next"
-            aria-label={t("photos.next")}
+            aria-label={t("preview.next")}
             onClick={() => props.onIndex(props.index + 1)}
           >
             <Icon name="chevronRight" size={28} />

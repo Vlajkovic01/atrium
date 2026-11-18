@@ -1,12 +1,10 @@
 import {
   ApiError,
   daysUntil,
-  fileCategory,
   formatBytes,
   libraryRootName,
   trashLocation,
   trashTotals,
-  type FileCategory,
   type TrashItem,
 } from "@atrium/shared";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,23 +16,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useActiveServer } from "../api.ts";
 import { ConfirmDialog } from "../components/Dialog.tsx";
-import { Icon, type IconName } from "../components/Icon.tsx";
+import { Icon } from "../components/Icon.tsx";
 import { Sheet, SheetOption } from "../components/Sheet.tsx";
 import { Body, Button, ErrorMessage } from "../components/ui.tsx";
 import { currentLocale } from "../i18n.ts";
 import { radius, space, type, useTheme } from "../theme.ts";
 import { FolderPicker } from "./FolderPicker.tsx";
-
-const categoryIcons: Record<FileCategory, IconName> = {
-  image: "image",
-  video: "video",
-  audio: "music",
-  pdf: "book",
-  text: "text",
-  document: "text",
-  archive: "archive",
-  other: "file",
-};
+import { nodeIcon } from "./icons.ts";
 
 /**
  * The trash (docs/UX.md, Trash): what was deleted, where it was and how
@@ -177,10 +165,7 @@ export function TrashScreen() {
                 style={({ pressed }) => [styles.row, { backgroundColor: pressed ? colors.surfaceSunk : "transparent" }]}
               >
                 <View style={[styles.tile, { backgroundColor: colors.surface, borderColor: colors.line }]}>
-                  <Icon
-                    name={item.node.kind === "folder" ? "folder" : categoryIcons[fileCategory(item.node)]}
-                    color={colors.inkSoft}
-                  />
+                  <Icon name={nodeIcon(item.node)} color={colors.inkSoft} />
                 </View>
                 <View style={styles.rowText}>
                   <Text numberOfLines={2} style={[styles.name, { color: colors.ink }]}>

@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 
+import { forgetLocalCopies } from "../src/files/local";
 import { loadFileOrder } from "../src/files/order.ts";
 import { initI18n } from "../src/i18n.ts";
 import { ServersProvider } from "../src/servers.tsx";
@@ -26,6 +27,8 @@ export default function RootLayout() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    // Copies of files opened last time are no longer looked at (D-052).
+    forgetLocalCopies();
     void Promise.all([initI18n(), loadFileOrder()]).then(() => setReady(true));
   }, []);
 

@@ -94,6 +94,7 @@ const shapes = {
     </>
   ),
   restore: <Path d="M4 12a8 8 0 1 0 2.400-5.700M4 4.500v4.300h4.300M12 8v4.300l3 1.800" />,
+  external: <Path d="M14 4h6v6M20 4l-9 9M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" />,
   more: <Path d="M12 5.500h.01M12 12h.01M12 18.500h.01" strokeWidth={2.6} />,
   circle: <Circle cx={12} cy={12} r={9} />,
   checkCircle: (
