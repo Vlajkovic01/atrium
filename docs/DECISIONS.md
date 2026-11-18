@@ -1218,3 +1218,31 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - **FFmpeg's loopback URL for S3** (DESIGN.md 7.4) is built with HLS,
   where FFmpeg first reads a film; nothing reads it before then.
 
+## D-061 Keyframes and segment boundaries (Proposed, Phase 5)
+
+- **Copied video is cut where its keyframes are, and the server says
+  where.** FFmpeg's HLS muxer cuts on a grid that starts at the first
+  packet of each run, so after a seek, which starts a new run, its
+  boundaries would no longer match the playlist the player already has.
+  The server therefore plans every boundary from the keyframes and gives
+  FFmpeg the exact cut times. Encoded video gets keyframes placed at fixed
+  six-second boundaries instead.
+- **Keyframes come from the container's own index.** MP4 and QuickTime
+  (stss, stts, ctts and the first edit) and Matroska and WebM (cues) are
+  read by Atrium itself with a few range requests: kilobytes, not the
+  film, which matters on S3. Checked against ffprobe reading every packet,
+  with B-frames, the movie box at either end, and VP9 in WebM.
+  Alternatives: ffprobe reading every packet of every file (minutes of
+  reading for a large film, and the whole film downloaded from S3), or
+  segments of approximate length (players stutter where the playlist and
+  the segments disagree).
+- **Other containers** (MPEG-TS, AVI, fragmented MP4) are scanned by
+  ffprobe, only from a local path and only when asked; from S3 this waits
+  for FFmpeg's loopback URL (step 3b).
+- **Times stay on the file's own clock**, as FFmpeg reads them, so a seek
+  asks FFmpeg for exactly a keyframe's time; the playlist uses only the
+  durations.
+- **Kept in the cache location** under a hash of the content's key: a
+  changed file is indexed again, a damaged entry is made again, and the
+  folder can be deleted at any time.
+

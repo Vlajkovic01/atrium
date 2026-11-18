@@ -150,6 +150,7 @@ public static class MediaSetup
     {
         services.TryAddSingleton(options);
         services.AddSingleton<MetadataReader>();
+        services.AddSingleton<Streaming.KeyframeIndex>();
         services.AddSingleton<IImageEncoder>(_ => options.ImageWorker is { } start
             ? new WorkerImageEncoder(start, options.ImageWorkerProcesses, options.ToolTimeout)
             : new InProcessImageEncoder());

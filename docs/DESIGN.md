@@ -852,6 +852,14 @@ Rules, in order (D-059):
 - Output is HLS with fMP4 segments of fixed duration. Because segment
   boundaries are known from the duration, the full playlist is generated
   immediately and any position can be requested at once.
+- Copied video (remux, audio transcode) can be cut only at keyframes, so
+  its segments end at the first keyframe six seconds or more after their
+  start (D-061). The keyframes come from the index the container carries:
+  the sample tables of MP4 and QuickTime, the cues of Matroska and WebM,
+  read with a few range requests from any storage location. Other
+  containers are scanned by ffprobe from a local path. The index is
+  derived data in the cache location. FFmpeg is told the exact cut
+  times, so a restart after a seek keeps every boundary of the playlist.
 - A seek outside what has been produced restarts FFmpeg at the requested
   segment. This is what makes seeking fast.
 - FFmpeg is paused when it is far ahead of the playback position and
