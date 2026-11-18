@@ -21,6 +21,7 @@ import { Body, ErrorMessage } from "../components/ui.tsx";
 import { FileViewer } from "../files/FileViewer.tsx";
 import { nodeIcon } from "../files/icons.ts";
 import { currentLocale } from "../i18n.ts";
+import { openFolderFromOverlay } from "../navigation.ts";
 import { radius, space, type, useTheme } from "../theme.ts";
 import { PhotoGrid, PhotoInfo, photoStyles } from "./PhotoGrid.tsx";
 
@@ -79,7 +80,7 @@ export function SearchScreen() {
 
   const openOther = (node: NodeInfo): void => {
     if (node.kind === "folder") {
-      router.push({ pathname: "/files/[folderId]", params: { folderId: node.id } });
+      openFolderFromOverlay(router, node.id);
     } else {
       setOpenFile(node.id);
     }

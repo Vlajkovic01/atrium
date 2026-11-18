@@ -1,5 +1,6 @@
 import {
   UploadQueue,
+  uploadReports,
   sha256,
   type ConflictAnswer,
   type ConflictQuestion,
@@ -10,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { useActiveServer } from "../api.ts";
+import { useNotificationActions } from "../notifications.ts";
 import { settings } from "../platform/storage";
 import { fileSource, removeCopy, stillThere, type Picked } from "./source";
 
@@ -59,6 +61,8 @@ export function UploadsProvider({ children }: { readonly children: ReactNode }) 
   const [question, setQuestion] = useState<ConflictQuestion | null>(null);
   const answering = useRef<((answer: ConflictAnswer) => void) | null>(null);
   const picked = useRef(new Map<number, Saved>());
+  const reported = useRef(new Set<number>());
+  const notify = useNotificationActions();
   const key = `atrium.uploads.${server.id}`;
 
   const queue = useMemo(() => {
@@ -104,6 +108,12 @@ export function UploadsProvider({ children }: { readonly children: ReactNode }) 
     }
 
     void settings.set(key, JSON.stringify(unfinished)).catch(() => undefined);
+    const { reports, ids } = uploadReports(items, reported.current);
+    ids.forEach((id) => reported.current.add(id));
+    for (const report of reports) {
+      void notify.add(report.kind, report.values, report.link).catch(() => undefined);
+    }
+
     for (const parentId of landedIn) {
       void queryClient.invalidateQueries({ queryKey: [server.id, "children", parentId] });
     }
@@ -111,7 +121,7 @@ export function UploadsProvider({ children }: { readonly children: ReactNode }) 
     if (landedIn.size > 0) {
       void queryClient.invalidateQueries({ queryKey: [server.id, "timeline"] });
     }
-  }, [items, key, queryClient, server.id]);
+  }, [items, key, notify, queryClient, server.id]);
 
   const add = (files: readonly Picked[], parentId: string, location?: string | null): void => {
     const before = queue.items.length;

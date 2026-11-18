@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon, type IconName } from "../../src/components/Icon.tsx";
+import { useNotifications } from "../../src/notifications.ts";
 import { useServers } from "../../src/servers.tsx";
 import { UploadsPanel } from "../../src/uploads/UploadsPanel.tsx";
 import { UploadsProvider } from "../../src/uploads/UploadsProvider.tsx";
@@ -16,22 +17,32 @@ import { space, useTheme } from "../../src/theme.ts";
  * screen of one server stays open over another.
  */
 export default function TabsLayout() {
-  const { t } = useTranslation();
-  const { colors } = useTheme();
   const { active } = useServers();
-  const insets = useSafeAreaInsets();
-
   if (!active) {
     return <Redirect href="/welcome" />;
   }
+
+  // Uploads belong to the server in front, and start over with another.
+  return (
+    <UploadsProvider key={active.id}>
+      <SignedInTabs />
+    </UploadsProvider>
+  );
+}
+
+function SignedInTabs() {
+  const { t } = useTranslation();
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  const unread = Number(useNotifications().data?.unread ?? 0);
 
   const icon =
     (name: IconName) =>
     ({ color }: { readonly color: unknown }) => <Icon name={name} {...(typeof color === "string" ? { color } : {})} />;
 
   return (
-    // Uploads belong to the server in front, and start over with another.
-    <UploadsProvider key={active.id}>
+    <>
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -51,9 +62,16 @@ export default function TabsLayout() {
       >
         <Tabs.Screen name="photos" options={{ title: t("nav.photos"), tabBarIcon: icon("image") }} />
         <Tabs.Screen name="files" options={{ title: t("nav.files"), tabBarIcon: icon("folder") }} />
-        <Tabs.Screen name="account" options={{ title: t("nav.account"), tabBarIcon: icon("user") }} />
+        <Tabs.Screen
+          name="account"
+          options={{
+            title: t("nav.account"),
+            tabBarIcon: icon("user"),
+            ...(unread > 0 ? { tabBarBadge: unread > 99 ? "99+" : unread } : {}),
+          }}
+        />
       </Tabs>
       <UploadsPanel bottom={64 + insets.bottom + space.sm} />
-    </UploadsProvider>
+    </>
   );
 }

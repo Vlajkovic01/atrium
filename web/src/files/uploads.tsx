@@ -2,6 +2,7 @@ import {
   fingerprint,
   sha256,
   UploadQueue,
+  uploadReports,
   type ConflictAnswer,
   type ConflictChoice,
   type ConflictQuestion,
@@ -175,24 +176,10 @@ export function UploadsProvider({ children }: { readonly children: ReactNode }) 
   // When a batch is done, the notification list says how it went, so it is
   // still known after the panel has gone away.
   useEffect(() => {
-    const busy = items.some((i) => ["queued", "uploading", "waiting", "paused"].includes(i.status.state));
-    const fresh = items.filter((i) => !reported.current.has(i.id));
-    if (busy || fresh.length === 0) {
-      return;
-    }
-
-    fresh.forEach((i) => reported.current.add(i.id));
-    const done = fresh.filter((i) => i.status.state === "completed");
-    const failed = fresh.filter((i) => i.status.state === "failed");
-    const folders = [...new Set(done.map((i) => i.parentId))];
-    if (done.length > 0) {
-      void actions
-        .add("uploads.finished", { count: String(done.length) }, folders.length === 1 ? `/files/${folders[0]}` : null)
-        .catch(() => undefined);
-    }
-
-    if (failed.length > 0) {
-      void actions.add("uploads.failed", { count: String(failed.length) }, null).catch(() => undefined);
+    const { reports, ids } = uploadReports(items, reported.current);
+    ids.forEach((id) => reported.current.add(id));
+    for (const report of reports) {
+      void actions.add(report.kind, report.values, report.link).catch(() => undefined);
     }
   }, [items, actions]);
 

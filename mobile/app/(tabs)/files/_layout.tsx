@@ -7,3 +7,7 @@ export default function FilesLayout() {
   const { colors } = useTheme();
   return <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }} />;
 }
+
+// A folder opened from elsewhere (search, a notification) has where files
+// start beneath it, so Back leads there rather than out of Files.
+export const unstable_settings = { initialRouteName: "index" };
