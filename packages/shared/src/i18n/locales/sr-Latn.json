@@ -141,6 +141,12 @@
       "expired": "Ovo otpremanje nije nastavljeno ceo dan, pa je odbačeno. Pokrenite ga ponovo.",
       "unsupported_version": "Ova aplikacija koristi protokol za otpremanje koji server ne podržava. Ažurirajte aplikaciju.",
       "invalid_metadata": "Otpremanju nedostaje folder ili ime."
+    },
+    "playback": {
+      "not_video": "Mogu da se puste samo video snimci.",
+      "not_ready": "Atrium još čita ovaj video. Pokušajte ponovo za trenutak.",
+      "unreadable": "Ovaj fajl nema video koji može da se pusti.",
+      "client_cannot_stream": "Ovaj video mora da se strimuje, a ova aplikacija ili pregledač to ne mogu."
     }
   },
   "mobile": {
@@ -1056,6 +1062,29 @@
       "library_offline": "Folder {name} nije dostupan: nedostaje, prazan je ili se ne može čitati. Ništa iz njega nije uklonjeno.",
       "integrity_problems": "Provera skladišta je našla {count, plural, one {# fajl koji nedostaje ili je oštećen} few {# fajla koja nedostaju ili su oštećena} other {# fajlova koji nedostaju ili su oštećeni}}.",
       "other": "Nešto se desilo na serveru."
+    }
+  },
+  "playback": {
+    "method": {
+      "directPlay": "Pušta se original",
+      "remux": "Strimuje se originalna slika i zvuk u drugom kontejneru",
+      "audioTranscode": "Strimuje se originalna slika sa pretvorenim zvukom",
+      "transcode": "Strimuje se pretvoren video"
+    },
+    "reason": {
+      "container": "Ovaj uređaj ne otvara format fajla.",
+      "video_codec": "Ovaj uređaj ne pušta format slike.",
+      "video_profile": "Ovaj uređaj ne pušta ovu vrstu formata slike.",
+      "video_level": "Video je zahtevniji nego što ovaj uređaj pušta.",
+      "video_bit_depth": "Ovaj uređaj ne pušta video sa ovoliko nivoa boje.",
+      "video_resolution": "Video je veći nego što ovaj uređaj pušta.",
+      "video_hdr": "Ovaj uređaj ne prikazuje visoki dinamički opseg ovog videa.",
+      "video_not_streamable": "Format slike ne može da se strimuje takav kakav je.",
+      "audio_codec": "Ovaj uređaj ne pušta format zvuka.",
+      "audio_channels": "Zvuk ima više kanala nego što ovaj uređaj pušta.",
+      "audio_not_streamable": "Format zvuka ne može da se strimuje takav kakav je.",
+      "bit_rate": "Video traži bržu vezu nego što izabrani kvalitet dozvoljava.",
+      "other": "Server je naveo razlog koji ova aplikacija još ne poznaje."
     }
   }
 }
