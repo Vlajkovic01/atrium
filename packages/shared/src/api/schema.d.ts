@@ -234,6 +234,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/nodes/{id}/playback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description How this client plays the video: the original, a remux, the audio converted, or the video encoded again, with the reasons. 409 playback.not_ready while the file has not been read yet. */
+        post: operations["DecidePlayback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -1572,6 +1589,11 @@ export interface components {
         ArchiveRequest: {
             ids: string[];
         };
+        AudioCodecSupport: {
+            codec: string;
+            /** Format: int32 */
+            maxChannels?: null | number | string;
+        };
         BackgroundWorkInfo: {
             profile: components["schemas"]["HardwareProfile"];
             /** Format: int32 */
@@ -1639,6 +1661,16 @@ export interface components {
             errorCode: null | string;
             /** Format: int32 */
             entryCount: null | number | string;
+        };
+        ClientProfile: {
+            containers: string[];
+            videoCodecs: components["schemas"]["VideoCodecSupport"][];
+            audioCodecs: components["schemas"]["AudioCodecSupport"][];
+            hdr: components["schemas"]["HdrFormat"][];
+            hls: boolean;
+            /** Format: int64 */
+            maxBitRate?: null | number | string;
+            dolbyVisionProfiles?: null | (number | string)[];
         };
         /** @enum {unknown} */
         ConflictPolicy: "fail" | "rename" | "replace" | null;
@@ -1715,6 +1747,11 @@ export interface components {
         HashCheckResponse: {
             owned: string[];
         };
+        /**
+         * @default none
+         * @enum {unknown}
+         */
+        HdrFormat: "none" | "hdr10" | "hlg" | "dolbyVision";
         HealthStatus: {
             status: string;
         };
@@ -1885,6 +1922,39 @@ export interface components {
         };
         /** @enum {unknown} */
         MediaKind: "photo" | "video";
+        MediaStream: {
+            /** Format: int32 */
+            index: number | string;
+            type: components["schemas"]["MediaStreamType"];
+            codec: null | string;
+            profile?: null | string;
+            /** Format: int32 */
+            level?: null | number | string;
+            /** Format: int32 */
+            bitDepth?: null | number | string;
+            /** Format: int32 */
+            width?: null | number | string;
+            /** Format: int32 */
+            height?: null | number | string;
+            /** Format: double */
+            frameRate?: null | number | string;
+            /** Format: int64 */
+            bitRate?: null | number | string;
+            hdr?: components["schemas"]["HdrFormat"];
+            /** Format: int32 */
+            dolbyVisionProfile?: null | number | string;
+            dolbyVisionBaseLayer?: null | components["schemas"]["HdrFormat"];
+            /** Format: int32 */
+            channels?: null | number | string;
+            language?: null | string;
+            title?: null | string;
+            /** @default false */
+            isDefault: boolean;
+            /** @default false */
+            isForced: boolean;
+        };
+        /** @enum {unknown} */
+        MediaStreamType: "video" | "audio" | "subtitle";
         NavEntry: {
             key: string;
             hidden: boolean;
@@ -2083,6 +2153,25 @@ export interface components {
         PhotoPageView: {
             items: components["schemas"]["PhotoItemView"][];
             nextCursor: null | string;
+        };
+        /** @enum {unknown} */
+        PlaybackMethod: "directPlay" | "remux" | "audioTranscode" | "transcode";
+        PlaybackRequest: {
+            profile: components["schemas"]["ClientProfile"];
+            /** Format: int32 */
+            audioStream?: null | number | string;
+        };
+        PlaybackView: {
+            method: components["schemas"]["PlaybackMethod"];
+            reasons: string[];
+            container: string;
+            /** Format: int64 */
+            durationMs: null | number | string;
+            /** Format: int32 */
+            videoStream: number | string;
+            /** Format: int32 */
+            audioStream: null | number | string;
+            streams: components["schemas"]["MediaStream"][];
         };
         ProblemDetails: {
             type?: null | string;
@@ -2373,6 +2462,18 @@ export interface components {
             modifiedAt: string;
             /** Format: date-time */
             replacedAt: string;
+        };
+        VideoCodecSupport: {
+            codec: string;
+            profiles?: null | string[];
+            /** Format: double */
+            maxLevel?: null | number | string;
+            /** Format: int32 */
+            maxBitDepth?: null | number | string;
+            /** Format: int32 */
+            maxWidth?: null | number | string;
+            /** Format: int32 */
+            maxHeight?: null | number | string;
         };
         ViewPageView: {
             items: components["schemas"]["SearchResultView"][];
@@ -2815,6 +2916,68 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    DecidePlayback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlaybackRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlaybackView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
