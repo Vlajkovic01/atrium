@@ -120,7 +120,9 @@ function monthRange(year: number, month: number): DateRange {
  * or by their first three letters.
  */
 export function parseSearch(text: string, locale: string): ParsedSearch {
-  const fold = (s: string): string => s.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "dj").toLowerCase();
+  // Combining marks by their range rather than \p{M}: every JavaScript
+  // engine reads it, including the one the mobile app runs on.
+  const fold = (s: string): string => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "dj").toLowerCase();
   const months = Array.from({ length: 12 }, (_, i) =>
     fold(new Intl.DateTimeFormat(locale, { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2000, i, 15)))),
   );

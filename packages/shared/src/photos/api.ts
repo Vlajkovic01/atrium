@@ -117,3 +117,63 @@ export function albumsApi(api: ApiClient) {
 }
 
 export type AlbumsApi = ReturnType<typeof albumsApi>;
+
+export type SearchResult = components["schemas"]["SearchResultView"];
+export type SearchPage = components["schemas"]["SearchPageView"];
+export type SearchType = components["schemas"]["SearchType"];
+
+/** The kinds a search can be narrowed to, in the order they are offered. */
+export const searchTypes: readonly SearchType[] = ["photo", "video", "document", "folder"];
+
+/** A search result that is a photo or video, in the shape the photo grid uses; null for anything else. */
+export function searchResultAsPhoto(result: SearchResult): PhotoItem | null {
+  if (!result.kind || !result.thumbnailUrl || !result.capturedAt) {
+    return null;
+  }
+
+  return {
+    id: result.node.id,
+    libraryId: result.node.libraryId,
+    parentId: result.node.parentId,
+    name: result.node.name,
+    kind: result.kind,
+    mediaType: result.node.mediaType,
+    size: result.node.size,
+    capturedAt: result.capturedAt,
+    width: result.width,
+    height: result.height,
+    durationMs: null,
+    thumbnailUrl: result.thumbnailUrl,
+  };
+}
+
+/**
+ * Searches names, kinds and dates everywhere the person can read. The
+ * words and the date range come from `parseSearch`.
+ */
+export function searchApi(api: ApiClient) {
+  return {
+    search: (options: {
+      readonly words?: string;
+      readonly type?: SearchType | null;
+      readonly range?: { readonly from: string; readonly to: string } | null;
+      readonly limit?: number;
+      readonly cursor?: string | null;
+    }): Promise<SearchPage> =>
+      call(
+        api.GET("/api/v1/search", {
+          params: {
+            query: {
+              ...(options.limit ? { limit: options.limit } : {}),
+              ...(options.words ? { q: options.words } : {}),
+              ...(options.type ? { type: options.type } : {}),
+              ...(options.range ? { from: options.range.from, to: options.range.to } : {}),
+              ...(options.cursor ? { cursor: options.cursor } : {}),
+            },
+          },
+        }),
+      ),
+  };
+}
+
+export type SearchApi = ReturnType<typeof searchApi>;

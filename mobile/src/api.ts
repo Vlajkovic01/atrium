@@ -2,10 +2,12 @@ import {
   albumsApi,
   filesApi,
   photosApi,
+  searchApi,
   type AlbumsApi,
   type FilesApi,
   type KnownServer,
   type PhotosApi,
+  type SearchApi,
   type ServerSession,
 } from "@atrium/shared";
 
@@ -15,6 +17,7 @@ interface Calls {
   readonly files: FilesApi;
   readonly photos: PhotosApi;
   readonly albums: AlbumsApi;
+  readonly search: SearchApi;
 }
 
 const callsOf = new WeakMap<ServerSession, Calls>();
@@ -28,6 +31,8 @@ export interface ActiveServer {
   readonly photos: PhotosApi;
   /** The album calls of the server in front. */
   readonly albums: AlbumsApi;
+  /** Search across everything the person can read on the server in front. */
+  readonly search: SearchApi;
 }
 
 /**
@@ -45,7 +50,12 @@ export function useActiveServer(): ActiveServer {
   const session = registry.session(active.id);
   let calls = callsOf.get(session);
   if (!calls) {
-    calls = { files: filesApi(session.api), photos: photosApi(session.api), albums: albumsApi(session.api) };
+    calls = {
+      files: filesApi(session.api),
+      photos: photosApi(session.api),
+      albums: albumsApi(session.api),
+      search: searchApi(session.api),
+    };
     callsOf.set(session, calls);
   }
 

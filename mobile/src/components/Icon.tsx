@@ -111,6 +111,12 @@ const shapes = {
       <Rect x={13.5} y={13.5} width={6.5} height={6.5} rx={1.5} />
     </>
   ),
+  search: (
+    <>
+      <Circle cx={10.5} cy={10.5} r={6} />
+      <Path d="m15 15 5.500 5.500" />
+    </>
+  ),
   album: (
     <>
       <Rect x={6.5} y={6.5} width={14} height={13} rx={2} />
