@@ -1,3 +1,4 @@
+using Atrium.Api.Auth;
 using Atrium.Api.Files;
 using Atrium.Core.Files;
 using Atrium.Core.Media;
@@ -27,6 +28,10 @@ public sealed record MediaInfoView(
     string? CameraModel,
     ThumbnailState ThumbnailState);
 
+/// <summary>Pictures for the seek bar (D-065): one per interval, on sheets of columns by rows.</summary>
+/// <param name="Sheets">Signed URLs of the sheets, in order.</param>
+public sealed record TrickplayView(int IntervalMs, int Width, int Height, int Columns, int Rows, int Count, IReadOnlyList<string> Sheets);
+
 /// <summary>
 /// Only a few thumbnails are made inline at once; the rest wait. A grid of
 /// a hundred new photos must not start a hundred decoders on a small device.
@@ -52,6 +57,8 @@ public static class MediaEndpoints
 {
     public const string SizeOption = "size";
 
+    public const string NoTrickplay = "media.no_trickplay";
+
     private static readonly string[] ThumbnailOptions = [SizeOption];
 
     public static IEndpointRouteBuilder MapMediaEndpoints(this IEndpointRouteBuilder routes)
@@ -67,6 +74,16 @@ public static class MediaEndpoints
             .WithTags("Photos")
             .WithName("GetPreview")
             .WithDescription("A video's short silent preview clip (MP4). Bearer token or signed URL.");
+        routes.MapGet("/nodes/{id:guid}/trickplay", TrickplayAsync)
+            .WithTags("Playback")
+            .WithName("GetTrickplay")
+            .WithDescription("Pictures for the seek bar of a video, made in the background. 404 media.no_trickplay until they exist, or for videos under a minute.")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        routes.MapGet("/nodes/{id:guid}/trickplay/{sheet:int}.jpg", TrickplaySheetAsync)
+            .WithTags("Playback")
+            .WithName("GetTrickplaySheet")
+            .AllowAnonymous()
+            .WithDescription("One sheet of seek pictures. Authorized by a bearer token or the signed URL the list gives.");
         routes.MapGet("/nodes/{id:guid}/media-info", MediaInfoAsync)
             .WithTags("Photos")
             .WithName("GetMediaInfo")
@@ -171,6 +188,71 @@ public static class MediaEndpoints
             : new MediaInfoView(
                 info.Kind, info.Width, info.Height, info.DurationMs, info.Format, info.VideoCodec, info.AudioCodec,
                 info.CapturedAt, info.CapturedOffsetMinutes, info.CameraMake, info.CameraModel, info.ThumbnailState));
+    }
+
+    private static async Task<Results<Ok<TrickplayView>, ProblemHttpResult>> TrickplayAsync(
+        Guid id, HttpContext http, NodeService nodes, NodeContent content, Atrium.Media.Streaming.Trickplay trickplay, SignedUrls signer, CancellationToken ct)
+    {
+        if (await nodes.FindAsync(http.User.Actor(), id, ct) is not { Node.MediaKind: MediaKind.Video } found)
+        {
+            return ApiProblem.Missing();
+        }
+
+        ContentSource source;
+        try
+        {
+            source = await content.SourceAsync(found.Node, found.Library, ct);
+        }
+        catch (Exception e) when (e is LocationUnavailableException or ContentUnavailableException)
+        {
+            return ApiProblem.Create(StatusCodes.Status404NotFound, NoTrickplay);
+        }
+
+        if (trickplay.Find(source.Key) is not { } info)
+        {
+            return ApiProblem.Create(StatusCodes.Status404NotFound, NoTrickplay);
+        }
+
+        var session = http.User.SessionId()!.Value;
+        var sheets = Enumerable.Range(0, info.Sheets)
+            .Select(n => signer.SignForCaching($"/api/v1/nodes/{id}/trickplay/{n}.jpg", session).Url)
+            .ToList();
+        return TypedResults.Ok(new TrickplayView(info.IntervalMs, info.Width, info.Height, info.Columns, info.Rows, info.Count, sheets));
+    }
+
+    private static async Task<IResult> TrickplaySheetAsync(
+        Guid id, int sheet, HttpContext http, AtriumDbContext db, NodeService nodes, NodeContent content,
+        Atrium.Media.Streaming.Trickplay trickplay, SignedUrls signer, CancellationToken ct)
+    {
+        if (await ActorAsync(http, signer, db, [], ct) is not { } actor)
+        {
+            return Results.Unauthorized();
+        }
+
+        if (await nodes.FindAsync(actor, id, ct) is not { Node.MediaKind: MediaKind.Video } found)
+        {
+            return Results.NotFound();
+        }
+
+        string? path;
+        try
+        {
+            path = trickplay.SheetPath((await content.SourceAsync(found.Node, found.Library, ct)).Key, sheet);
+        }
+        catch (Exception e) when (e is LocationUnavailableException or ContentUnavailableException)
+        {
+            return Results.NotFound();
+        }
+
+        if (path is null)
+        {
+            return Results.NotFound();
+        }
+
+        http.Response.Headers.CacheControl = "private, max-age=21600";
+        http.Response.Headers.ContentSecurityPolicy = FileContent.SandboxPolicy;
+        http.Response.Headers.XContentTypeOptions = "nosniff";
+        return Results.File(path, "image/jpeg");
     }
 
     private static async Task<FileActor?> ActorAsync(

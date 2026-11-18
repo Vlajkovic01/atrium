@@ -1367,3 +1367,30 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - **Containers.** Compose has commented blocks for `/dev/dri` with its
   group and for NVIDIA's toolkit. Nothing is needed for software encoding.
 
+## D-065 Fast seeking and seek pictures (Proposed, Phase 5)
+
+- **A seek is a new run of FFmpeg at the segment asked for** (D-062): the
+  time to the first picture after a seek is the time FFmpeg takes to open
+  the file there and make one segment, the same as starting. Nothing more
+  was needed for speed.
+- **Seek pictures** come from a background job of idle priority after a
+  video's preview: one picture every ten seconds, 240 pixels wide, on JPEG
+  sheets of ten by ten, so a two-hour film is 720 pictures on eight sheets
+  and a player loads a sheet, not a picture, at a time. FFmpeg decodes
+  only the keyframes (`-skip_frame nokey`) and takes the first at or after
+  each ten seconds, so a film is read once with little decoding. A picture
+  is therefore up to a keyframe's distance late, which a seek bar does
+  not show. Videos under a minute get none: their whole length fits the
+  bar.
+- **Remote files** are read through a loopback URL that lasts while the
+  job runs (D-063), never copied whole.
+- **Kept in the cache location** by content, made in a temporary folder
+  and moved in place when complete, so a half-made set is never served.
+- **The API** lists the sheets as signed URLs that stay the same for six
+  hours, so browsers cache them; 404 `media.no_trickplay` until made, and
+  the seek bar works without them. Placing a position on a sheet is one
+  function in the shared package for every player.
+- Alternatives: a picture per segment made while streaming (only for
+  streamed videos, and not before they are played); pictures as separate
+  files (hundreds of requests per film).
+

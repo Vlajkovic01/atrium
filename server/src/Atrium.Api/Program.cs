@@ -69,6 +69,7 @@ builder.Services.AddSingleton<ThumbnailGate>();
 builder.Services.AddScoped<Atrium.Api.Preferences.PreferencesStore>();
 builder.Services.AddSingleton<SignedUrls>();
 builder.Services.AddSingleton<Atrium.Api.Files.LoopbackSources>();
+builder.Services.AddSingleton<Atrium.Media.Streaming.IToolInputs>(sp => sp.GetRequiredService<Atrium.Api.Files.LoopbackSources>());
 builder.Services.AddSingleton<ArchiveRequests>();
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi("v1");

@@ -190,12 +190,12 @@ public sealed class StreamingApiTests : IDisposable
         FilmAsync(_factory, _client, _dir, user, name, output, size, addLocalStorage: true);
 
     internal static async Task<(string Token, Node Node)> FilmAsync(
-        AtriumFactory factory, HttpClient client, string dir, string user, string name, string[] output, string size = "160x90", bool addLocalStorage = true)
+        AtriumFactory factory, HttpClient client, string dir, string user, string name, string[] output, string size = "160x90", bool addLocalStorage = true, int seconds = 20)
     {
         var source = Path.Combine(dir, $"{Guid.NewGuid():N}{Path.GetExtension(name)}");
         await ToolRunner.RunAsync(
             "ffmpeg",
-            ["-nostdin", "-v", "error", "-f", "lavfi", "-i", $"testsrc=duration=20:size={size}:rate=24", "-f", "lavfi", "-i", "sine=duration=20",
+            ["-nostdin", "-v", "error", "-f", "lavfi", "-i", $"testsrc=duration={seconds}:size={size}:rate=24", "-f", "lavfi", "-i", $"sine=duration={seconds}",
                 "-shortest", .. output, "-y", source],
             TimeSpan.FromMinutes(2),
             false,

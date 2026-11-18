@@ -487,6 +487,83 @@
         }
       }
     },
+    "/api/v1/nodes/{id}/trickplay": {
+      "get": {
+        "tags": [
+          "Playback"
+        ],
+        "description": "Pictures for the seek bar of a video, made in the background. 404 media.no_trickplay until they exist, or for videos under a minute.",
+        "operationId": "GetTrickplay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrickplayView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem\u002Bjson": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/nodes/{id}/trickplay/{sheet}.jpg": {
+      "get": {
+        "tags": [
+          "Playback"
+        ],
+        "description": "One sheet of seek pictures. Authorized by a bearer token or the signed URL the list gives.",
+        "operationId": "GetTrickplaySheet",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sheet",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/nodes/{id}/media-info": {
       "get": {
         "tags": [
@@ -9300,6 +9377,74 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/LocationSegment"
+            }
+          }
+        }
+      },
+      "TrickplayView": {
+        "required": [
+          "intervalMs",
+          "width",
+          "height",
+          "columns",
+          "rows",
+          "count",
+          "sheets"
+        ],
+        "type": "object",
+        "properties": {
+          "intervalMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "width": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "height": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "columns": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "rows": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sheets": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         }

@@ -16,7 +16,7 @@ namespace Atrium.Api.Files;
 /// that lasts as long as the stream it was made for, and is answered only
 /// to a connection from this machine.
 /// </summary>
-public sealed class LoopbackSources(IServer server, TimeProvider time)
+public sealed class LoopbackSources(IServer server, TimeProvider time) : Atrium.Media.Streaming.IToolInputs
 {
     public const string Route = "/api/v1/internal/sources";
 
@@ -79,6 +79,18 @@ public sealed class LoopbackSources(IServer server, TimeProvider time)
     }
 
     public void Remove(string token) => _entries.TryRemove(token, out _);
+
+    /// <summary>For background tools: a URL that lasts while <paramref name="alive"/> says so.</summary>
+    public string? UrlFor(Guid nodeId, Func<bool> alive)
+    {
+        if (Register(nodeId) is not { } registered)
+        {
+            return null;
+        }
+
+        Bind(registered.Token, alive);
+        return registered.Url;
+    }
 
     /// <summary>The node a token is for, while it lasts; a token that ended is forgotten.</summary>
     public Guid? Find(string token)
