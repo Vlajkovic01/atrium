@@ -117,7 +117,7 @@ not by network calls.
 |---|---|
 | `/packages/shared` | API client generated from the OpenAPI document, domain logic (capability profiles, upload state machine, sync), player core (state machine, track selection, progress reporting), translations |
 | `/web` | React app |
-| `/mobile` | React Native app for Android and iOS |
+| `/mobile` | React Native app (Expo); Android built from Phase 4, iOS configured but not built (D-048). See docs/MOBILE.md |
 | `/tv` | react-native-tvos app for Android TV and Apple TV, reusing mobile code where the UI is not involved |
 
 The player core is engine-independent logic. Rendering uses the platform
@@ -990,6 +990,7 @@ Built in Phase 2 (D-026):
 | Fault injection | Kill the server mid-upload, mid-scan and mid-job, then verify resume and that no file is lost or half-written |
 | Contract | The OpenAPI document is generated and compared; the previous release's client runs against the current server |
 | End to end | Web app flows in a real browser |
+| Mobile screens | The mobile app run in a browser through react-native-web against a real server, every screen in both languages and themes (D-050); what only a phone has is checked by hand with the APK from CI |
 | Media | A small set of sample files covering common codecs, containers, HDR and subtitle formats, each with a license that allows redistribution |
 
 A failing test is fixed or the change is withdrawn. Tests are not
@@ -1020,4 +1021,15 @@ Flagged here so they are decided on purpose.
    about lifecycle rules where the API exposes them.
 6. Plain HTTP on a local network exposes tokens to anyone on that
    network. The apps show a persistent indicator for insecure connections.
+   The Android build must allow plain HTTP to every address; the app's
+   own rule limits it to local addresses (D-049). The mobile app does
+   not show the indicator yet; it is listed in the Phase 4 summary.
 7. The admin privacy boundary has the two limits listed in 6.3.
+8. A lost or stolen phone holds a signed-in session and offline copies.
+   Mitigations: the refresh token in the Keystore, the optional lock
+   (D-057), signing the phone out from Devices on the web, offline copies
+   only in the app's own storage. Screenshots and the app switcher are
+   allowed by the owner's choice.
+9. Camera backup reads every photo the person allows. It sends only to
+   the person's own files on their own server, never deletes from the
+   phone, and stops when turned off.

@@ -1,6 +1,6 @@
 # Atrium roadmap
 
-Status: revised 2026-11-12 (D-030, D-031).
+Status: revised 2026-11-17 (Phase 4 built).
 
 One phase at a time. Each phase ends with all tests passing, a summary of
 what was built, known risks and open questions, and a stop for approval.
@@ -66,7 +66,7 @@ protect files keep growing with every phase.
   scheduled user deletion (D-025) and the storage integrity check, which
   cover release requirements 1 and 5 in part. The change feed moved to
   Phase 4 (D-027).
-- Phase 3: built, awaiting the owner's approval. Media jobs with
+- Phase 3: done. Media jobs with
   hardware profiles, per-class limits and a pause; metadata, thumbnails
   and video previews made in separate decoder processes (D-039); the
   photo timeline, albums and search by name, type and date, without
@@ -74,6 +74,17 @@ protect files keep growing with every phase.
   changes allowed per library after a typed confirmation (D-035, D-036).
   It adds to release requirement 3 (an interrupted scan resumes) and 4
   (external libraries join the security review's scope).
+- Phase 4: built, awaiting the owner's approval. The Android app
+  (docs/MOBILE.md): connect by QR or address, several servers, files,
+  photos with albums and search, resumable uploads, notifications,
+  offline folders kept current by the change feed (D-047), camera backup
+  in the app, Android's background job and a foreground service
+  (D-058), a biometric lock, devices and approving a TV by scanning. iOS
+  is configured but not built (D-048); the APK comes from CI, signed with
+  the debug key. Shared logic moved to `packages/shared`, used by the
+  web app too. It adds to release requirement 4 (the phone's token
+  storage, links and plain HTTP rule join the review) and 8 (the app's
+  libraries are in LICENSES.md).
 
 ## Sequencing notes
 
