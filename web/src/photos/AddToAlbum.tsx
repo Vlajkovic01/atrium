@@ -2,10 +2,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { api, call } from "../api.ts";
+import { albumsApi } from "@atrium/shared";
+
+import { api } from "../api.ts";
 import { Dialog } from "../components/Dialog.tsx";
 import { Icon } from "../components/Icon.tsx";
 import { Button, ErrorMessage, Field } from "../components/ui.tsx";
+
+const albums = albumsApi(api);
 
 /** Adds the chosen photos to an album, or to a new one. */
 export function AddToAlbum(props: {
@@ -18,7 +22,7 @@ export function AddToAlbum(props: {
   const [name, setName] = useState("");
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
-  const albums = useQuery({ queryKey: ["albums"], queryFn: () => call(api.GET("/api/v1/albums")) });
+  const list = useQuery({ queryKey: ["albums"], queryFn: albums.list });
 
   const finish = async (albumName: string): Promise<void> => {
     await queryClient.invalidateQueries({ queryKey: ["albums"] });
@@ -30,9 +34,7 @@ export function AddToAlbum(props: {
     setBusy(true);
     setError(null);
     try {
-      await call(
-        api.POST("/api/v1/albums/{id}/items", { params: { path: { id } }, body: { nodeIds: [...props.ids] } }),
-      );
+      await albums.add(id, props.ids);
       await finish(albumName);
     } catch (e) {
       setError(e);
@@ -45,7 +47,7 @@ export function AddToAlbum(props: {
     setBusy(true);
     setError(null);
     try {
-      const album = await call(api.POST("/api/v1/albums", { body: { name, nodeIds: [...props.ids] } }));
+      const album = await albums.create(name, props.ids);
       await finish(album.name);
     } catch (e) {
       setError(e);
@@ -69,11 +71,11 @@ export function AddToAlbum(props: {
           {t("albums.create")}
         </Button>
       </form>
-      {albums.data && albums.data.length > 0 ? (
+      {list.data && list.data.length > 0 ? (
         <>
           <p className="muted">{t("albums.orExisting")}</p>
           <ul className="album-picks">
-            {albums.data.map((album) => (
+            {list.data.map((album) => (
               <li key={album.id}>
                 <button
                   type="button"

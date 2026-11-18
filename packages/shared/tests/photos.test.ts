@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { createApiClient } from "../src/api/client.ts";
+import { albumsApi } from "../src/photos/api.ts";
 import {
   bucketRange,
   formatDuration,
@@ -112,5 +114,79 @@ describe("when a photo was taken", () => {
     for (const captured of ["2026-10-15T09:00:00Z", "2026-10-15T09:00:00+00:00", "2026-10-15T09:00:00.000Z"]) {
       expect(formatTakenAt(captured, "en-GB")).toMatch(/15 Oct 2026,? 09:00/);
     }
+  });
+});
+
+describe("album calls", () => {
+  function server(answer: () => Response) {
+    const requests: { method: string; path: string; query: string; body: unknown; ifMatch?: string }[] = [];
+    const fetch: typeof globalThis.fetch = async (input, init) => {
+      const request = new Request(input, init);
+      const url = new URL(request.url);
+      const text = await request.text();
+      const ifMatch = request.headers.get("If-Match");
+      requests.push({
+        method: request.method,
+        path: url.pathname,
+        query: url.search,
+        body: text ? JSON.parse(text) : null,
+        ...(ifMatch ? { ifMatch } : {}),
+      });
+      return answer();
+    };
+    const api = createApiClient({
+      baseUrl: "http://atrium.test",
+      fetch,
+      getAccessToken: () => "token",
+      refresh: () => Promise.resolve(null),
+    });
+    return { albums: albumsApi(api), requests };
+  }
+
+  const json = (body: unknown): Response =>
+    new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
+
+  it("creates, renames, sets the cover and deletes", async () => {
+    const { albums, requests } = server(() => json({ id: "a" }));
+
+    await albums.create("Summer", ["p1", "p2"]);
+    // Changes carry the version the person was looking at; the server refuses them without it.
+    await albums.rename({ id: "a", version: 3 }, "Summer 2026");
+    await albums.setCover({ id: "a", version: 4 }, "p2");
+    await albums.delete("a");
+
+    expect(requests).toEqual([
+      { method: "POST", path: "/api/v1/albums", query: "", body: { name: "Summer", nodeIds: ["p1", "p2"] } },
+      {
+        method: "PATCH",
+        path: "/api/v1/albums/a",
+        query: "",
+        body: { name: "Summer 2026", coverNodeId: null },
+        ifMatch: '"3"',
+      },
+      { method: "PATCH", path: "/api/v1/albums/a", query: "", body: { name: null, coverNodeId: "p2" }, ifMatch: '"4"' },
+      { method: "DELETE", path: "/api/v1/albums/a", query: "", body: null },
+    ]);
+  });
+
+  it("adds and removes items, saying how many changed", async () => {
+    const { albums, requests } = server(() => json({ changed: "2" }));
+
+    expect(await albums.add("a", ["p1", "p2", "p3"])).toBe(2);
+    expect(await albums.remove("a", ["p1"])).toBe(2);
+
+    expect(requests.map((r) => [r.path, r.body])).toEqual([
+      ["/api/v1/albums/a/items", { nodeIds: ["p1", "p2", "p3"] }],
+      ["/api/v1/albums/a/items/remove", { nodeIds: ["p1"] }],
+    ]);
+  });
+
+  it("reads an album page by page", async () => {
+    const { albums, requests } = server(() => json({ items: [], nextCursor: null }));
+
+    await albums.items("a", { limit: 150 });
+    await albums.items("a", { limit: 150, cursor: "next" });
+
+    expect(requests.map((r) => r.query)).toEqual(["?limit=150", "?limit=150&cursor=next"]);
   });
 });

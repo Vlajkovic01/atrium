@@ -1,6 +1,8 @@
 import {
+  albumsApi,
   filesApi,
   photosApi,
+  type AlbumsApi,
   type FilesApi,
   type KnownServer,
   type PhotosApi,
@@ -9,7 +11,13 @@ import {
 
 import { useServers } from "./servers.tsx";
 
-const callsOf = new WeakMap<ServerSession, { files: FilesApi; photos: PhotosApi }>();
+interface Calls {
+  readonly files: FilesApi;
+  readonly photos: PhotosApi;
+  readonly albums: AlbumsApi;
+}
+
+const callsOf = new WeakMap<ServerSession, Calls>();
 
 export interface ActiveServer {
   readonly server: KnownServer;
@@ -18,6 +26,8 @@ export interface ActiveServer {
   readonly files: FilesApi;
   /** The photo calls of the server in front. */
   readonly photos: PhotosApi;
+  /** The album calls of the server in front. */
+  readonly albums: AlbumsApi;
 }
 
 /**
@@ -35,7 +45,7 @@ export function useActiveServer(): ActiveServer {
   const session = registry.session(active.id);
   let calls = callsOf.get(session);
   if (!calls) {
-    calls = { files: filesApi(session.api), photos: photosApi(session.api) };
+    calls = { files: filesApi(session.api), photos: photosApi(session.api), albums: albumsApi(session.api) };
     callsOf.set(session, calls);
   }
 
