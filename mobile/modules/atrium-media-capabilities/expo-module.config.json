@@ -1,0 +1,6 @@
+{
+  "platforms": ["android", "web"],
+  "android": {
+    "modules": ["app.atrium.mediacapabilities.MediaCapabilitiesModule"]
+  }
+}
