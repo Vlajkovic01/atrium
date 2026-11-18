@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using Atrium.Core.Files;
+using Atrium.Core.Media;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 
@@ -20,7 +21,9 @@ public sealed record MediaFacts(
     DateTimeOffset? CapturedInstant,
     string? CameraMake,
     string? CameraModel,
-    int? Orientation);
+    int? Orientation,
+    long? BitRate = null,
+    IReadOnlyList<MediaStream>? Streams = null);
 
 /// <summary>Reads technical facts: EXIF and XMP for photos, ffprobe for videos.</summary>
 public sealed class MetadataReader(MediaOptions options)
@@ -156,8 +159,142 @@ public sealed class MetadataReader(MediaOptions options)
             instant,
             Trim(Tag(tags, "com.apple.quicktime.make") ?? Tag(tags, "make"), 128),
             Trim(Tag(tags, "com.apple.quicktime.model") ?? Tag(tags, "model"), 128),
-            null);
+            null,
+            Long(format, "bit_rate"),
+            streams.Select((stream, position) => ReadStream(stream, position)).OfType<MediaStream>().ToList());
     }
+
+    /// <summary>
+    /// One stream as a playback decision needs it (DESIGN.md 7.3). Cover
+    /// pictures, data and attachment streams are left out.
+    /// </summary>
+    private static MediaStream? ReadStream(JsonElement stream, int position)
+    {
+        MediaStreamType? type = Str(stream, "codec_type") switch
+        {
+            "video" when !IsAttachedPicture(stream) => MediaStreamType.Video,
+            "audio" => MediaStreamType.Audio,
+            "subtitle" => MediaStreamType.Subtitle,
+            _ => null,
+        };
+        if (type is null)
+        {
+            return null;
+        }
+
+        var tags = stream.TryGetProperty("tags", out var t) ? t : default;
+        var disposition = stream.TryGetProperty("disposition", out var d) ? d : default;
+        var (hdr, dvProfile, dvBase) = type == MediaStreamType.Video ? DynamicRange(stream) : (HdrFormat.None, null, null);
+        return new MediaStream(
+            Int(stream, "index") ?? position,
+            type.Value,
+            Trim(Str(stream, "codec_name"), 32),
+            Trim(Str(stream, "profile"), 64),
+            Int(stream, "level") is { } level && level >= 0 ? level : null,
+            type == MediaStreamType.Video ? BitDepth(stream) : null,
+            type == MediaStreamType.Video ? Int(stream, "width") : null,
+            type == MediaStreamType.Video ? Int(stream, "height") : null,
+            type == MediaStreamType.Video ? FrameRate(Str(stream, "avg_frame_rate")) ?? FrameRate(Str(stream, "r_frame_rate")) : null,
+            Long(stream, "bit_rate") ?? Long(tags, "BPS"),
+            hdr,
+            dvProfile,
+            dvBase,
+            type == MediaStreamType.Audio ? Int(stream, "channels") : null,
+            Trim(Tag(tags, "language"), 16) is { } language && language != "und" ? language : null,
+            Trim(Tag(tags, "title"), 256),
+            Flag(disposition, "default"),
+            Flag(disposition, "forced"));
+    }
+
+    /// <summary>
+    /// HDR10 and HLG are read from the transfer function. Dolby Vision from
+    /// its configuration record, with the base layer a player without Dolby
+    /// Vision shows: compatibility 1 and 6 are HDR10, 2 is SDR, 4 is HLG,
+    /// 0 none (profile 5).
+    /// </summary>
+    private static (HdrFormat Hdr, int? Profile, HdrFormat? BaseLayer) DynamicRange(JsonElement stream)
+    {
+        var transfer = Str(stream, "color_transfer") switch
+        {
+            "smpte2084" => HdrFormat.Hdr10,
+            "arib-std-b67" => HdrFormat.Hlg,
+            _ => HdrFormat.None,
+        };
+
+        if (stream.TryGetProperty("side_data_list", out var list) && list.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in list.EnumerateArray())
+            {
+                if (Str(item, "side_data_type") is { } kind && kind.StartsWith("DOVI configuration", StringComparison.OrdinalIgnoreCase))
+                {
+                    HdrFormat? baseLayer = Int(item, "dv_bl_signal_compatibility_id") switch
+                    {
+                        1 or 6 => HdrFormat.Hdr10,
+                        2 => HdrFormat.None,
+                        4 => HdrFormat.Hlg,
+                        _ => null,
+                    };
+                    return (HdrFormat.DolbyVision, Int(item, "dv_profile"), baseLayer);
+                }
+            }
+        }
+
+        return (transfer, null, null);
+    }
+
+    /// <summary>Bits per sample from the stream, else from its pixel format (yuv420p10le, p010le...).</summary>
+    private static int? BitDepth(JsonElement stream)
+    {
+        if (Int(stream, "bits_per_raw_sample") is { } bits and > 0)
+        {
+            return bits;
+        }
+
+        var pixels = Str(stream, "pix_fmt");
+        if (pixels is null)
+        {
+            return null;
+        }
+
+        return pixels.Contains("12", StringComparison.Ordinal) ? 12
+            : pixels.Contains("10", StringComparison.Ordinal) || pixels.StartsWith("p01", StringComparison.Ordinal) ? 10
+            : 8;
+    }
+
+    private static double? FrameRate(string? fraction)
+    {
+        var parts = fraction?.Split('/');
+        if (parts is not [var n, var d]
+            || !double.TryParse(n, NumberStyles.Float, CultureInfo.InvariantCulture, out var numerator)
+            || !double.TryParse(d, NumberStyles.Float, CultureInfo.InvariantCulture, out var denominator)
+            || numerator <= 0 || denominator <= 0)
+        {
+            return null;
+        }
+
+        return Math.Round(numerator / denominator, 3);
+    }
+
+    /// <summary>A whole number ffprobe writes as a number or as text.</summary>
+    private static long? Long(JsonElement element, string name)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(name, out var value))
+        {
+            return null;
+        }
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.Number when value.TryGetInt64(out var number) => number,
+            JsonValueKind.String when long.TryParse(value.GetString(), NumberStyles.None, CultureInfo.InvariantCulture, out var number) => number,
+            _ => null,
+        };
+    }
+
+    private static int? Int(JsonElement element, string name) =>
+        Long(element, name) is { } value && value is >= int.MinValue and <= int.MaxValue ? (int)value : null;
+
+    private static bool Flag(JsonElement disposition, string name) => Int(disposition, name) == 1;
 
     /// <summary>
     /// The local clock time a photo was taken (D-034): from the file when it

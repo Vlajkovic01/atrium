@@ -241,6 +241,7 @@ public sealed class AtriumDbContext(DbContextOptions<AtriumDbContext> options, T
             e.Property(m => m.Format).HasMaxLength(64);
             e.Property(m => m.VideoCodec).HasMaxLength(64);
             e.Property(m => m.AudioCodec).HasMaxLength(64);
+            e.Property(m => m.Streams).HasConversion(MediaStreamsJson.Converter, MediaStreamsJson.Comparer);
             e.Property(m => m.CameraMake).HasMaxLength(128);
             e.Property(m => m.CameraModel).HasMaxLength(128);
             e.Property(m => m.ErrorCode).HasMaxLength(128);

@@ -53,16 +53,16 @@ public sealed class MediaService(
         await using (file)
         {
             var info = await FindInfoAsync(node, ct) ?? NewInfo(node, kind);
-            var stale = info.ExtractorVersion < MediaInfo.CurrentExtractorVersion
-                || info.SourceSize != file.Source.Size
-                || info.SourceModifiedAt != file.Source.ModifiedAt;
-            if (stale)
+            var changed = info.SourceSize != file.Source.Size || info.SourceModifiedAt != file.Source.ModifiedAt;
+            if (changed || info.ExtractorVersion < MediaInfo.CurrentExtractorVersion)
             {
                 await ReadFactsAsync(info, file, kind, node.ModifiedAt, background, ct);
                 await ApplyCaptureTimeAsync(node, info, ct);
             }
 
-            if (info.ThumbnailState == ThumbnailState.Pending || stale)
+            // A newer reader reads the facts again; the thumbnail only follows
+            // the file, so a new reader does not redraw a whole library.
+            if (info.ThumbnailState == ThumbnailState.Pending || changed)
             {
                 info.ThumbnailState = await MakeAsync(file, kind, ThumbnailVariant.Small, background, ct) is { } error
                     ? (error == MediaErrors.Unsupported ? ThumbnailState.Unsupported : ThumbnailState.Failed)
@@ -161,6 +161,8 @@ public sealed class MediaService(
         info.Format = facts.Format;
         info.VideoCodec = facts.VideoCodec;
         info.AudioCodec = facts.AudioCodec;
+        info.BitRate = facts.BitRate;
+        info.Streams = facts.Streams ?? [];
         info.CapturedAt = reader.CapturedAt(facts, modifiedAt);
         info.CapturedOffsetMinutes = facts.OffsetMinutes;
         info.CameraMake = facts.CameraMake;
