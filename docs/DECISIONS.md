@@ -1394,3 +1394,38 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   streamed videos, and not before they are played); pictures as separate
   files (hundreds of requests per film).
 
+## D-066 The web player (Proposed, Phase 5)
+
+- **One player for every video**, in Files and in Photos, replacing the
+  browser's own controls: those cannot show seek pictures, a track or a
+  quality menu, or why a video is converted.
+- **The server decides, the page describes the browser** (D-059): the
+  profile comes from `canPlayType` and Media Source; the original plays
+  through its signed URL, anything else opens a stream, closed when the
+  player goes so the server stops making it.
+- **hls.js wherever Media Source exists**, loaded as a separate part of
+  the page only when a stream plays (180 KB compressed), so the app's
+  first load does not grow; the browser's own HLS only where there is no
+  Media Source (iPhone Safari). Chromium's own HLS, new in Edge and
+  Chrome, refused segments hls.js plays.
+- **Two fixes to the segments found by playing them in a browser**: AAC
+  copied from MPEG-TS carries its settings only in its packets, so the
+  init segment is now written after the first packets (`delay_moov`);
+  and the index FFmpeg writes at the end of each segment (`mfra`) is no
+  longer written or served, since a browser's parser refuses it. An API
+  test streams an MPEG-TS film and checks the AAC settings in the init
+  segment.
+- **Every video opens in the player** (`previewKind`): what the browser
+  cannot open, the server streams. An MKV the browser does open (Edge and
+  Chrome do) plays as it is.
+- **Quality is a bit rate.** Auto sends no limit, so the original plays
+  whenever it can; a chosen quality sets the bit rate the stream may use,
+  which may turn direct play into conversion, and the info panel then says
+  so. Changing quality or track goes on from the same place.
+- **A new video waits for the server** instead of failing: while the
+  decision answers `playback.not_ready` the player says it is still being
+  read and asks again every three seconds, for two minutes.
+- **End-to-end tests play for real**, which needs H.264 and AAC in the
+  browser: Edge on the laptop, Google Chrome in CI instead of Playwright's
+  Chromium, which has neither.
+

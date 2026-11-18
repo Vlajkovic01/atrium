@@ -5,9 +5,10 @@ import { useTranslation } from "react-i18next";
 
 import { api, call, currentAccessToken, refreshAccessToken } from "../api.ts";
 import { Icon } from "../components/Icon.tsx";
-import { Button, ErrorMessage } from "../components/ui.tsx";
+import { Button } from "../components/ui.tsx";
 import { downloadFile } from "../files/actions.ts";
 import { currentLocale, formatBytes } from "../i18n.ts";
+import { VideoPlayer } from "../player/VideoPlayer.tsx";
 import { formatDuration, type PhotoItem } from "./PhotoGrid.tsx";
 
 /**
@@ -67,18 +68,6 @@ export function Viewer(props: {
   const [info, setInfo] = useState(false);
   const dialog = useRef<HTMLDivElement>(null);
   const large = useLargeImage(item.id, item.kind === "photo");
-  const video = useQuery({
-    queryKey: ["video-url", item.id],
-    enabled: item.kind === "video",
-    queryFn: () =>
-      call(
-        api.POST("/api/v1/nodes/{id}/content-url", {
-          params: { path: { id: item.id } },
-          body: { inline: true, versionId: null },
-        }),
-      ),
-    staleTime: 30 * 60 * 1000,
-  });
   const details = useQuery({
     queryKey: ["media-info", item.id],
     enabled: info,
@@ -136,11 +125,7 @@ export function Viewer(props: {
           </button>
         ) : null}
         {item.kind === "video" ? (
-          video.data ? (
-            <video key={item.id} className="viewer-media" src={video.data.url} controls autoPlay playsInline />
-          ) : (
-            <ErrorMessage error={video.error} />
-          )
+          <VideoPlayer key={item.id} nodeId={item.id} name={item.name} />
         ) : (
           <img key={item.id} className="viewer-media" src={large ?? item.thumbnailUrl} alt={item.name} />
         )}

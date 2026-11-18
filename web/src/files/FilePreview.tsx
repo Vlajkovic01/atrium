@@ -7,6 +7,7 @@ import { api, call } from "../api.ts";
 import { Icon } from "../components/Icon.tsx";
 import { Button, ErrorMessage } from "../components/ui.tsx";
 import { formatBytes } from "../i18n.ts";
+import { VideoPlayer } from "../player/VideoPlayer.tsx";
 import { downloadFile, type NodeInfo } from "./actions.ts";
 
 function TextBody({ url }: { readonly url: string }) {
@@ -107,7 +108,7 @@ export function FilePreview(props: {
       case "image":
         return <img key={node.id} className="viewer-media" src={url} alt={node.name} />;
       case "video":
-        return <video key={node.id} className="viewer-media" src={url} controls autoPlay playsInline />;
+        return <VideoPlayer key={node.id} nodeId={node.id} name={node.name} />;
       case "audio":
         return (
           <div className="preview-audio">

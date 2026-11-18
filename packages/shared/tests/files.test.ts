@@ -55,7 +55,9 @@ describe("what a file is", () => {
     // A browser cannot draw a camera's raw picture: it is offered, not shown.
     ["raw.cr2", "image/x-canon-cr2", "none"],
     ["clip.mp4", "video/mp4", "video"],
-    ["clip.mkv", "video/x-matroska", "none"],
+    // Since Phase 5 the server streams what a browser cannot open (D-066).
+    ["clip.mkv", "video/x-matroska", "video"],
+    ["old.avi", "video/x-msvideo", "video"],
     ["song.mp3", "audio/mpeg", "audio"],
     ["scan.pdf", null, "pdf"],
     ["budget.xlsx", null, "office"],

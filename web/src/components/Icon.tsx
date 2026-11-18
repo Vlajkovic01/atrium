@@ -178,6 +178,15 @@ const shapes = {
   close: <path d="m6 6 12 12M18 6 6 18" />,
   pause: <path d="M8.5 5.5v13M15.5 5.5v13" />,
   play: <path d="m7.5 5 11 7-11 7z" />,
+  volume: <path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3zM15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />,
+  mute: <path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3zM15.5 9.5l5 5M20.5 9.5l-5 5" />,
+  fullscreen: <path d="M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15" />,
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3.5v2.5M12 18v2.5M3.5 12H6M18 12h2.5M6 6l1.8 1.8M16.2 16.2 18 18M6 18l1.8-1.8M16.2 7.8 18 6" />
+    </>
+  ),
   chevronRight: <path d="m9.5 6 6 6-6 6" />,
   grid: (
     <>
