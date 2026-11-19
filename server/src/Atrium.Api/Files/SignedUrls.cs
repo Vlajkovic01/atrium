@@ -25,6 +25,9 @@ public sealed class SignedUrls(ServerKeys keys, SessionRevocationCache revocatio
 
     public static readonly TimeSpan DefaultLifetime = TimeSpan.FromHours(1);
 
+    /// <summary>No signed URL lasts longer, whatever it is for.</summary>
+    public static readonly TimeSpan MaxLifetime = TimeSpan.FromDays(1);
+
     private readonly byte[] _key = keys.Derive("atrium/signed-url/v1");
 
     /// <summary>
@@ -37,6 +40,13 @@ public sealed class SignedUrls(ServerKeys keys, SessionRevocationCache revocatio
     /// <summary>A signed version of <paramref name="path"/> with the given extra parameters.</summary>
     public (string Url, DateTimeOffset ExpiresAt) Sign(string path, Guid sessionId, IReadOnlyDictionary<string, string>? options = null) =>
         Sign(path, sessionId, options, time.GetUtcNow() + DefaultLifetime);
+
+    /// <summary>
+    /// Like <see cref="Sign(string, Guid, IReadOnlyDictionary{string, string}?)"/>, for a given time, at most
+    /// <see cref="MaxLifetime"/>: a film played from the original must not lose its URL halfway.
+    /// </summary>
+    public (string Url, DateTimeOffset ExpiresAt) Sign(string path, Guid sessionId, IReadOnlyDictionary<string, string>? options, TimeSpan lifetime) =>
+        Sign(path, sessionId, options, time.GetUtcNow() + (lifetime > MaxLifetime ? MaxLifetime : lifetime < TimeSpan.Zero ? TimeSpan.Zero : lifetime));
 
     /// <summary>Like <see cref="Sign(string, Guid, IReadOnlyDictionary{string, string}?)"/>, but stable within a <see cref="CacheWindow"/>.</summary>
     public (string Url, DateTimeOffset ExpiresAt) SignForCaching(string path, Guid sessionId, IReadOnlyDictionary<string, string>? options = null)

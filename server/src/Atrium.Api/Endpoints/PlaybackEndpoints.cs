@@ -1,3 +1,4 @@
+using Atrium.Api.Auth;
 using Atrium.Api.Files;
 using Atrium.Core.Files;
 using Atrium.Core.Media;
@@ -17,6 +18,7 @@ public sealed record PlaybackRequest(ClientProfile Profile, int? AudioStream = n
 /// <param name="Reasons">Why the original is not played as it is; empty for direct play. Clients translate the codes.</param>
 /// <param name="Container">The file's container as clients name it: mp4, mkv, webm...</param>
 /// <param name="Streams">Every video, audio and subtitle stream, for the track menus.</param>
+/// <param name="Original">For direct play: a signed URL of the original, with range requests, that lasts the length of the video and two hours more.</param>
 public sealed record PlaybackView(
     PlaybackMethod Method,
     IReadOnlyList<string> Reasons,
@@ -24,7 +26,8 @@ public sealed record PlaybackView(
     long? DurationMs,
     int VideoStream,
     int? AudioStream,
-    IReadOnlyList<MediaStream> Streams);
+    IReadOnlyList<MediaStream> Streams,
+    SignedUrlResponse? Original);
 
 /// <summary>Deciding how a video is played (DESIGN.md 7.2 and 7.3). Serving it comes with direct play and HLS.</summary>
 public static class PlaybackEndpoints
@@ -39,6 +42,15 @@ public static class PlaybackEndpoints
 
     private const int MaxName = 32;
 
+    /// <summary>
+    /// How long the URL of an original lasts: the video's length and two
+    /// hours for pauses, at most a day (<see cref="SignedUrls.MaxLifetime"/>).
+    /// A longer pause, or a revoked session, ends it; the player then asks
+    /// again.
+    /// </summary>
+    public static TimeSpan OriginalLifetime(long? durationMs) =>
+        TimeSpan.FromMilliseconds(Math.Max(0, durationMs ?? 0)) + TimeSpan.FromHours(2);
+
     public static IEndpointRouteBuilder MapPlaybackEndpoints(this IEndpointRouteBuilder routes)
     {
         routes.MapPost("/nodes/{id:guid}/playback", DecideAsync)
@@ -46,7 +58,7 @@ public static class PlaybackEndpoints
             .WithName("DecidePlayback")
             .WithDescription(
                 "How this client plays the video: the original, a remux, the audio converted, or the video encoded again, " +
-                "with the reasons. 409 playback.not_ready while the file has not been read yet.")
+                "with the reasons, and for direct play a signed URL of the original. 409 playback.not_ready while the file has not been read yet.")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict)
@@ -55,7 +67,7 @@ public static class PlaybackEndpoints
     }
 
     private static async Task<Results<Ok<PlaybackView>, ProblemHttpResult>> DecideAsync(
-        Guid id, PlaybackRequest request, HttpContext http, NodeService nodes, AtriumDbContext db, CancellationToken ct)
+        Guid id, PlaybackRequest request, HttpContext http, NodeService nodes, AtriumDbContext db, SignedUrls signer, CancellationToken ct)
     {
         if (!Valid(request.Profile))
         {
@@ -95,8 +107,19 @@ public static class PlaybackEndpoints
                 StatusCodes.Status422UnprocessableEntity, CannotStream, new() { ["reasons"] = decision.Reasons });
         }
 
+        SignedUrlResponse? original = null;
+        if (decision.Method == PlaybackMethod.DirectPlay)
+        {
+            var (url, expires) = signer.Sign(
+                $"/api/v1/nodes/{node.Id}/content",
+                http.User.SessionId()!.Value,
+                new Dictionary<string, string> { [ContentEndpoints.InlineOption] = "1" },
+                OriginalLifetime(info.DurationMs));
+            original = new SignedUrlResponse(url, expires);
+        }
+
         return TypedResults.Ok(new PlaybackView(
-            decision.Method, decision.Reasons, container, info.DurationMs, decision.VideoStream, decision.AudioStream, info.Streams));
+            decision.Method, decision.Reasons, container, info.DurationMs, decision.VideoStream, decision.AudioStream, info.Streams, original));
     }
 
     private static bool Valid(ClientProfile? profile) =>

@@ -1204,3 +1204,25 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
 - **The schema changed** (D-026): the initial migration was generated
   again with the two new columns. A database from an earlier development
   build is created again; the demo gets a new one at the end of the phase.
+
+## D-060 Playing the original (Proposed, Phase 5)
+
+- **The decision carries the URL.** For direct play the answer holds a
+  signed URL of the original, so a player needs one call before it plays.
+  It is the ordinary content URL (range requests, ETag and If-Range, any
+  storage location), signed for the session that asked.
+- **It lasts the film.** A signed URL lasts an hour; a film played from
+  it would stop when it ran out. The original's URL lasts the video's
+  length and two hours for pauses, and no signed URL lasts more than a
+  day. Revoking the session still ends it at once. A player that meets a
+  refused URL asks for the decision again. Alternative: a short URL that
+  the player refreshes, which the platform players cannot do in the middle
+  of a stream.
+- **Video containers are served inline.** Matroska, MPEG-TS, AVI and Ogg
+  join MP4, WebM and QuickTime: a phone's player opens them from the
+  original, and without this they went out as `application/octet-stream`
+  attachments. Media types never run as documents, and the sandbox policy
+  stays on every file.
+- **FFmpeg's loopback URL for S3** (DESIGN.md 7.4) is built with HLS,
+  where FFmpeg first reads a film; nothing reads it before then.
+
