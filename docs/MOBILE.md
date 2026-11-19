@@ -47,6 +47,7 @@ Publishing anywhere is the owner's decision.
 | Camera backup | Off until turned on; photos, videos, chosen albums; only on Wi-Fi, only while charging; known by content, never sent twice, never deletes from the phone; runs while open, in Android's background job, and with a notification while sending (D-058) |
 | Security | Optional lock with fingerprint, face or screen lock; refresh tokens in the Android Keystore (D-050, D-057) |
 | Devices | The person's signed-in devices, signing one out, approving a TV by scanning its code (D-050) |
+| Video | The phone's own player (Media3). What the phone decodes and its screen shows is read from Android; the server plays the original when it can and streams otherwise. Quality, audio track and playback info above the player; a copy kept on the phone plays as it is (D-067) |
 
 ## Permissions
 

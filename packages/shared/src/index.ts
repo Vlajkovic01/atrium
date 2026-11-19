@@ -112,3 +112,5 @@ export type {
   TrickplayFrame,
   TrickplayView,
 } from "./playback/decision.ts";
+export { androidProfile } from "./playback/android.ts";
+export type { AndroidDecoder, AndroidMediaCapabilities } from "./playback/android.ts";

@@ -17,6 +17,7 @@ import { copyText, copyUri } from "../offline/copies";
 import { useOfflineMaybe } from "../offline/OfflineProvider.tsx";
 import { nodeIcon } from "./icons.ts";
 import { PdfView } from "./PdfView";
+import { StreamingPlayer } from "./StreamingPlayer.tsx";
 
 /** Signed addresses last longer than this; asking again after it keeps them from expiring while shown. */
 const ADDRESS_FRESH_MS = 10 * 60 * 1000;
@@ -169,8 +170,14 @@ function Inline({
         />
       );
     case "video":
+      // A copy kept on the phone plays as it is; otherwise the server says how (D-067).
+      return local ? (
+        <Player uri={shown} audio={false} onError={onError} />
+      ) : (
+        <StreamingPlayer nodeId={node.id} onUnplayable={onError} />
+      );
     case "audio":
-      return <Player uri={shown} audio={kind === "audio"} onError={onError} />;
+      return <Player uri={shown} audio onError={onError} />;
     default:
       return <TextBody uri={shown} copy={local ? copy!.path : null} label={t("mobile.viewer.text")} />;
   }

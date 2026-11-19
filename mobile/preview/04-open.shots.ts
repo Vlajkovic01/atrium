@@ -121,6 +121,21 @@ for (const [language, locale, scheme] of [
         .toBeGreaterThan(1);
       await shot(page, `${language}-62-video`);
 
+      // How it plays, and why, one touch away; and the quality to choose.
+      await viewer(page)
+        .getByRole("button", { name: say("Playback info", "Informacije o reprodukciji") })
+        .click();
+      await expect(viewer(page).getByTestId("playback-info")).toContainText(
+        say("Playing the original", "Pušta se original"),
+      );
+      await shot(page, `${language}-63-playback-info`);
+      await viewer(page)
+        .getByRole("button", { name: say("Quality", "Kvalitet") })
+        .click();
+      await expect(page.getByText("720p", { exact: true }).filter({ visible: true })).toBeVisible();
+      await shot(page, `${language}-64-quality`);
+      await page.getByText(say("Auto", "Automatski"), { exact: true }).filter({ visible: true }).click();
+
       // Text, as text.
       await viewer(page)
         .getByRole("button", { name: say("Next file", "Sledeći fajl") })
