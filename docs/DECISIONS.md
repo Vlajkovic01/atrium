@@ -1469,3 +1469,26 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   info and quality menus. Reading Android's decoders, Media3 playing HLS
   and MKV, and HDR are only on a phone (APK from CI).
 
+## D-068 The place in a video, on every device (Proposed, Phase 5)
+
+- **One row per person and file**, `PlaybackStates`: position, the length
+  the player saw, and when. The last device to save wins; two devices
+  saving the first position at the same moment are handled by saving
+  over the other. The row goes with the file and with the person.
+- **Saved by the players** every ten seconds while playing, on pause and
+  on closing; read back with the decision (`resumeMs`), so a player knows
+  where to start in the call it already makes. Alternative: a playback
+  session that reports progress (the API sketch), which would hold state
+  on the server for originals played straight from the file.
+- **When to resume is the clients' rule, shared**: not for videos under
+  five minutes (clips are watched whole), not from the first 30 seconds,
+  and not from the last minute or 5 %, whichever is longer (the film was
+  finished). The server stores what it is given, so Phase 7 can build
+  "continue watching" and the watched state on the same rows, and move
+  the rule to the server then.
+- **Not yet**: a copy kept on the phone plays offline in the plain player
+  and neither resumes nor saves its place.
+- The schema changed (D-026): the initial migration was generated again
+  with the new table; the demo gets a new database at the end of the
+  phase.
+

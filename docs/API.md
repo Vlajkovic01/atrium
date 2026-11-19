@@ -227,7 +227,7 @@ A player first asks how to play (D-059); only streaming opens a session.
 | GET | `/stream/{id}/master.m3u8` | Built. The stream's identifier is the access (D-062). Master playlist with codecs, bandwidth and resolution |
 | GET | `/stream/{id}/index.m3u8` | Built. The full playlist from the first request |
 | GET | `/stream/{id}/init.mp4`, `/stream/{id}/{n}.m4s` | Built. fMP4 init and segments, produced on demand |
-| GET, PUT | `/playback/state/{nodeOrItemId}` | Resume position, watched flag |
+| GET, PUT | `/playback/state/{nodeId}` | Built. Where this person last was in a video, saved by any device; the last save wins. The decision and a new stream also carry it as `resumeMs` (D-068). The watched flag comes in Phase 7 |
 
 ## Subtitles and audio (Phase 6)
 

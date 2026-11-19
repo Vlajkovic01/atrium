@@ -114,3 +114,11 @@ export type {
 } from "./playback/decision.ts";
 export { androidProfile } from "./playback/android.ts";
 export type { AndroidDecoder, AndroidMediaCapabilities } from "./playback/android.ts";
+export {
+  RESUME_END_MARGIN_MS,
+  RESUME_MIN_DURATION_MS,
+  RESUME_MIN_POSITION_MS,
+  SAVE_EVERY_MS,
+  resumeFrom,
+  savesPosition,
+} from "./playback/position.ts";

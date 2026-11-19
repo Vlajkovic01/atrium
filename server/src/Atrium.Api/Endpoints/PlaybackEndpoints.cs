@@ -19,6 +19,7 @@ public sealed record PlaybackRequest(ClientProfile Profile, int? AudioStream = n
 /// <param name="Container">The file's container as clients name it: mp4, mkv, webm...</param>
 /// <param name="Streams">Every video, audio and subtitle stream, for the track menus.</param>
 /// <param name="Original">For direct play: a signed URL of the original, with range requests, that lasts the length of the video and two hours more.</param>
+/// <param name="ResumeMs">Where this person last was in the video, on any device; the client decides whether to resume there (D-068).</param>
 public sealed record PlaybackView(
     PlaybackMethod Method,
     IReadOnlyList<string> Reasons,
@@ -27,7 +28,14 @@ public sealed record PlaybackView(
     int VideoStream,
     int? AudioStream,
     IReadOnlyList<MediaStream> Streams,
-    SignedUrlResponse? Original);
+    SignedUrlResponse? Original,
+    long? ResumeMs = null);
+
+/// <summary>Where a person is in a video (D-068).</summary>
+public sealed record PositionView(long PositionMs, long DurationMs, DateTimeOffset UpdatedAt);
+
+/// <param name="DurationMs">The length the player sees.</param>
+public sealed record SavePositionRequest(long PositionMs, long DurationMs);
 
 /// <summary>Deciding how a video is played (DESIGN.md 7.2 and 7.3). Serving it comes with direct play and HLS.</summary>
 public static class PlaybackEndpoints
@@ -53,6 +61,17 @@ public static class PlaybackEndpoints
 
     public static IEndpointRouteBuilder MapPlaybackEndpoints(this IEndpointRouteBuilder routes)
     {
+        routes.MapGet("/playback/state/{nodeId:guid}", GetPositionAsync)
+            .WithTags("Playback")
+            .WithName("GetPlaybackPosition")
+            .WithDescription("Where this person last was in a video, saved by any of their devices. 404 when never saved.")
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        routes.MapPut("/playback/state/{nodeId:guid}", SavePositionAsync)
+            .WithTags("Playback")
+            .WithName("SavePlaybackPosition")
+            .WithDescription("Saves where this person is in a video; players save every few seconds, on pause and on close. The last save wins.")
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
         routes.MapPost("/nodes/{id:guid}/playback", DecideAsync)
             .WithTags("Playback")
             .WithName("DecidePlayback")
@@ -88,8 +107,65 @@ public static class PlaybackEndpoints
             original = new SignedUrlResponse(url, expires);
         }
 
+        var resume = await ResumeAsync(db, http.User.UserId()!.Value, node.Id, ct);
         return TypedResults.Ok(new PlaybackView(
-            decision.Method, decision.Reasons, container, info.DurationMs, decision.VideoStream, decision.AudioStream, info.Streams, original));
+            decision.Method, decision.Reasons, container, info.DurationMs, decision.VideoStream, decision.AudioStream, info.Streams, original, resume));
+    }
+
+    internal static async Task<long?> ResumeAsync(AtriumDbContext db, Guid userId, Guid nodeId, CancellationToken ct) =>
+        (await db.PlaybackStates.AsNoTracking().SingleOrDefaultAsync(s => s.UserId == userId && s.NodeId == nodeId, ct))?.PositionMs;
+
+    private static async Task<Results<Ok<PositionView>, ProblemHttpResult>> GetPositionAsync(
+        Guid nodeId, HttpContext http, NodeService nodes, AtriumDbContext db, CancellationToken ct)
+    {
+        if (await nodes.FindAsync(http.User.Actor(), nodeId, ct) is null)
+        {
+            return ApiProblem.Missing();
+        }
+
+        var userId = http.User.UserId()!.Value;
+        return await db.PlaybackStates.AsNoTracking().SingleOrDefaultAsync(s => s.UserId == userId && s.NodeId == nodeId, ct) is { } state
+            ? TypedResults.Ok(new PositionView(state.PositionMs, state.DurationMs, state.UpdatedAt))
+            : ApiProblem.Missing();
+    }
+
+    private static async Task<IResult> SavePositionAsync(
+        Guid nodeId, SavePositionRequest request, HttpContext http, NodeService nodes, AtriumDbContext db, TimeProvider time, CancellationToken ct)
+    {
+        if (request.PositionMs < 0 || request.DurationMs <= 0 || request.PositionMs > request.DurationMs + 60_000)
+        {
+            return ApiProblem.Invalid();
+        }
+
+        if (await nodes.FindAsync(http.User.Actor(), nodeId, ct) is not { Node.MediaKind: MediaKind.Video })
+        {
+            return ApiProblem.Missing();
+        }
+
+        var userId = http.User.UserId()!.Value;
+        for (var attempt = 0; ; attempt++)
+        {
+            var state = await db.PlaybackStates.SingleOrDefaultAsync(s => s.UserId == userId && s.NodeId == nodeId, ct);
+            if (state is null)
+            {
+                state = new PlaybackState { UserId = userId, NodeId = nodeId };
+                db.PlaybackStates.Add(state);
+            }
+
+            state.PositionMs = Math.Min(request.PositionMs, request.DurationMs);
+            state.DurationMs = request.DurationMs;
+            state.UpdatedAt = time.GetUtcNow();
+            try
+            {
+                await db.SaveChangesAsync(ct);
+                return Results.NoContent();
+            }
+            catch (DbUpdateException) when (attempt == 0)
+            {
+                // Another device saved the first position at the same moment: save over it.
+                db.ChangeTracker.Clear();
+            }
+        }
     }
 
     /// <summary>A video's facts and the decision for a client, as the decision and a stream both need them.</summary>

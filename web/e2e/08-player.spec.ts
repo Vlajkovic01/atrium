@@ -121,3 +121,69 @@ test("an MPEG-TS film is remuxed, plays, says why, changes quality and seeks wit
     .toBeGreaterThan(now + 8);
   await expect(page.getByRole("dialog", { name: "film.m2ts" })).toBeVisible();
 });
+
+/** Six minutes, small, in MP4: long enough that its place is kept (D-068). */
+function longFilm(): Buffer {
+  const dir = mkdtempSync(join(tmpdir(), "atrium-e2e-"));
+  try {
+    const path = join(dir, "long.mp4");
+    execFileSync("ffmpeg", [
+      "-nostdin",
+      "-v",
+      "error",
+      "-f",
+      "lavfi",
+      "-i",
+      "testsrc=duration=360:size=160x90:rate=10",
+      "-f",
+      "lavfi",
+      "-i",
+      "sine=frequency=330:duration=360",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "ultrafast",
+      "-pix_fmt",
+      "yuv420p",
+      "-c:a",
+      "aac",
+      "-b:a",
+      "32k",
+      "-shortest",
+      "-movflags",
+      "+faststart",
+      "-y",
+      path,
+    ]);
+    return readFileSync(path);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test("a long film resumes where it was paused, also after closing it", async ({ page }) => {
+  await signIn(page, "/files");
+  await page
+    .getByTestId("upload-files")
+    .setInputFiles([{ name: "long.mp4", mimeType: "video/mp4", buffer: longFilm() }]);
+  await expect(page.getByRole("region", { name: "Uploads" }).getByText("Uploads finished")).toBeVisible();
+
+  await page.getByRole("button", { name: "long.mp4", exact: true }).click();
+  await playsOn(page);
+  const video = page.getByTestId("player-video");
+  await video.evaluate((v: HTMLVideoElement) => {
+    v.currentTime = 120;
+  });
+  await expect.poll(async () => video.evaluate((v: HTMLVideoElement) => v.currentTime)).toBeGreaterThan(119);
+  await video.evaluate((v: HTMLVideoElement) => v.pause());
+  // The pause saves the place; give the save a moment to reach the server.
+  await page.waitForTimeout(1500);
+  await page.getByRole("dialog", { name: "long.mp4" }).getByRole("button", { name: "Close" }).click();
+
+  await page.getByRole("button", { name: "long.mp4", exact: true }).click();
+  await expect
+    .poll(async () => page.getByTestId("player-video").evaluate((v: HTMLVideoElement) => v.currentTime), {
+      timeout: 30_000,
+    })
+    .toBeGreaterThan(115);
+});

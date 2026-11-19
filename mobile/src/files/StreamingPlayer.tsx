@@ -3,8 +3,11 @@ import {
   androidProfile,
   browserMediaProbe,
   browserProfile,
+  SAVE_EVERY_MS,
   playbackMethodKey,
   playbackReasonKeys,
+  resumeFrom,
+  savesPosition,
   type ClientProfile,
   type MediaStream,
   type PlaybackMethod,
@@ -93,6 +96,12 @@ export function StreamingPlayer({
           return;
         }
 
+        // Where the person was on any device (D-068), unless a change of track or quality set it.
+        if (resumeAt.current === 0) {
+          const durationMs = decided.durationMs === null ? null : Number(decided.durationMs);
+          resumeAt.current = resumeFrom(decided.resumeMs === null ? null : Number(decided.resumeMs), durationMs) / 1000;
+        }
+
         if (decided.method === "directPlay" && decided.original) {
           setState({
             source: { uri: absoluteUrl(server.url, decided.original.url) },
@@ -157,6 +166,36 @@ export function StreamingPlayer({
     p.timeUpdateEventInterval = 1;
   });
   const { status } = useEvent(player, "statusChange", { status: player.status });
+  const { isPlaying } = useEvent(player, "playingChange", { isPlaying: player.playing });
+  const { currentTime } = useEvent(player, "timeUpdate", {
+    currentTime: player.currentTime,
+    currentLiveTimestamp: null,
+    currentOffsetFromLive: null,
+    bufferedPosition: 0,
+  });
+
+  // The place is saved while playing, on pause and on closing, for any device to resume (D-068).
+  const place = useRef({ time: 0, duration: 0 });
+  place.current = { time: currentTime, duration: player.duration || place.current.duration };
+  const save = useMemo(
+    () => () => {
+      const { time, duration } = place.current;
+      if (savesPosition(duration * 1000) && time > 0) {
+        void playback.savePosition(nodeId, time * 1000, duration * 1000).catch(() => undefined);
+      }
+    },
+    [playback, nodeId],
+  );
+  useEffect(() => {
+    if (!isPlaying) {
+      save();
+      return;
+    }
+
+    const timer = setInterval(save, SAVE_EVERY_MS);
+    return () => clearInterval(timer);
+  }, [isPlaying, save]);
+  useEffect(() => save, [save]);
 
   useEffect(() => {
     if (!ready) {

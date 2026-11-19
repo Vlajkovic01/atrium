@@ -239,7 +239,10 @@ Built in Phase 3, with these details settled while building it:
 - A "playback info" panel says whether the stream is direct, remuxed or
   transcoded, and why.
 - Next episode card near the end with a countdown the user can cancel.
-- Position is saved continuously and resumes on any device.
+- Position is saved continuously and resumes on any device. Built in
+  Phase 5 (D-068): every ten seconds while playing, on pause and on
+  closing; a video resumes there unless it is under five minutes, the
+  place is in its first 30 seconds, or in its last minute (or last 5 %).
 - Keyboard shortcuts for all controls, listed under `?`.
 
 Built in Phase 5 (D-066): the player opens for every video in Files and

@@ -268,6 +268,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/playback/state/{nodeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Where this person last was in a video, saved by any of their devices. 404 when never saved. */
+        get: operations["GetPlaybackPosition"];
+        /** @description Saves where this person is in a video; players save every few seconds, on pause and on close. The last save wins. */
+        put: operations["SavePlaybackPosition"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/nodes/{id}/playback": {
         parameters: {
             query?: never;
@@ -2359,6 +2377,16 @@ export interface components {
             audioStream: null | number | string;
             streams: components["schemas"]["MediaStream"][];
             original: null | components["schemas"]["SignedUrlResponse"];
+            /** Format: int64 */
+            resumeMs?: null | number | string;
+        };
+        PositionView: {
+            /** Format: int64 */
+            positionMs: number | string;
+            /** Format: int64 */
+            durationMs: number | string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         ProblemDetails: {
             type?: null | string;
@@ -2400,6 +2428,12 @@ export interface components {
             id: string;
             name: string;
             rules: components["schemas"]["ViewRulesData"];
+        };
+        SavePositionRequest: {
+            /** Format: int64 */
+            positionMs: number | string;
+            /** Format: int64 */
+            durationMs: number | string;
         };
         SaveViewRequest: {
             name: string;
@@ -2522,6 +2556,8 @@ export interface components {
             /** Format: int32 */
             audioStream: null | number | string;
             streams: components["schemas"]["MediaStream"][];
+            /** Format: int64 */
+            resumeMs?: null | number | string;
         };
         SystemInfo: {
             name: string;
@@ -3190,6 +3226,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MediaInfoView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetPlaybackPosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                nodeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SavePlaybackPosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                nodeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavePositionRequest"];
+            };
+        };
+        responses: {
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
                 };
             };
             /** @description Not Found */
