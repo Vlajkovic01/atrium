@@ -36,6 +36,7 @@ public sealed class MediaExtractHandler(MediaService media, JobQueue queue, Atri
         if (await db.Nodes.AnyAsync(n => n.Id == nodeId && n.MediaKind == MediaKind.Video, ct))
         {
             await queue.EnqueueAsync(MediaPreviewHandler.Request(nodeId), ct);
+            await queue.EnqueueAsync(Streaming.MediaTrickplayHandler.Request(nodeId), ct);
         }
     }
 }
@@ -151,6 +152,7 @@ public static class MediaSetup
         services.TryAddSingleton(options);
         services.AddSingleton<MetadataReader>();
         services.AddSingleton<Streaming.KeyframeIndex>();
+        services.AddSingleton<Streaming.Trickplay>();
         services.TryAddSingleton(sp => Streaming.StreamLimits.For(sp.GetRequiredService<Atrium.Jobs.HardwareInfo>()));
         services.AddSingleton<Streaming.VideoEncoders>();
         services.AddHostedService<Streaming.VideoEncoderDetection>();
@@ -166,6 +168,7 @@ public static class MediaSetup
         services.AddScoped<INodeContentObserver, MediaContentObserver>();
         services.AddJobHandler<MediaExtractHandler>(MediaExtractHandler.Type);
         services.AddJobHandler<MediaPreviewHandler>(MediaPreviewHandler.Type);
+        services.AddJobHandler<Streaming.MediaTrickplayHandler>(Streaming.MediaTrickplayHandler.Type);
         services.AddJobHandler<MediaSweepHandler>(MediaSweepHandler.Type);
         services.AddRecurringJob(MediaSweepHandler.Schedule);
         return services;

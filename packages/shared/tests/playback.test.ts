@@ -2,7 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import en from "../src/i18n/locales/en.json";
 import sr from "../src/i18n/locales/sr-Latn.json";
-import { browserProfile, playbackMethodKey, playbackReasonKeys, type MediaProbe } from "../src/index.ts";
+import {
+  browserProfile,
+  playbackMethodKey,
+  playbackReasonKeys,
+  trickplayFrame,
+  type MediaProbe,
+} from "../src/index.ts";
 
 /** A probe that answers yes to every type matching one of the patterns. */
 function probe(patterns: readonly RegExp[], extra: Partial<MediaProbe> = {}): MediaProbe {
@@ -119,5 +125,29 @@ describe("playback texts", () => {
       "playback.reason.video_dolby_vision_enhancement",
       "playback.reason.other",
     ]);
+  });
+});
+
+describe("seek pictures", () => {
+  const view = {
+    intervalMs: 10_000,
+    width: 240,
+    height: 136,
+    columns: 10,
+    rows: 10,
+    count: 105,
+    sheets: ["a.jpg", "b.jpg"],
+  };
+
+  it("finds the picture of a position on its sheet", () => {
+    expect(trickplayFrame(view, 0)).toEqual({ sheet: "a.jpg", x: 0, y: 0, width: 240, height: 136 });
+    expect(trickplayFrame(view, 129_999)).toEqual({ sheet: "a.jpg", x: 480, y: 136, width: 240, height: 136 });
+    expect(trickplayFrame(view, 1_000_000)).toEqual({ sheet: "b.jpg", x: 0, y: 0, width: 240, height: 136 });
+  });
+
+  it("keeps to the pictures there are", () => {
+    expect(trickplayFrame(view, 99_000_000)).toEqual({ sheet: "b.jpg", x: 960, y: 0, width: 240, height: 136 });
+    expect(trickplayFrame(view, -5)).toEqual({ sheet: "a.jpg", x: 0, y: 0, width: 240, height: 136 });
+    expect(trickplayFrame({ ...view, count: 0 }, 0)).toBeNull();
   });
 });

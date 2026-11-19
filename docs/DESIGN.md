@@ -867,6 +867,10 @@ Rules, in order (D-059):
   (D-062), so segments of different runs join without a seam.
 - FFmpeg is paused when it is far ahead of the playback position and
   stopped when the session goes idle.
+- The seek bar shows a picture of where it would land: a background job
+  of idle priority makes one picture every ten seconds from the keyframes
+  only, on sheets of ten by ten, kept in the cache location by content
+  (D-065). Videos under a minute get none.
 - Segments are written to the cache while the stream lasts: at most about
   twenty minutes of them per stream, those near the player, and a limit
   for all streams together (20 GB by default), over which idle streams

@@ -1,4 +1,4 @@
-import { call } from "../api/call.ts";
+import { ApiError, call } from "../api/call.ts";
 import type { ApiClient } from "../api/client.ts";
 import type { components } from "../api/schema.d.ts";
 import type { ClientProfile } from "./profile.ts";
@@ -7,6 +7,7 @@ export type PlaybackView = components["schemas"]["PlaybackView"];
 export type PlaybackMethod = components["schemas"]["PlaybackMethod"];
 export type MediaStream = components["schemas"]["MediaStream"];
 export type StreamView = components["schemas"]["StreamView"];
+export type TrickplayView = components["schemas"]["TrickplayView"];
 
 /** The calls a player makes before it plays (DESIGN.md 7.3). The server decides; clients never guess. */
 export function playbackApi(api: ApiClient) {
@@ -44,6 +45,22 @@ export function playbackApi(api: ApiClient) {
         }),
       ),
 
+    /**
+     * Pictures for the seek bar, or null while they are not made yet (or
+     * for a video under a minute): the bar then works without them.
+     */
+    trickplay: async (id: string): Promise<TrickplayView | null> => {
+      try {
+        return await call(api.GET("/api/v1/nodes/{id}/trickplay", { params: { path: { id } } }));
+      } catch (error) {
+        if (error instanceof ApiError && error.problem.code === "media.no_trickplay") {
+          return null;
+        }
+
+        throw error;
+      }
+    },
+
     /** Ends a stream, so the server stops making it. */
     closeStream: (id: string): Promise<void> =>
       call(api.DELETE("/api/v1/playback/sessions/{id}", { params: { path: { id } } })),
@@ -61,4 +78,39 @@ export function playbackMethodKey(method: PlaybackMethod): string {
  */
 export function playbackReasonKeys(reason: string): readonly string[] {
   return [`playback.reason.${reason}`, "playback.reason.other"];
+}
+
+/** Where in a sheet the picture of a position is, in the sheet's pixels. */
+export interface TrickplayFrame {
+  readonly sheet: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/**
+ * The seek picture for a position: the picture of the interval it falls
+ * in, the last one past the end. Pictures run left to right, then top to
+ * bottom, sheet by sheet.
+ */
+export function trickplayFrame(view: TrickplayView, positionMs: number): TrickplayFrame | null {
+  const count = Number(view.count);
+  const columns = Number(view.columns);
+  const rows = Number(view.rows);
+  const width = Number(view.width);
+  const height = Number(view.height);
+  if (count <= 0 || columns <= 0 || rows <= 0) {
+    return null;
+  }
+
+  const index = Math.min(count - 1, Math.max(0, Math.floor(positionMs / Number(view.intervalMs))));
+  const perSheet = columns * rows;
+  const sheet = view.sheets[Math.floor(index / perSheet)];
+  if (sheet === undefined) {
+    return null;
+  }
+
+  const within = index % perSheet;
+  return { sheet, x: (within % columns) * width, y: Math.floor(within / columns) * height, width, height };
 }

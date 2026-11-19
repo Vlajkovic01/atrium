@@ -218,6 +218,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/nodes/{id}/trickplay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Pictures for the seek bar of a video, made in the background. 404 media.no_trickplay until they exist, or for videos under a minute. */
+        get: operations["GetTrickplay"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/nodes/{id}/trickplay/{sheet}.jpg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One sheet of seek pictures. Authorized by a bearer token or the signed URL the list gives. */
+        get: operations["GetTrickplaySheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/nodes/{id}/media-info": {
         parameters: {
             query?: never;
@@ -2539,6 +2573,21 @@ export interface components {
             deleteAt: string;
             location: components["schemas"]["LocationSegment"][];
         };
+        TrickplayView: {
+            /** Format: int32 */
+            intervalMs: number | string;
+            /** Format: int32 */
+            width: number | string;
+            /** Format: int32 */
+            height: number | string;
+            /** Format: int32 */
+            columns: number | string;
+            /** Format: int32 */
+            rows: number | string;
+            /** Format: int32 */
+            count: number | string;
+            sheets: string[];
+        };
         UpdateAlbumRequest: {
             name: null | string;
             /** Format: uuid */
@@ -3057,6 +3106,58 @@ export interface operations {
             header?: never;
             path: {
                 id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GetTrickplay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrickplayView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetTrickplaySheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                sheet: number;
             };
             cookie?: never;
         };
