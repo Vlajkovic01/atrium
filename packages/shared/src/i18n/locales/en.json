@@ -153,7 +153,8 @@
       "busy": "The server is already converting as many videos as it can. Try again in a few minutes.",
       "too_many_streams": "You are already watching as many videos as one person can at once. Close one and try again.",
       "remote_storage": "Streaming from this storage location is not available yet. Videos that play as they are still work.",
-      "stream_failed": "This part of the video could not be converted. Try again, or try another quality."
+      "stream_failed": "This part of the video could not be converted. Try again, or try another quality.",
+      "tone_mapping_unavailable": "This video is in HDR and your screen is not. Converting it is too heavy for this server, so it cannot be played here. Play it on a device with an HDR screen."
     }
   },
   "mobile": {
@@ -1039,6 +1040,24 @@
       "storage_scrub": "Storage check",
       "uploads_cleanup": "Clearing unfinished uploads",
       "users_delete": "Deleting an account"
+    },
+    "videoHeading": "Video encoding",
+    "videoNotYet": "The video encoders have not been tested yet. They are tested a few seconds after the server starts.",
+    "videoChosen": "Streams are encoded with",
+    "videoTested": "Encoders tested on this machine",
+    "videoWorks": "Works",
+    "videoNo": "Not available",
+    "videoFailure": "A hardware encoder failed during a stream and software took over: {failure}",
+    "videoNote": "Each encoder is tried with a real one-second encode. Videos that play as they are, or only need their container changed, are never encoded.",
+    "videoTest": "Test again",
+    "videoTesting": "Testing…",
+    "encoder": {
+      "software": "Software (processor)",
+      "nvenc": "NVIDIA NVENC",
+      "qsv": "Intel Quick Sync",
+      "vaapi": "VA-API",
+      "videoToolbox": "Apple VideoToolbox",
+      "amf": "AMD AMF"
     }
   },
   "userMenu": {

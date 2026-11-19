@@ -153,7 +153,8 @@
       "busy": "Server već pretvara onoliko videa koliko može. Pokušajte ponovo za nekoliko minuta.",
       "too_many_streams": "Već gledate onoliko videa koliko jedna osoba može odjednom. Zatvorite jedan i pokušajte ponovo.",
       "remote_storage": "Strimovanje sa ove lokacije za skladištenje još nije dostupno. Video snimci koji se puštaju takvi kakvi jesu i dalje rade.",
-      "stream_failed": "Ovaj deo videa nije mogao da se pretvori. Pokušajte ponovo ili izaberite drugi kvalitet."
+      "stream_failed": "Ovaj deo videa nije mogao da se pretvori. Pokušajte ponovo ili izaberite drugi kvalitet.",
+      "tone_mapping_unavailable": "Ovaj video je u HDR-u, a vaš ekran nije. Pretvaranje je preteško za ovaj server, pa ne može da se pusti ovde. Pustite ga na uređaju sa HDR ekranom."
     }
   },
   "mobile": {
@@ -1039,6 +1040,24 @@
       "storage_scrub": "Provera skladišta",
       "uploads_cleanup": "Brisanje nezavršenih otpremanja",
       "users_delete": "Brisanje naloga"
+    },
+    "videoHeading": "Kodiranje videa",
+    "videoNotYet": "Video koderi još nisu isprobani. Isprobavaju se nekoliko sekundi posle pokretanja servera.",
+    "videoChosen": "Strimovi se kodiraju pomoću",
+    "videoTested": "Koderi isprobani na ovoj mašini",
+    "videoWorks": "Radi",
+    "videoNo": "Nije dostupno",
+    "videoFailure": "Hardverski koder je otkazao tokom strima i softver je preuzeo: {failure}",
+    "videoNote": "Svaki koder se isprobava pravim kodiranjem od jedne sekunde. Video snimci koji se puštaju takvi kakvi jesu, ili kojima treba samo drugi kontejner, nikad se ne kodiraju.",
+    "videoTest": "Isprobaj ponovo",
+    "videoTesting": "Isprobavanje…",
+    "encoder": {
+      "software": "Softver (procesor)",
+      "nvenc": "NVIDIA NVENC",
+      "qsv": "Intel Quick Sync",
+      "vaapi": "VA-API",
+      "videoToolbox": "Apple VideoToolbox",
+      "amf": "AMD AMF"
     }
   },
   "userMenu": {

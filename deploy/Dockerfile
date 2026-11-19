@@ -47,11 +47,26 @@ LABEL org.opencontainers.image.title="Atrium" \
       org.opencontainers.image.licenses="AGPL-3.0-only" \
       org.opencontainers.image.source="https://github.com/Vlajkovic01/atrium"
 
-# FFmpeg and ffprobe for videos, libvips for photos, with the HEIF plugin so
-# iPhone photos (HEIC) decode (D-032). The distribution's packages: their
-# source is offered by Ubuntu; see docs/LICENSES.md.
+# libvips for photos, with the HEIF plugin so iPhone photos (HEIC) decode
+# (D-032): the distribution's packages, whose source Ubuntu offers.
+#
+# FFmpeg and ffprobe from Jellyfin's build (D-064): GPL-3.0, never nonfree
+# (CI checks), with every hardware encoder and its drivers (VA-API, Quick
+# Sync, NVENC). Its repository's key is checked against the fingerprint
+# below before anything is installed from it, and the version is pinned.
+# Jellyfin offers the source; see docs/LICENSES.md.
+ARG JELLYFIN_FFMPEG=8.1.3-2-noble
+ARG JELLYFIN_KEY=4918AABC486CA052358D778D49023CD01DE21A7B
 RUN apt-get update \
- && apt-get install --yes --no-install-recommends ffmpeg libvips42t64 libheif-plugin-libde265 \
+ && apt-get install --yes --no-install-recommends ca-certificates curl gnupg libvips42t64 libheif-plugin-libde265 \
+ && . /etc/os-release && test "$VERSION_CODENAME" = noble \
+ && curl --fail --silent --show-error --location https://repo.jellyfin.org/jellyfin_team.gpg.key \
+      | gpg --dearmor --output /usr/share/keyrings/jellyfin.gpg \
+ && gpg --show-keys --with-colons /usr/share/keyrings/jellyfin.gpg | grep -q "^fpr:::::::::$JELLYFIN_KEY:" \
+ && echo "deb [signed-by=/usr/share/keyrings/jellyfin.gpg] https://repo.jellyfin.org/ubuntu noble main" > /etc/apt/sources.list.d/jellyfin.list \
+ && apt-get update \
+ && apt-get install --yes --no-install-recommends "jellyfin-ffmpeg8=$JELLYFIN_FFMPEG" \
+ && apt-get purge --yes --auto-remove curl gnupg \
  && rm -rf /var/lib/apt/lists/*
 
 # The three places Atrium keeps data (docs/DESIGN.md 1.3). They are created
@@ -65,6 +80,8 @@ COPY --from=web /src/web/dist /app/wwwroot
 
 ENV ATRIUM_CONFIG_DIR=/config \
     ATRIUM_CACHE_DIR=/cache \
+    ATRIUM_FFMPEG=/usr/lib/jellyfin-ffmpeg/ffmpeg \
+    ATRIUM_FFPROBE=/usr/lib/jellyfin-ffmpeg/ffprobe \
     ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_CLI_TELEMETRY_OPTOUT=1
 

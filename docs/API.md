@@ -44,7 +44,8 @@ the same ones the admin interface uses later.
 | GET | `/setup/state` | *Public.* Admin exists, storage configured, completed, whether this client needs the setup token |
 | POST | `/setup/admin` | *Public while no admin exists.* Creates the first admin; needs the setup token from the server log |
 | POST | `/setup/complete` | Admin. Finishes setup; refused until a storage location exists |
-| GET | `/admin/hardware` | Not built yet. Detected CPU, memory, hardware profile, working encoders |
+| GET | `/admin/hardware` | Built. Detected CPU, memory, hardware profile, each video encoder's test, the one streams use, the last fallback to software |
+| POST | `/admin/hardware/detect` | Built. Tests the encoders again |
 | GET | `/admin/network` | Not built yet. The address the server sees for this request, proxy detection |
 
 ## Authentication and sessions (Phase 1)

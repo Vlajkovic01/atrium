@@ -1382,6 +1382,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/hardware": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetHardware"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/hardware/detect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Tests every candidate video encoder again with a one-second encode, as after changing the machine or its drivers. */
+        post: operations["DetectHardware"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/timeline/buckets": {
         parameters: {
             query?: never;
@@ -1837,8 +1870,29 @@ export interface components {
             /** Format: int32 */
             removed: number | string;
         };
+        EncoderTest: {
+            kind: components["schemas"]["VideoEncoderKind"];
+            works: boolean;
+            error: null | string;
+        };
         /** @enum {unknown} */
         HardwareProfile: "small" | "medium" | "large";
+        HardwareView: {
+            /** Format: int32 */
+            processorCount: number | string;
+            /** Format: int64 */
+            memoryBytes: number | string;
+            profile: components["schemas"]["HardwareProfile"];
+            encoders: components["schemas"]["EncoderTest"][];
+            chosen: components["schemas"]["VideoEncoderKind"];
+            /** Format: date-time */
+            detectedAt: null | string;
+            lastFailure: null | string;
+            /** Format: int32 */
+            maxSoftwareEncodes: number | string;
+            /** Format: int32 */
+            maxHardwareEncodes: number | string;
+        };
         HashCheckRequest: {
             hashes: string[];
         };
@@ -2596,6 +2650,8 @@ export interface components {
             /** Format: int32 */
             maxHeight?: null | number | string;
         };
+        /** @enum {unknown} */
+        VideoEncoderKind: "software" | "nvenc" | "qsv" | "vaapi" | "videoToolbox" | "amf";
         ViewPageView: {
             items: components["schemas"]["SearchResultView"][];
             nextCursor: null | string;
@@ -6159,6 +6215,46 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    GetHardware: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HardwareView"];
+                };
+            };
+        };
+    };
+    DetectHardware: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HardwareView"];
+                };
             };
         };
     };

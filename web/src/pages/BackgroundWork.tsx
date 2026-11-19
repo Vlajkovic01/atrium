@@ -10,6 +10,7 @@ import { formatBytes, formatDateTime } from "../i18n.ts";
 
 type Info = components["schemas"]["BackgroundWorkInfo"];
 type ResourceClass = components["schemas"]["JobResourceClass"];
+type Hardware = components["schemas"]["HardwareView"];
 
 const queryKey = ["background-work"];
 
@@ -69,6 +70,8 @@ export function BackgroundWork() {
             </p>
           </Card>
 
+          <VideoEncodingCard />
+
           <Card title={t("backgroundWork.pauseHeading")} icon="pause">
             <Notice kind={data.paused ? "warning" : "ok"}>{pauseText(data, t)}</Notice>
             <p className="muted">{t("backgroundWork.pauseNote")}</p>
@@ -102,6 +105,69 @@ export function BackgroundWork() {
       ) : null}
       <FailedJobs />
     </>
+  );
+}
+
+/**
+ * Which video encoders work on this machine (DESIGN.md 7.5): each
+ * candidate's test encode, the one streams use, and the last time a
+ * hardware encoder failed during a stream. "Test again" after changing
+ * the machine, its drivers or the devices given to the container.
+ */
+function VideoEncodingCard() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const [testing, setTesting] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const hardware = useQuery({
+    queryKey: ["hardware"],
+    queryFn: () => call(api.GET("/api/v1/admin/hardware")),
+  });
+
+  const detect = async () => {
+    setTesting(true);
+    setError(null);
+    try {
+      queryClient.setQueryData(["hardware"], await call(api.POST("/api/v1/admin/hardware/detect")));
+    } catch (e) {
+      setError(e);
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const data: Hardware | undefined = hardware.data;
+  return (
+    <Card title={t("backgroundWork.videoHeading")} icon="device">
+      <ErrorMessage error={error ?? hardware.error} />
+      {data && data.encoders.length === 0 ? <p className="muted">{t("backgroundWork.videoNotYet")}</p> : null}
+      {data && data.encoders.length > 0 ? (
+        <>
+          <p className="row-title">
+            {t("backgroundWork.videoChosen")}
+            <Badge tone="accent">{t(`backgroundWork.encoder.${data.chosen}`)}</Badge>
+          </p>
+          <ul className="plain-list" aria-label={t("backgroundWork.videoTested")}>
+            {data.encoders.map((encoder) => (
+              <li key={encoder.kind}>
+                <span>{t(`backgroundWork.encoder.${encoder.kind}`)}</span>{" "}
+                <Badge tone={encoder.works ? "accent" : "muted"}>
+                  {encoder.works ? t("backgroundWork.videoWorks") : t("backgroundWork.videoNo")}
+                </Badge>
+                {encoder.error ? <span className="muted"> {encoder.error}</span> : null}
+              </li>
+            ))}
+          </ul>
+          {data.lastFailure ? (
+            <Notice kind="warning">{t("backgroundWork.videoFailure", { failure: data.lastFailure })}</Notice>
+          ) : null}
+          <p className="muted">{t("backgroundWork.videoNote")}</p>
+        </>
+      ) : null}
+      <Button onClick={() => void detect()} disabled={testing}>
+        {testing ? t("backgroundWork.videoTesting") : t("backgroundWork.videoTest")}
+      </Button>
+    </Card>
   );
 }
 

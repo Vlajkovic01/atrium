@@ -14,7 +14,8 @@ namespace Atrium.Media.Streaming;
 /// <param name="MaxCopies">Streams whose video is copied (remux, audio transcode), at once on the server.</param>
 /// <param name="MaxPerUser">Streams one person has at once.</param>
 /// <param name="MaxCacheBytes">What all streams together keep in the cache location.</param>
-public sealed record StreamLimits(int MaxEncodes, int MaxCopies, int MaxPerUser, long MaxCacheBytes = StreamLimits.DefaultCacheBytes)
+/// <param name="MaxHardwareEncodes">Streams encoded by a hardware encoder at once; the device, not the processor, is the limit.</param>
+public sealed record StreamLimits(int MaxEncodes, int MaxCopies, int MaxPerUser, long MaxCacheBytes = StreamLimits.DefaultCacheBytes, int MaxHardwareEncodes = 3)
 {
     public const string MaxEncodesKey = "ATRIUM_MAX_TRANSCODES";
 
@@ -57,7 +58,7 @@ public enum StreamRefusal
 /// that is its capability in stream URLs, kept only for the session that
 /// opened it.
 /// </summary>
-public sealed class StreamSessions(MediaOptions options, StreamLimits limits, TimeProvider time, ILoggerFactory loggers) : IAsyncDisposable
+public sealed class StreamSessions(MediaOptions options, StreamLimits limits, TimeProvider time, ILoggerFactory loggers, VideoEncoders? encoders = null) : IAsyncDisposable
 {
     /// <summary>A stream nobody asked anything of for this long stops its FFmpeg.</summary>
     public static readonly TimeSpan IdleStop = TimeSpan.FromSeconds(60);
@@ -126,9 +127,15 @@ public sealed class StreamSessions(MediaOptions options, StreamLimits limits, Ti
                 return (null, StreamRefusal.ServerBusy);
             }
 
-            var encodes = !output.CopyVideo;
-            var alike = open.Count(s => s.Encodes == encodes);
-            if (alike >= (encodes ? limits.MaxEncodes : limits.MaxCopies))
+            // Copies, software encodes and hardware encodes each have their own limit.
+            var kind = Kind(output);
+            var limit = kind switch
+            {
+                0 => limits.MaxCopies,
+                1 => limits.MaxEncodes,
+                _ => limits.MaxHardwareEncodes,
+            };
+            if (open.Count(s => Kind(s.Output) == kind) >= limit)
             {
                 return (null, StreamRefusal.ServerBusy);
             }
@@ -149,7 +156,8 @@ public sealed class StreamSessions(MediaOptions options, StreamLimits limits, Ti
                 options.Ffmpeg,
                 input,
                 time,
-                loggers.CreateLogger<StreamSession>());
+                loggers.CreateLogger<StreamSession>(),
+                encoders is null ? null : encoders.ReportFailure);
             _sessions[id] = session;
             return (session, null);
         }
@@ -158,6 +166,9 @@ public sealed class StreamSessions(MediaOptions options, StreamLimits limits, Ti
             _opening.Release();
         }
     }
+
+    private static int Kind(StreamOutput output) =>
+        output.CopyVideo ? 0 : output.Encoder == VideoEncoderKind.Software ? 1 : 2;
 
     public async Task<bool> CloseAsync(string id)
     {

@@ -269,6 +269,19 @@ jobs:
         working-directory: deploy
         run: docker compose run --rm --no-deps atrium --check-media
 
+      # A build with --enable-nonfree may not be redistributed at all
+      # (docs/LICENSES.md, flag 1); the image must never carry one.
+      - name: The image's FFmpeg may be redistributed
+        working-directory: deploy
+        run: |
+          conf="$(docker compose run --rm --no-deps --entrypoint /usr/lib/jellyfin-ffmpeg/ffmpeg atrium -hide_banner -buildconf)"
+          echo "$conf" | head -5
+          if echo "$conf" | grep -q -- "--enable-nonfree"; then
+            echo "::error::The image's FFmpeg is built with --enable-nonfree"
+            exit 1
+          fi
+          echo "$conf" | grep -q -- "--enable-gpl"
+
       - name: Start with Compose
         working-directory: deploy
         run: docker compose up --detach --wait --wait-timeout 180
