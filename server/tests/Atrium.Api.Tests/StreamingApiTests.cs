@@ -145,7 +145,7 @@ public sealed class StreamingApiTests : IDisposable
         Assert.Equal(StreamingEndpoints.DirectPlay, await response.ProblemCodeAsync());
     }
 
-    private static string Relative(string master, string name) => master[..(master.LastIndexOf('/') + 1)] + name;
+    internal static string Relative(string master, string name) => master[..(master.LastIndexOf('/') + 1)] + name;
 
     private static List<double> Durations(string playlist) =>
         playlist.Split('\n')
@@ -153,9 +153,11 @@ public sealed class StreamingApiTests : IDisposable
             .Select(l => double.Parse(l[8..].TrimEnd(','), CultureInfo.InvariantCulture))
             .ToList();
 
-    private async Task<string> JoinAsync(byte[] init, Dictionary<int, byte[]> parts)
+    private Task<string> JoinAsync(byte[] init, Dictionary<int, byte[]> parts) => JoinAsync(_dir, init, parts);
+
+    internal static async Task<string> JoinAsync(string dir, byte[] init, Dictionary<int, byte[]> parts)
     {
-        var path = Path.Combine(_dir, $"{Guid.NewGuid():N}.mp4");
+        var path = Path.Combine(dir, $"{Guid.NewGuid():N}.mp4");
         await using var file = File.Create(path);
         await file.WriteAsync(init);
         foreach (var (_, part) in parts.OrderBy(p => p.Key))
@@ -167,7 +169,7 @@ public sealed class StreamingApiTests : IDisposable
     }
 
     /// <summary>The duration, the video's first time, and whatever FFmpeg complains of while decoding all of it.</summary>
-    private static async Task<(double Duration, double VideoStart, string Errors)> ProbeAsync(string path)
+    internal static async Task<(double Duration, double VideoStart, string Errors)> ProbeAsync(string path)
     {
         var probe = Encoding.UTF8.GetString(await ToolRunner.RunAsync(
             "ffprobe",
@@ -184,9 +186,13 @@ public sealed class StreamingApiTests : IDisposable
     }
 
     /// <summary>A twenty-second film made by FFmpeg, stored as the user's, with its facts read as the media job would.</summary>
-    private async Task<(string Token, Node Node)> FilmAsync(string user, string name, string[] output, string size = "160x90")
+    private Task<(string Token, Node Node)> FilmAsync(string user, string name, string[] output, string size = "160x90") =>
+        FilmAsync(_factory, _client, _dir, user, name, output, size, addLocalStorage: true);
+
+    internal static async Task<(string Token, Node Node)> FilmAsync(
+        AtriumFactory factory, HttpClient client, string dir, string user, string name, string[] output, string size = "160x90", bool addLocalStorage = true)
     {
-        var source = Path.Combine(_dir, $"{Guid.NewGuid():N}{Path.GetExtension(name)}");
+        var source = Path.Combine(dir, $"{Guid.NewGuid():N}{Path.GetExtension(name)}");
         await ToolRunner.RunAsync(
             "ffmpeg",
             ["-nostdin", "-v", "error", "-f", "lavfi", "-i", $"testsrc=duration=20:size={size}:rate=24", "-f", "lavfi", "-i", "sine=duration=20",
@@ -196,20 +202,20 @@ public sealed class StreamingApiTests : IDisposable
             4096,
             CancellationToken.None);
 
-        if (!await _factory.WithDbResultAsync(db => db.StorageLocations.AnyAsync()))
+        if (addLocalStorage && !await factory.WithDbResultAsync(db => db.StorageLocations.AnyAsync()))
         {
-            await _factory.AddLocalStorageAsync();
+            await factory.AddLocalStorageAsync();
         }
 
-        if (!await _factory.WithDbResultAsync(db => db.Users.AnyAsync(u => u.Name == user)))
+        if (!await factory.WithDbResultAsync(db => db.Users.AnyAsync(u => u.Name == user)))
         {
-            await _factory.CreateUserAsync(user, TestApi.Password);
+            await factory.CreateUserAsync(user, TestApi.Password);
         }
 
-        var token = (await _client.SignInAsync(user)).AccessToken;
-        await _client.SendAsync(HttpMethod.Get, "/api/v1/libraries", token);
+        var token = (await client.SignInAsync(user)).AccessToken;
+        await client.SendAsync(HttpMethod.Get, "/api/v1/libraries", token);
 
-        await using var scope = _factory.Services.CreateAsyncScope();
+        await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<Atrium.Data.AtriumDbContext>();
         var owner = await db.Users.SingleAsync(u => u.Name == user);
         var library = await db.Libraries.SingleAsync(l => l.OwnerUserId == owner.Id);

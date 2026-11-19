@@ -216,7 +216,7 @@ A player first asks how to play (D-059); only streaming opens a session.
 | Method | Path | Notes |
 |---|---|---|
 | POST | `/nodes/{id}/playback` | Built. Body: the client's capability profile (DESIGN.md 7.2) and the audio track. Returns the method (direct play, remux, audio transcode, transcode), the reasons as codes, the container, the duration and every stream, and for direct play a signed URL of the original that lasts the video and two hours more. 409 `playback.not_ready` until the file has been read; 422 `playback.client_cannot_stream` when streaming is needed and the client has no HLS |
-| POST | `/playback/sessions` | Built. Body: node, capability profile, audio track, start position. Decides again; 409 `playback.direct_play` when the original plays. Returns the stream's identifier, method, reasons and master URL. 503 `playback.busy` at the server's limit, 429 `playback.too_many_streams` at the person's, 503 `playback.remote_storage` for a source on S3 until the loopback URL is built |
+| POST | `/playback/sessions` | Built. Body: node, capability profile, audio track, start position. Decides again; 409 `playback.direct_play` when the original plays. Returns the stream's identifier, method, reasons and master URL. 503 `playback.busy` at the server's limit, 429 `playback.too_many_streams` at the person's, 503 `playback.remote_storage` when the server has no address of its own for FFmpeg to read remote storage through |
 | DELETE | `/playback/sessions/{id}` | Built. Ends the stream |
 | PATCH | `/playback/sessions/{id}` | Change audio, subtitle, quality; may change the decision |
 | POST | `/playback/sessions/{id}/progress` | Position and state; keeps the session and its URLs alive |

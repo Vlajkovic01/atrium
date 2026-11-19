@@ -80,6 +80,25 @@ public sealed class StreamSessionsTests : IAsyncDisposable
     }
 
     [Fact]
+    public async Task Over_the_cache_limit_an_idle_stream_gives_way_and_a_busy_one_refuses_the_new()
+    {
+        await using var sessions = new StreamSessions(new MediaOptions { CacheDir = _dir }, new StreamLimits(4, 4, 4, MaxCacheBytes: 1000), _time, NullLoggerFactory.Instance);
+        var decision = new PlaybackDecision(PlaybackMethod.Remux, [], 0, null);
+        var output = new StreamOutput(0, null, true, false, 0, 720, false);
+        Task<(StreamSession? Session, StreamRefusal? Refusal)> Open() => sessions.OpenAsync(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), decision, output, SegmentPlan.Fixed(60_000_000, 6_000_000), Video, null, 0, _ => Task.FromResult("unused"));
+
+        var full = (await Open()).Session!;
+        await File.WriteAllBytesAsync(Path.Combine(full.Directory, "0.mp4"), new byte[2000]);
+
+        Assert.Equal(StreamRefusal.ServerBusy, (await Open()).Refusal);
+
+        _time.Advance(StreamSessions.IdleStop);
+        Assert.NotNull((await Open()).Session);
+        Assert.Null(sessions.Find(full.Id));
+    }
+
+    [Fact]
     public void Folders_left_by_an_earlier_run_of_the_server_are_removed()
     {
         var left = Path.Combine(_sessions.Directory, "old-stream");

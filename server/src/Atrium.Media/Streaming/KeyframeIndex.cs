@@ -26,7 +26,7 @@ public sealed class KeyframeIndex(MediaOptions options, ILogger<KeyframeIndex> l
     public string Directory => Path.Combine(options.CacheDir, "keyframes");
 
     /// <param name="container">The container as clients name it (mp4, mov, mkv, webm...).</param>
-    /// <param name="localPath">The file on local disk, when it is there, for a scan.</param>
+    /// <param name="localPath">Where ffprobe can read the file for a scan: a local path or a loopback URL.</param>
     /// <param name="scan">Whether a container without an index may be scanned now, reading the whole file.</param>
     /// <returns>
     /// Keyframe times in microseconds, ascending, on the file's own clock,

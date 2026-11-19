@@ -24,6 +24,16 @@ public sealed class StreamSession : IAsyncDisposable
     /// <summary>A run this many segments ahead of what is asked for stops; a later request starts it again.</summary>
     public const int RunAhead = 20;
 
+    /// <summary>
+    /// Finished segments a stream keeps, about twenty minutes of video; past
+    /// that, those far behind the player go, so a film watched to the end
+    /// does not keep all of itself in the cache.
+    /// </summary>
+    public const int MaxKept = 200;
+
+    /// <summary>Segments behind the player that stay, for seeking back.</summary>
+    public const int KeepBehind = 100;
+
     private static readonly TimeSpan SegmentWait = TimeSpan.FromSeconds(30);
 
     private readonly SemaphoreSlim _lock = new(1, 1);
@@ -215,6 +225,15 @@ public sealed class StreamSession : IAsyncDisposable
                 _init = header;
             }
 
+            if (_finished.Count > MaxKept)
+            {
+                foreach (var old in _finished.Where(n => n < index - KeepBehind || n > index + MaxKept).ToList())
+                {
+                    TryDelete(Path.Combine(Directory, $"{old.ToString(CultureInfo.InvariantCulture)}.mp4"));
+                    _finished.Remove(old);
+                }
+            }
+
             // Far ahead of the player: stop, and start again when it catches up.
             if (_run is { } ahead && ahead.Last - index > RunAhead)
             {
@@ -226,6 +245,30 @@ public sealed class StreamSession : IAsyncDisposable
         finally
         {
             _lock.Release();
+        }
+    }
+
+    /// <summary>The bytes this stream keeps on disk.</summary>
+    public long SizeOnDisk()
+    {
+        try
+        {
+            return new DirectoryInfo(Directory).EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return 0;
+        }
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
         }
     }
 

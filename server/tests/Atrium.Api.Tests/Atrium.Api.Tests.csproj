@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Atrium.Api\Atrium.Api.csproj" />
+    <ProjectReference Include="..\Atrium.Storage.Tests\Atrium.Storage.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

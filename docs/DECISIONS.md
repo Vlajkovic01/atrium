@@ -1304,3 +1304,34 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   loopback URL; a limit on the cache's size and reuse of segments between
   streams come with it.
 
+## D-063 Remote sources and the stream cache (Proposed, Phase 5)
+
+- **FFmpeg reads remote storage through the server.** For a file on S3
+  FFmpeg is given `http://127.0.0.1:<port>/api/v1/internal/sources/<token>`:
+  the server reads the storage for it with range requests, as for any
+  client, and FFmpeg seeks with ranges and reconnects when a connection
+  drops. FFmpeg never sees storage credentials. The ffprobe scan for
+  keyframes of containers without an index uses the same URL.
+- **The token is the access, kept on the server.** 144 random bits, never
+  sent to a client, tied to its stream: it ends when the stream does (two
+  minutes for one not yet given to a stream). The route answers only a
+  connection from this machine and is left out of the public API. A
+  reverse proxy on the same machine also connects from loopback; a token
+  it never learns keeps that closed, and with the proxy listed as trusted
+  (forwarded headers) the client's own address is checked instead.
+- **The address** is the first plain HTTP address the server listens on,
+  a wildcard host (0.0.0.0, [::], +) turned into loopback. A server with
+  no TCP address answers `playback.remote_storage` for streams from
+  remote storage; videos that play as they are still work.
+- **The cache is bounded.** A stream keeps at most 200 finished segments,
+  the ones near the player (100 behind for seeking back), and all streams
+  together at most 20 GB (`ATRIUM_STREAM_CACHE_GB`). Over that, streams
+  idle for a minute give way, oldest first; if none is idle, a new stream
+  is refused with `playback.busy` instead of filling the disk.
+- **Segments are not shared between streams**, which DESIGN.md 7.4 once
+  planned. Sharing would need runs of FFmpeg that several streams wait on
+  and a store kept across streams; the case it helps, the same film at the
+  same quality started again after its stream was forgotten (30 minutes
+  idle), is rare at home, and resuming within those 30 minutes already
+  uses the same stream. Revisited if usage shows otherwise.
+
