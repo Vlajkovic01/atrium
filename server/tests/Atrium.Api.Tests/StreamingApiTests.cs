@@ -82,6 +82,40 @@ public sealed class StreamingApiTests : IDisposable
     }
 
     [Fact]
+    public async Task An_MPEG_TS_film_without_an_index_is_scanned_for_keyframes_and_remuxed()
+    {
+        var (token, film) = await FilmAsync("ana", "film.m2ts", ["-c:v", "libx264", "-preset", "ultrafast", "-g", "48", "-keyint_min", "48", "-sc_threshold", "0", "-pix_fmt", "yuv420p", "-c:a", "aac", "-f", "mpegts"]);
+
+        var opened = await _client.SendAsync(HttpMethod.Post, "/api/v1/playback/sessions", token, new StreamRequest(film.Id, Browser));
+        Assert.Equal(HttpStatusCode.Created, opened.StatusCode);
+        var stream = await opened.ReadAsync<StreamView>();
+        Assert.Equal(PlaybackMethod.Remux, stream.Method);
+
+        var playlist = await _client.GetStringAsync(Relative(stream.MasterUrl, "index.m3u8"));
+        var durations = Durations(playlist);
+        Assert.InRange(durations.Sum(), 19.8, 20.3);
+        var init = await _client.GetByteArrayAsync(Relative(stream.MasterUrl, "init.mp4"));
+        var parts = new Dictionary<int, byte[]>();
+        for (var n = 0; n < durations.Count; n++)
+        {
+            var response = await _client.GetAsync(Relative(stream.MasterUrl, $"{n}.m4s"));
+            Assert.True(response.IsSuccessStatusCode, $"segment {n}: {(int)response.StatusCode} {await response.Content.ReadAsStringAsync()}");
+            parts[n] = await response.Content.ReadAsByteArrayAsync();
+        }
+
+        var (duration, start, errors) = await ProbeAsync(await JoinAsync(init, parts));
+        Assert.InRange(duration, 19.8, 20.3);
+        Assert.InRange(start, -0.01, 0.1);
+        Assert.Equal(string.Empty, errors);
+
+        // The AAC settings an MPEG-TS carries only in its packets reach the init
+        // segment (a decoder-specific info, tag 5, in esds); browsers refuse it without.
+        var esds = init.AsSpan().IndexOf("esds"u8);
+        Assert.True(esds > 0);
+        Assert.Contains((byte)0x05, init.AsSpan(esds, Math.Min(64, init.Length - esds)).ToArray());
+    }
+
+    [Fact]
     public async Task Video_the_client_cannot_play_is_encoded_in_six_second_segments()
     {
         var client = Browser with { VideoCodecs = [new VideoCodecSupport("h264", MaxWidth: 160, MaxHeight: 90)] };

@@ -1113,5 +1113,28 @@
       "other": "Server je naveo razlog koji ova aplikacija još ne poznaje.",
       "keyframes_unknown": "Ključni kadrovi videa nisu pronađeni, pa se video pretvara umesto da se kopira."
     }
+  },
+  "player": {
+    "label": "Video plejer: {name}",
+    "waiting": "Atrium još čita ovaj video. Počinje za trenutak.",
+    "failed": "Ovaj video nije mogao da se pusti.",
+    "noHls": "Ovaj pregledač ne može da strimuje video. Probajte drugi pregledač.",
+    "info": "Informacije o reprodukciji",
+    "nothingConverted": "Ništa se ne pretvara: ovo je originalni fajl.",
+    "seek": "Pozicija",
+    "play": "Pusti",
+    "pause": "Pauziraj",
+    "mute": "Isključi zvuk",
+    "unmute": "Uključi zvuk",
+    "volume": "Jačina zvuka",
+    "audio": "Zvučna traka",
+    "quality": "Kvalitet",
+    "fullscreen": "Ceo ekran",
+    "unknownLanguage": "Nepoznat jezik",
+    "auto": "Automatski",
+    "q1080": "1080p",
+    "q720": "720p",
+    "q480": "480p",
+    "q360": "360p"
   }
 }

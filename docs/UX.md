@@ -242,6 +242,17 @@ Built in Phase 3, with these details settled while building it:
 - Position is saved continuously and resumes on any device.
 - Keyboard shortcuts for all controls, listed under `?`.
 
+Built in Phase 5 (D-066): the player opens for every video in Files and
+Photos. It plays the original when the browser can, a stream otherwise;
+while the server is still reading a new video it says so and starts by
+itself. Controls: play and pause, the seek bar with a picture of where it
+would land, time, volume and mute, the audio track when there are
+several, quality (Auto, 1080p, 720p, 480p, 360p; Auto plays the original
+when it can), playback info (how it plays and why) and full screen.
+Keys: space or K, left and right arrows (ten seconds), up and down
+(volume), M, F, I. Changing track or quality goes on from the same
+place. Subtitles, speed and casting come in later phases.
+
 ### Devices
 
 List of signed-in devices with name, kind, last seen and approximate

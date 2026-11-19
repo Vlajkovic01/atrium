@@ -173,7 +173,11 @@ jobs:
           name: e2e
 
       # Starts the real server with the built web app and drives it in a browser.
+      # Google Chrome, which the runner image has, rather than Playwright's
+      # Chromium: Chromium plays no H.264 or AAC, which the player tests need.
       - name: Run
+        env:
+          ATRIUM_BROWSER_CHANNEL: chrome
         run: pnpm --filter @atrium/web run e2e
 
       - name: Keep traces of failed tests

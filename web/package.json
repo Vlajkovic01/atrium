@@ -15,6 +15,7 @@
   "dependencies": {
     "@atrium/shared": "workspace:*",
     "@tanstack/react-query": "^5.107.1",
+    "hls.js": "1.7.4",
     "i18next": "^27.1.0",
     "i18next-icu": "^2.7.0",
     "intl-messageformat": "^12.1.5",

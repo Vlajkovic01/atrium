@@ -204,12 +204,12 @@ public sealed class HlsTests
     }
 
     [Fact]
-    public void Fragments_are_moved_in_each_tracks_own_timescale_and_the_header_is_left_out()
+    public void Fragments_are_moved_in_each_tracks_own_timescale_and_only_moof_and_mdat_are_kept()
     {
         // Track 1 at 90 kHz, track 2 at 48 kHz.
         var init = Box("ftyp", [0, 0, 0, 0]).Concat(Box("moov", [.. Trak(1, 90_000), .. Trak(2, 48_000)])).ToArray();
         var moof = Box("moof", [.. Box("mfhd", new byte[8]), .. Traf(1, 10), .. Traf(2, 20)]);
-        var file = init.Concat(moof).Concat(Box("mdat", [9, 9])).ToArray();
+        var file = init.Concat(moof).Concat(Box("mdat", [9, 9])).Concat(Box("mfra", new byte[8])).ToArray();
 
         var media = Fmp4.Media(file, Fmp4.Timescales(Fmp4.Init(file)), offsetUs: 2_000_000);
 

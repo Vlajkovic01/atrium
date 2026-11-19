@@ -1113,5 +1113,28 @@
       "other": "The server found a reason this app does not know yet.",
       "keyframes_unknown": "The video's keyframes could not be found, so it is converted instead of copied."
     }
+  },
+  "player": {
+    "label": "Video player: {name}",
+    "waiting": "Atrium is still reading this video. It starts in a moment.",
+    "failed": "This video could not be played.",
+    "noHls": "This browser cannot stream video. Try another browser.",
+    "info": "Playback info",
+    "nothingConverted": "Nothing is converted: this is the original file.",
+    "seek": "Position",
+    "play": "Play",
+    "pause": "Pause",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "volume": "Volume",
+    "audio": "Audio track",
+    "quality": "Quality",
+    "fullscreen": "Full screen",
+    "unknownLanguage": "Unknown language",
+    "auto": "Auto",
+    "q1080": "1080p",
+    "q720": "720p",
+    "q480": "480p",
+    "q360": "360p"
   }
 }

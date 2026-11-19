@@ -85,7 +85,8 @@ export function previewKind(node: Pick<NodeInfo, "name" | "mediaType" | "size">)
     return "image";
   }
 
-  if (VIDEO_TYPES.has(type)) {
+  // Every video plays: what the browser cannot open, the server streams (D-066).
+  if (VIDEO_TYPES.has(type) || type.startsWith("video/")) {
     return "video";
   }
 

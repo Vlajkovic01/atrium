@@ -3423,3 +3423,97 @@ a {
     left: auto;
   }
 }
+
+/* Video player (docs/UX.md, Player) */
+.player {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+.player-video {
+  width: 100%;
+  height: 100%;
+}
+
+.player-message {
+  position: absolute;
+  inset: auto 1rem 50% 1rem;
+  text-align: center;
+  color: #f3f5f4;
+}
+
+.player-controls {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 0.5rem 1rem 0.75rem;
+  background: linear-gradient(transparent, rgb(0 0 0 / 70%));
+  color: #f3f5f4;
+}
+
+.player-bar {
+  position: relative;
+}
+
+.player-seek {
+  width: 100%;
+}
+
+.player-picture {
+  position: absolute;
+  bottom: 1.75rem;
+  transform: translateX(-50%);
+  border: 2px solid #f3f5f4;
+  border-radius: 4px;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.player-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.player-buttons .icon-button {
+  color: inherit;
+}
+
+.player-buttons .icon-button[aria-pressed="true"] {
+  background: rgb(255 255 255 / 22%);
+  color: inherit;
+}
+
+.player-time {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+}
+
+.player-volume {
+  width: 6rem;
+}
+
+.player-spacer {
+  flex: 1;
+}
+
+.player-info {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  max-width: min(28rem, calc(100% - 2rem));
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 75%);
+  color: #f3f5f4;
+}
+
+.player-info ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+}

@@ -64,8 +64,10 @@ public static class Fmp4
     }
 
     /// <summary>
-    /// The media of a segment file (its moof and mdat boxes, without the
-    /// header) with every fragment moved later by <paramref name="offsetUs"/>,
+    /// The media of a segment file: its moof and mdat boxes only, the
+    /// header and the random-access index at the end (mfra) left out, since
+    /// a browser's own HLS player refuses anything else in a media segment.
+    /// Every fragment is moved later by <paramref name="offsetUs"/>,
     /// each track in its own timescale. Decode times must be 64-bit (tfdt
     /// version 1), which FFmpeg writes.
     /// </summary>
@@ -75,7 +77,7 @@ public static class Fmp4
         var output = new MemoryStream(file.Length);
         foreach (var (type, offset, size) in Boxes(file))
         {
-            if (type is "ftyp" or "moov")
+            if (type is not ("moof" or "mdat"))
             {
                 continue;
             }

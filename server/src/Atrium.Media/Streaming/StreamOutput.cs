@@ -143,9 +143,13 @@ public sealed record StreamOutput(
             args.AddRange(["-segment_times", string.Join(',', cuts)]);
         }
 
+        // delay_moov: the header waits for the first packets, so codec settings
+        // that only they carry (AAC copied from MPEG-TS) are in the init segment;
+        // without them a browser refuses the stream. skip_trailer: no index at
+        // the end of a segment, which browsers refuse too.
         args.AddRange([
             "-segment_format", "mp4",
-            "-segment_format_options", "movflags=+frag_keyframe+empty_moov+default_base_moof",
+            "-segment_format_options", "movflags=+frag_keyframe+empty_moov+delay_moov+default_base_moof+skip_trailer",
             "-segment_start_number", first.ToString(CultureInfo.InvariantCulture),
             "-reset_timestamps", "1",
             "-segment_list", Path.Combine(directory, "segments.csv"),

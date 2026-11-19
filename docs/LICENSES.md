@@ -117,6 +117,7 @@ with the release). HEVC decoding (libde265, FFmpeg) falls under flag 2.
 | Package | Version | License | Use |
 |---|---|---|---|
 | jellyfin-ffmpeg8 (Jellyfin's apt repository, in the image) | 8.1.3-2-noble | GPL-3.0-or-later (built with --enable-gpl --enable-version3, with libx264, libx265 and others; never --enable-nonfree, which CI checks in the image) | FFmpeg and ffprobe for probing, thumbnails, previews and streaming, with hardware encoders (NVENC, Quick Sync, VA-API). Bundles the Intel media driver (MIT), libva (MIT) and libvpl (MIT). Its source is published by Jellyfin at github.com/jellyfin/jellyfin-ffmpeg; the release must point to the tag of the pinned version (flag 1). Encoders of patented formats fall under flag 2 |
+| hls.js | 1.7.4 | Apache-2.0 | HLS in browsers without HLS of their own, in the web app; loaded only when a stream plays |
 
 Flag: the image grows by about 220 MB installed, mostly drivers for
 hardware encoding. The Ubuntu FFmpeg it replaces was smaller; Jellyfin's
