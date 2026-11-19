@@ -1173,3 +1173,34 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   server, what waits and why, what failed and why, when a run last
   finished, and limited access when only selected photos were allowed.
 
+## D-059 The playback decision (Proposed, Phase 5)
+
+- **Asked before playing, without a session.** `POST /nodes/{id}/playback`
+  takes the client's profile and answers with the method and its reasons;
+  it keeps nothing. A session, with its transcoder, opens only when the
+  answer is to stream (HLS, later in this phase). Alternative: one call
+  that always opens a session (the API sketch), which would hold server
+  state for every original played straight from the file.
+- **The server decides, the clients describe.** The rules live in one
+  place (`PlaybackDecider`), tested as a table. The shared package builds
+  the profile and translates the reasons; it does not repeat the rules, so
+  a client one version behind gets a newer server's decisions. A reason a
+  client does not know reads as a general one.
+- **Streams are read once and kept** with the file's facts, as JSON in one
+  column: read whole for every decision, never queried by their parts, the
+  same text in SQLite, PostgreSQL and the portable backup. Raising the
+  reader's version to 2 makes the media job read every existing video
+  again; until it has, the decision answers 409 `playback.not_ready`.
+  Thumbnails are not made again for a new reader, only when the file
+  changes: before, raising the version would have redrawn every photo's
+  thumbnail, hours of work on a small device.
+  Alternative: ffprobe at every playback, which costs a probe (slow on S3)
+  each time.
+- **QuickTime counts as MP4 in browsers.** Browsers that answer no for
+  `video/quicktime` play phone videos in it; the codecs inside are still
+  checked. Without this every iPhone video would be remuxed.
+- **Profiles are bounded**: at most 64 entries in each list and names of
+  32 characters; anything larger is refused, as no real client sends it.
+- **The schema changed** (D-026): the initial migration was generated
+  again with the two new columns. A database from an earlier development
+  build is created again; the demo gets a new one at the end of the phase.

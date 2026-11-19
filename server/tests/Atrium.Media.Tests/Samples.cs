@@ -59,6 +59,39 @@ public static class Samples
         return path;
     }
 
+    /// <summary>
+    /// A one-second film in Matroska like a ripped one: 10-bit HEVC marked
+    /// as HDR10, English AAC stereo as the default track, Serbian AC-3 5.1,
+    /// and a forced Serbian SRT subtitle.
+    /// </summary>
+    public static async Task<string> HdrMkvAsync(string directory)
+    {
+        Directory.CreateDirectory(directory);
+        var subtitle = Path.Combine(directory, $"{Guid.NewGuid():N}.srt");
+        await File.WriteAllTextAsync(subtitle, "1\n00:00:00,000 --> 00:00:01,500\nZdravo\n");
+        var path = Path.Combine(directory, $"{Guid.NewGuid():N}.mkv");
+        await ToolRunner.RunAsync(
+            "ffmpeg",
+            ["-nostdin", "-v", "error",
+                "-f", "lavfi", "-i", "testsrc=duration=1:size=320x180:rate=24",
+                "-f", "lavfi", "-i", "sine=frequency=440:duration=1",
+                "-f", "lavfi", "-i", "sine=frequency=220:duration=1",
+                "-i", subtitle,
+                "-map", "0:v", "-map", "1:a", "-map", "2:a", "-map", "3:s",
+                // The colour is set on the frames, so the encoder writes it into the stream.
+                "-vf", "setparams=color_primaries=bt2020:color_trc=smpte2084:colorspace=bt2020nc",
+                "-c:v", "libx265", "-preset", "ultrafast", "-pix_fmt", "yuv420p10le", "-x265-params", "log-level=error",
+                "-c:a:0", "aac", "-ac:a:0", "2", "-c:a:1", "ac3", "-ac:a:1", "6", "-c:s", "srt",
+                "-metadata:s:a:0", "language=eng", "-metadata:s:a:1", "language=srp", "-metadata:s:s:0", "language=srp",
+                "-disposition:a:0", "default", "-disposition:a:1", "0", "-disposition:s:0", "forced",
+                "-y", path],
+            TimeSpan.FromMinutes(2),
+            background: false,
+            maxOutput: 4096,
+            CancellationToken.None);
+        return path;
+    }
+
     // A little-endian TIFF structure: IFD0 with Make, Model, Orientation and
     // pointers to the EXIF and GPS IFDs.
     private static byte[] Exif(string dateTimeOriginal, string? offset, int orientation)

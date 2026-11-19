@@ -143,6 +143,12 @@
       "expired": "This upload was not continued for a day and was discarded. Start it again.",
       "unsupported_version": "This app uses an upload protocol the server does not support. Update the app.",
       "invalid_metadata": "The upload is missing its folder or name."
+    },
+    "playback": {
+      "not_video": "Only videos can be played.",
+      "not_ready": "Atrium is still reading this video. Try again in a moment.",
+      "unreadable": "This file has no video that can be played.",
+      "client_cannot_stream": "This video needs streaming, which this app or browser cannot play."
     }
   },
   "mobile": {
@@ -1058,6 +1064,29 @@
       "library_offline": "The folder {name} is offline: missing, empty or unreadable. Nothing in it was removed.",
       "integrity_problems": "The storage check found {count, plural, one {# file} other {# files}} missing or damaged.",
       "other": "Something happened on the server."
+    }
+  },
+  "playback": {
+    "method": {
+      "directPlay": "Playing the original",
+      "remux": "Streaming the original video and sound in another container",
+      "audioTranscode": "Streaming the original video with the sound converted",
+      "transcode": "Streaming the video converted"
+    },
+    "reason": {
+      "container": "This device does not open the file's format.",
+      "video_codec": "This device does not play the video's format.",
+      "video_profile": "This device does not play this kind of the video's format.",
+      "video_level": "The video is more demanding than this device plays.",
+      "video_bit_depth": "This device does not play video with this many colour levels.",
+      "video_resolution": "The video is larger than this device plays.",
+      "video_hdr": "This device does not show the video's high dynamic range.",
+      "video_not_streamable": "The video's format cannot be streamed as it is.",
+      "audio_codec": "This device does not play the sound's format.",
+      "audio_channels": "The sound has more channels than this device plays.",
+      "audio_not_streamable": "The sound's format cannot be streamed as it is.",
+      "bit_rate": "The video needs a faster connection than the quality chosen allows.",
+      "other": "The server found a reason this app does not know yet."
     }
   }
 }

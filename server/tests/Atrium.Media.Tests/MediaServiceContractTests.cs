@@ -91,6 +91,36 @@ public abstract class MediaServiceContractTests<TDatabase> : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_newer_reader_reads_the_facts_again_without_drawing_the_thumbnail_again()
+    {
+        var (actor, library) = await Host.NewUserAsync();
+        var photo = await AddPhotoAsync(actor, library.RootNodeId, "lake.jpg", Samples.JpegWithExif(320, 200));
+        await Host.RunJobsAsync();
+        var thumbnail = Assert.Single(Directory.GetFiles(Path.Combine(_cache, "thumbs"), "*-s.webp", SearchOption.AllDirectories));
+        var drawn = File.GetLastWriteTimeUtc(thumbnail);
+
+        // As if read by the reader before this one, which knew less.
+        await Host.WithDbAsync(async db =>
+        {
+            var info = await db.MediaInfos.SingleAsync(m => m.BlobId == photo.BlobId);
+            info.ExtractorVersion = MediaInfo.CurrentExtractorVersion - 1;
+            info.Width = null;
+            await db.SaveChangesAsync();
+        });
+        await Host.WithAsync(async sp =>
+        {
+            await sp.GetRequiredService<JobQueue>().EnqueueAsync(MediaExtractHandler.Request(photo.Id), None);
+            return true;
+        });
+        await Host.RunJobsAsync();
+
+        var again = await DbAsync(db => db.MediaInfos.AsNoTracking().SingleAsync(m => m.BlobId == photo.BlobId));
+        Assert.Equal((MediaInfo.CurrentExtractorVersion, 320), (again.ExtractorVersion, again.Width!.Value));
+        Assert.Equal(ThumbnailState.Ready, again.ThumbnailState);
+        Assert.Equal(drawn, File.GetLastWriteTimeUtc(thumbnail));
+    }
+
+    [Fact]
     public async Task Two_files_with_the_same_content_share_one_reading()
     {
         var (actor, library) = await Host.NewUserAsync();

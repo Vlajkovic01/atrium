@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atrium.Data.Sqlite.Migrations
 {
     [DbContext(typeof(AtriumDbContext))]
-    [Migration("20261116162000_Initial")]
+    [Migration("20261118163800_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -915,6 +915,9 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("BitRate")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid?>("BlobId")
                         .HasColumnType("TEXT");
 
@@ -968,6 +971,10 @@ namespace Atrium.Data.Sqlite.Migrations
 
                     b.Property<long>("SourceSize")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Streams")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ThumbnailState")
                         .IsRequired()

@@ -24,7 +24,8 @@ public enum ThumbnailState
 public sealed class MediaInfo
 {
     /// <summary>Bump when extraction learns something new, so older rows are read again.</summary>
-    public const int CurrentExtractorVersion = 1;
+    /// <summary>2: every stream with what a playback decision needs (Phase 5).</summary>
+    public const int CurrentExtractorVersion = 2;
 
     public Guid Id { get; init; } = Guid.CreateVersion7();
 
@@ -53,6 +54,12 @@ public sealed class MediaInfo
     public string? VideoCodec { get; set; }
 
     public string? AudioCodec { get; set; }
+
+    /// <summary>The whole file's bit rate in bits per second, when known.</summary>
+    public long? BitRate { get; set; }
+
+    /// <summary>Every video, audio and subtitle stream of a video; empty for photos.</summary>
+    public IReadOnlyList<MediaStream> Streams { get; set; } = [];
 
     /// <summary>Local clock time the photo or video was taken, with a zero offset (D-034).</summary>
     public DateTimeOffset? CapturedAt { get; set; }

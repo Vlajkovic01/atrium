@@ -541,6 +541,8 @@ namespace Atrium.Data.Postgres.Migrations
                     Format = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
                     VideoCodec = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
                     AudioCodec = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: true),
+                    BitRate = table.Column<long>(type: "bigint", nullable: true),
+                    Streams = table.Column<string>(type: "text", nullable: false),
                     CapturedAt = table.Column<long>(type: "bigint", nullable: true),
                     CapturedOffsetMinutes = table.Column<int>(type: "integer", nullable: true),
                     CameraMake = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),

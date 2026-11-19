@@ -912,6 +912,9 @@ namespace Atrium.Data.Sqlite.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("BitRate")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid?>("BlobId")
                         .HasColumnType("TEXT");
 
@@ -965,6 +968,10 @@ namespace Atrium.Data.Sqlite.Migrations
 
                     b.Property<long>("SourceSize")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Streams")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("ThumbnailState")
                         .IsRequired()

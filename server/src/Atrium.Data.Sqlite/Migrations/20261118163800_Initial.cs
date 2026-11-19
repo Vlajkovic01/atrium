@@ -540,6 +540,8 @@ namespace Atrium.Data.Sqlite.Migrations
                     Format = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
                     VideoCodec = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
                     AudioCodec = table.Column<string>(type: "TEXT", maxLength: 64, nullable: true),
+                    BitRate = table.Column<long>(type: "INTEGER", nullable: true),
+                    Streams = table.Column<string>(type: "TEXT", nullable: false),
                     CapturedAt = table.Column<long>(type: "INTEGER", nullable: true),
                     CapturedOffsetMinutes = table.Column<int>(type: "INTEGER", nullable: true),
                     CameraMake = table.Column<string>(type: "TEXT", maxLength: 128, nullable: true),

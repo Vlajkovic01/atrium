@@ -919,6 +919,9 @@ namespace Atrium.Data.Postgres.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<long?>("BitRate")
+                        .HasColumnType("bigint");
+
                     b.Property<Guid?>("BlobId")
                         .HasColumnType("uuid");
 
@@ -972,6 +975,10 @@ namespace Atrium.Data.Postgres.Migrations
 
                     b.Property<long>("SourceSize")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("Streams")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("ThumbnailState")
                         .IsRequired()
