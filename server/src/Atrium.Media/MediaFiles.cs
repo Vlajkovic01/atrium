@@ -52,6 +52,24 @@ public sealed class LocalMediaFile : IAsyncDisposable
 /// </summary>
 public sealed class MediaFiles(AtriumDbContext db, NodeContent content, StorageProviders providers, MediaOptions options)
 {
+    /// <summary>
+    /// The content and, when it is on local disk, its path, without making
+    /// a copy: streaming reads a film where it is (DESIGN.md 7.4).
+    /// </summary>
+    public async Task<(ContentSource Source, string? LocalPath)> LocateAsync(Node node, Library library, CancellationToken ct)
+    {
+        var source = await content.SourceAsync(node, library, ct);
+        if (library.Mode == LibraryMode.External)
+        {
+            return (source, new ExternalFolder(library.ExternalPath!).Resolve(node.ExternalPath!)
+                ?? throw new ContentUnavailableException($"Node {node.Id} is not inside its folder."));
+        }
+
+        var blob = await db.Blobs.AsNoTracking().SingleAsync(b => b.Id == node.BlobId, ct);
+        var provider = await providers.OpenAsync(db, blob.StorageLocationId, ct);
+        return (source, provider is LocalStorageProvider local ? local.LocalPathOf(blob.Key) : null);
+    }
+
     public async Task<LocalMediaFile> OpenAsync(Node node, Library library, CancellationToken ct)
     {
         var source = await content.SourceAsync(node, library, ct);

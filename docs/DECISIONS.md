@@ -1254,3 +1254,53 @@ The owner asked to settle the Phase 2 risks as the engineer sees best.
   changed file is indexed again, a damaged entry is made again, and the
   folder can be deleted at any time.
 
+## D-062 Streaming sessions and segments (Proposed, Phase 5)
+
+- **The server keeps the timeline, not FFmpeg.** FFmpeg runs once per
+  stretch of watching with its segment muxer, is told the cut times
+  counted from where the run starts, and writes each segment as an fMP4
+  file of its own, timed from zero. The server serves the header of the
+  first one as the init segment and, for each segment, its fragments with
+  the decode times moved to the segment's place in the playlist, in each
+  track's own timescale. Found by trying: FFmpeg's HLS muxer moves its cut
+  grid at every restart, and its segment muxer with copied timestamps does
+  not cut at all. Checked end to end: a seek to segment 2 before anything
+  was made, then the rest, joins into one file FFmpeg decodes without a
+  single complaint, with the original's length.
+- **A run per stretch of watching.** A request for a segment the running
+  FFmpeg reaches within three segments waits for it (at most 30 seconds);
+  any other starts a run there. A run twenty segments ahead of the player
+  stops and starts again when needed, which is the "paused when far
+  ahead" of DESIGN.md 7.4. Finished segments stay while the stream lasts,
+  as every run cuts at the same boundaries.
+- **The identifier is the access.** Media elements and platform players
+  send no token, and an HLS playlist names its segments by relative URLs,
+  so each stream has a random 144-bit identifier, given only to the
+  session that opened it, carried in every URL of the stream. Signing the
+  session out ends the stream's URLs at once. Alternative: signing every
+  segment URL inside the playlists, which needs the playlist rewritten per
+  request and gains nothing over an identifier as unguessable as a
+  signature.
+- **In memory, derived on disk.** Streams live in memory; a restart ends
+  them and players open a new one. Segments are in the cache location
+  under the stream's identifier; a stream idle for a minute stops FFmpeg,
+  one idle for 30 minutes is forgotten with its folder, and folders left
+  by an earlier run of the server are removed at start.
+- **Limits.** Streams that encode video and streams that copy it are
+  counted apart: by default one encode on a small device and one per four
+  cores elsewhere (`ATRIUM_MAX_TRANSCODES` sets it), four times as many
+  copies, and three streams per person, where a stream idle for a minute
+  gives way to a new one. At a limit the client is told so (503
+  `playback.busy`, 429 `playback.too_many_streams`); nothing stalls.
+- **Encoding**: H.264 High at the largest of 1080, 720, 480 or 360 lines
+  the bit rate carries (8, 4, 2, 1 Mbit/s), never larger than the
+  original; HDR is tone-mapped to SDR when the client cannot show it.
+  Sound is encoded as stereo AAC at 192 kbit/s. Software only for now;
+  hardware encoders are the next step.
+- **Copied video without a known index** (a large file in a container
+  without one) is encoded instead, with the reason `keyframes_unknown`,
+  rather than making the person wait for a scan of the whole file.
+- **Not yet**: sources on S3 (`playback.remote_storage`) wait for FFmpeg's
+  loopback URL; a limit on the cache's size and reuse of segments between
+  streams come with it.
+

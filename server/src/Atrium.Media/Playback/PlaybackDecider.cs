@@ -66,6 +66,9 @@ public static class PlaybackReasons
     public const string AudioChannels = "audio_channels";
     public const string AudioNotStreamable = "audio_not_streamable";
     public const string BitRate = "bit_rate";
+
+    /// <summary>The video could be copied, but where its keyframes are is not known, so it is encoded again.</summary>
+    public const string KeyframesUnknown = "keyframes_unknown";
 }
 
 /// <summary>
